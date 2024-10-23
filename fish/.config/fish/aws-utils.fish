@@ -26,6 +26,11 @@ function assume_role
   if test -n "$mfa_serial"
     # Unlock Bitwarden and retrieve the session ID.
     set -l sessionId (bw unlock | grep -Eo 'BW_SESSION="[^"]+"' | cut -d '"' -f 2 | head -n 1)
+    
+    if [ "$sessionId" = "" ]
+      exit 1
+    end
+
     # Load Bitwarden items using the session ID.
     set -l bwItems (gum spin --title "Loading Bitwarden items" -- bw list items --session "$sessionId")
     set -l selectedBwItem (echo $bwItems | jq -r '.[].name' | fzf --header "Select bitwarden item" --cycle --ansi --layout=reverse --height=15)
