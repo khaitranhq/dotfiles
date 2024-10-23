@@ -81,6 +81,4 @@ alias t="tmux"
 alias au="source ~/.config/fish/aws-utils.fish"
 alias db="~/.config/fish/connect-db.fish"
 
-source "$HOME/.config/fish/manage-tmux-sessions.fish"
-
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"

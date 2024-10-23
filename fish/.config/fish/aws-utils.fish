@@ -112,7 +112,6 @@ set tasks 'Authenticate AWS Profile\nSSM to EC2 instances'
 
 # Use fzf to select a task interactively.
 set selectedTask (echo $tasks | string split "\n" | fzf --header "Select task" --cycle --ansi --layout=reverse --height=15)
-set selectedTask (echo $tasks | string split "\n" | fzf --header "Select task" --cycle --ansi --layout=reverse --height=15)
 
 if test "$selectedTask" = "Authenticate AWS Profile"
     authenticate_aws_profile
