@@ -105,11 +105,15 @@ function ssm_ec2_instances
   set regions $default_region $regions
   set selectedRegion (echo $regions | string split " " | fzf --header "Select region" --cycle --ansi --layout=reverse --height=15)
 
-  set ec2_instances (gum spin --title "Loading instances..." -- aws ec2 describe-instances --region $selectedRegion | jq -r '.Reservations[].Instances[] | select(.State.Name == "running") | "\(.InstanceId)(\(.Tags[]? | select(.Key == "Name") | .Value // "NoName"))"' | string split "\n")
-  set selectedInstance (echo $ec2_instances | string split " " | fzf --header "Select instance"--cycle --ansi --layout=reverse --height=15)
-  set selectedInstance (string split '(' $selectedInstance)[1]
+  set selected_instance (
+    gum spin --title "Loading instances..." -- aws ec2 describe-instances --region $selectedRegion --query 'Reservations[].Instances[?State.Name==`running`].[InstanceId, Tags[?Key==`Name`].Value | [0] || `NoName`]' --output json | 
+      jq -r '.[][] | select(length > 0) | "\(.[0])(\(.[1]))"' | 
+      string split "\n" | 
+      fzf --header "Select instance" --cycle --ansi --layout=reverse --height=15
+  )
+  set selected_instance (string split '(' $selected_instance)[1]
 
-  aws ssm start-session --target $selectedInstance --region $selectedRegion
+  aws ssm start-session --target $selected_instance --region $selectedRegion
 end
 
 # Define available tasks for the user to select.

@@ -83,9 +83,10 @@ M.notify = {
 
 M.git = {
 	n = {
-		["<leader>gs"] = { "<cmd>Neogit kind=split<CR>", "Git branch" },
+		["<leader>gs"] = { "<cmd>Neogit kind=floating<CR>", "Git branch" },
 		["<leader>gd"] = { "<cmd>DiffviewOpen<CR>", "Git branch" },
-		["<leader>gcm"] = { vim.opencommit, "Git branch" },
+		["<leader>gcm"] = { vim.opencommit, "Git commit with OpenCommit" },
+		["<leader>gb"] = { vim.current_git_branch, "current_branch" },
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },

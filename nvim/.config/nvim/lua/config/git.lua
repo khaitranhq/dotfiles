@@ -1,3 +1,9 @@
+function vim.current_git_branch()
+	local current_branch = require("neogit.lib.git").branch.current()
+	vim.cmd.let(("@+='%s'"):format(current_branch))
+	print("Copied current branch to clipboard: " .. current_branch)
+end
+
 return {
 	{
 		"lewis6991/gitsigns.nvim",
@@ -16,9 +22,11 @@ return {
 		"NeogitOrg/neogit",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			"sindrets/diffview.nvim", -- Diff integration
 			"nvim-telescope/telescope.nvim",
 		},
 		config = true,
+	},
+	{
+		"sindrets/diffview.nvim", -- Diff integration
 	},
 }
