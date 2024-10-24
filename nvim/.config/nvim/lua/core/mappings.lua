@@ -20,10 +20,10 @@ M.general = {
 			"Show directory of current buffer",
 		},
 		["<leader>/"] = { "<cmd>nohlsearch<CR>", "Disable search highlight" },
+
 		["p"] = { '"+p', "Paste" },
+
 		["<leader>tt"] = { "<cmd>tabnew<CR>", "New tab" },
-		["<leader>tn"] = { "<cmd>+tabnext<CR>", "Next tab" },
-		["<leader>tp"] = { "<cmd>-tabnext<CR>", "Previous tab" },
 		["<leader>tx"] = { "<cmd>tabclose<CR>", "Close tab" },
 	},
 	v = {
@@ -83,8 +83,9 @@ M.notify = {
 
 M.git = {
 	n = {
-		["<leader>gb"] = { vim.term_git_branch, "Git branch" },
-		["<leader>gl"] = { vim.term_lazygit_toggle, "Open lazygit" },
+		["<leader>gs"] = { "<cmd>Neogit kind=split<CR>", "Git branch" },
+		["<leader>gd"] = { "<cmd>DiffviewOpen<CR>", "Git branch" },
+		["<leader>gcm"] = { vim.opencommit, "Git branch" },
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },
@@ -101,50 +102,12 @@ M.format = {
 	},
 }
 
-M.window_picket = {
-	n = {
-		["<leader>w"] = { vim.window_picker_select, "Pick window" },
-	},
-}
-
 M.Navigate = {
 	n = {
 		["s"] = { "<Plug>(leap)", "Navigate with leap" },
 		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Select buffers" },
-	},
-}
-
-M.neorg = {
-	n = {
-		["<leader>nd"] = { "<Plug>(neorg.qol.todo-items.todo.task-done)", "mark the task under the cursor as done" },
-		["<leader>nu"] = {
-			"<Plug>(neorg.qol.todo-items.todo.task-undone)",
-			"mark the task under the cursor as undone",
-		},
-		["<leader>ni"] = {
-			"<Plug>(neorg.qol.todo-items.todo.task-pending)",
-			"mark the task under the cursor as pending",
-		},
-		["<leader>nh"] = {
-			"<Plug>(neorg.qol.todo-items.todo.task-on-hold)",
-			"mark the task under the cursor as on-hold",
-		},
-		["<leader>nnd"] = {
-			"<Plug>(neorg.promo.demote)",
-			"demote an object non-recursively",
-		},
-		["<leader>nrd"] = {
-			"<Plug>(neorg.promo.demote.nested)",
-			"demote an object recursively",
-		},
-		["<leader>nnp"] = {
-			"<Plug>(neorg.promo.promote)",
-			"promote an object non-recursively",
-		},
-		["<leader>nrp"] = {
-			"<Plug>(neorg.promo.promote.nested)",
-			"promote an object recursively",
-		},
+		["<leader>w"] = { vim.window_picker_select, "Pick window" },
+		["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
 	},
 }
 

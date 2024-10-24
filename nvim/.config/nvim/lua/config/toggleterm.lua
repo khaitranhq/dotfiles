@@ -10,26 +10,10 @@ end
 -- if you only want these mappings for toggle term use term://*toggleterm#* instead
 vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
 
-function vim.term_lazygit_toggle()
+function vim.opencommit()
 	local Terminal = require("toggleterm.terminal").Terminal
-	local lazygit = Terminal:new({ cmd = "lazygit", hidden = true, direction = "float" })
-	lazygit:toggle()
-end
-
-function vim.term_git_branch()
-	-- Get the current branch name using a shell command
-	local branch_name = vim.fn.systemlist("git rev-parse --abbrev-ref HEAD")[1]
-
-	if vim.v.shell_error ~= 0 then
-		print("Failed to retrieve Git branch name.")
-		return
-	end
-
-	-- Insert the branch name at the current cursor position
-	local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
-
-	-- Insert the branch name on a new line below the current cursor position
-	vim.api.nvim_buf_set_lines(0, row, row, false, { branch_name })
+	local opencommit = Terminal:new({ cmd = "oco --yes", hidden = true, direction = "float" })
+	opencommit:toggle()
 end
 
 return {

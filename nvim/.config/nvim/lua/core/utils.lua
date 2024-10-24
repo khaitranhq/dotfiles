@@ -28,4 +28,26 @@ M.load_mappings = function()
     )
 end
 
+M.select_tab = function()
+    local tabs = vim.api.nvim_list_tabpages()
+    local tab_names = {}
+
+    for _, tab in ipairs(tabs) do
+        local tabnr = vim.api.nvim_tabpage_get_number(tab)
+        local tabname = "Tab " .. tabnr
+        table.insert(tab_names, { tab = tab, name = tabname })
+    end
+
+    vim.ui.select(tab_names, {
+        prompt = 'Select a tab:',
+        format_item = function(item)
+            return item.name
+        end,
+    }, function(choice)
+        if choice then
+            vim.api.nvim_set_current_tabpage(choice.tab)
+        end
+    end)
+end
+
 return M
