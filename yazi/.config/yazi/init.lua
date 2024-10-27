@@ -1,4 +1,4 @@
-require("relative-motions"):setup({ show_numbers = "none", show_motion = true })
+require("relative-motions"):setup({ show_numbers = "relative", show_motion = true })
 
 -- You can configure your bookmarks by lua language
 local bookmarks = {}

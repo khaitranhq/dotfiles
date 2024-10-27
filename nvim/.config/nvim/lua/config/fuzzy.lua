@@ -32,6 +32,7 @@ return {
 						"^.venv/",
 						"^.git/",
 						"!^.github/",
+            "^cdk.out"
 					},
 					file_previewer = require("telescope.previewers").vim_buffer_vimgrep.new,
 					layout_strategy = "vertical",
