@@ -12,7 +12,15 @@ vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
 
 function vim.opencommit()
 	local Terminal = require("toggleterm.terminal").Terminal
-	local opencommit = Terminal:new({ cmd = "oco --yes", hidden = true, direction = "float" })
+	local opencommit = Terminal:new({
+		cmd = "oco --yes",
+		hidden = true,
+		direction = "float",
+		on_close = function(term)
+      require("neogit").dispatch_refresh()
+			print("Generate commit completed")
+		end,
+	})
 	opencommit:toggle()
 end
 
