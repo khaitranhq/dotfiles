@@ -9,14 +9,14 @@ function assume_role
 
   # Extract the role ARN for the selected profile from the AWS config.
   set role_arn (awk -v profile="$selectedProfile" '
-      $0 ~ "\\[profile " profile "\\]" {found=1}
+      $0 ~ "\\\\[profile " profile "\\\\]" {found=1}
       found && /role_arn/ {print $3; exit}
       /^$/ {found=0}
       ' ~/.aws/config)
 
   # Extract the MFA serial for the selected profile from the AWS config.
   set mfa_serial (awk -v profile="$selectedProfile" '
-      $0 ~ "\\[profile " profile "\\]" {found=1}
+      $0 ~ "\\\\[profile " profile "\\\\]" {found=1}
       found && /mfa_serial/ {print $3; exit}
       /^$/ {found=0}
       ' ~/.aws/config)
@@ -67,7 +67,7 @@ function authenticate_aws_profile
 
   set selectedProfile $splitted_result[1]
   set default_region (awk -v profile="$selectedProfile-source" '
-      $0 ~ "\\[profile " profile "\\]" {found=1}
+      $0 ~ "\\\\[profile " profile "\\\\]" {found=1}
       found && /region/ {print $3; exit}
       /^$/ {found=0}
       ' ~/.aws/config)
