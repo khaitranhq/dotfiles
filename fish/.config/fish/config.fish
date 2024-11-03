@@ -79,6 +79,6 @@ alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b"
 alias y='yazi'
 alias t="tmux"
 alias au="source ~/.config/fish/aws-utils.fish"
-alias db="~/.config/fish/connect-db.fish"
+alias db="source ~/.config/fish/connect-db.fish"
 
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"

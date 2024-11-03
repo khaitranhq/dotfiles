@@ -1,27 +1,60 @@
 #!/usr/bin/env fish
 
-set -l dbTypes 'mysql' 'postgres'
-set -l selectedDbType (gum choose --header "Select DB type" $dbTypes)
+set -l dbTypes 'postgres' 'mysql'
+set -l selectedDbType (echo $dbTypes | string split " " | fzf --header "Select DB type" --cycle --ansi --layout=reverse --height=15)
 
-if [ "$selectedDbType" = "mysql" ]
-  set -l dnsList (mycli --list-dsn | awk -F: '{ print $1 }')
-  set -l selectedDsn (gum choose --header "Select DSN" $dnsList | string trim)
+set -l dbCredentialsSources 'bitwarden' 'manual'
+set -l selectedDbCredentialsSource (
+  echo $dbCredentialsSources | 
+  string split " " | 
+  fzf --header "Select DB credentials source" --cycle --ansi --layout=reverse --height=15
+)
 
+if [ "$selectedDbCredentialsSource" = "bitwarden" ]
+  # Unlock Bitwarden and retrieve the session ID.
   set -l sessionId (bw unlock | grep -Eo 'BW_SESSION="[^"]+"' | cut -d '"' -f 2 | head -n 1)
+
   set -l bwItems (gum spin --title "Loading Bitwarden items" -- bw list items --session "$sessionId")
-  set -l selectedBwItem (echo $bwItems | jq -r '.[].name' | fzf --cycle --ansi --layout=reverse)
-  set -l password (gum spin --title "Loading password" -- bw get password $selectedBwItem --session "$sessionId")
+  set -l selectedBwItem (
+    echo $bwItems | 
+    jq -r '.[].name' | 
+    fzf --header "Select bitwarden item" --cycle --ansi --layout=reverse --height=15
+  )
 
-  set -l isUsingSshTunnel (gum confirm "Using SSH tunnel?" && echo "yes" || echo "no")
-  if [ "$isUsingSshTunnel" = "yes" ]
-    set -l selectedSshTunnel (cat ~/.ssh/config | grep "^Host" | awk '{ print $2 }' | gum choose)
-    mycli --password $password -d $selectedDsn --ssh-config-host $selectedSshTunnel
-  else
-    mycli --password $password -d $selectedDsn
+  set -l dbCredentials (gum spin --title "Loading credentials" -- bw get item $selectedBwItem --session "$sessionId")
+
+  set -l connection_name (echo $dbCredentials | jq -r '.name')
+  set -l uri (echo $dbCredentials | jq -r '.login.uris[0].uri')
+  set -l host (echo $uri | cut -d ':' -f 1)
+  set -l port (echo $uri | cut -d ':' -f 2)
+  set -l username (echo $dbCredentials | jq -r '.login.username')
+  set -l password (echo $dbCredentials | jq -r '.login.password')
+
+  if [ "$password" = "null" ]
+    set password (gum input --password --header "Enter password")
   end
-else if [ "$selectedDbType" = "postgres" ]
-  set -l dnsList (pgcli --list-dsn | awk -F: '{ print $1 }')
-  set -l selectedDsn (gum choose --header "Select DSN" $dnsList | string trim)
 
-  pgcli -D $selectedDsn
+  if [ "$selectedDbType" = "postgres" ]
+    echo "Loading database names"
+    set -l database_names (PGPASSWORD="$password" psql --host $host --port $port --username $username --dbname postgres  --command 'SELECT datname FROM pg_catalog.pg_database' --no-align --tuples-only)
+
+    set -l prefix_db_uri "$selectedDbType://$username:$password@$uri"
+    for database_name in $database_names
+      # Skip template databases and empty lines
+      if [ "$database_name" = "template0" -o "$database_name" = "template1" -o "$database_name" = "" ]
+        continue
+      end
+      
+      # Sanitize database name for variable name (remove special chars, convert to uppercase)
+      set -l sanitized_name (echo $database_name | string upper | string replace -a -r '[^A-Z0-9_]' '_')
+      
+      # Set global variable with format DB_URI_DBNAME
+      set -gx DB_UI_$sanitized_name "$prefix_db_uri/$database_name"
+    end
+  end
+
+  if [ "$selectedDbType" = "mysql" ]
+    set -gx DATABASE_NAME "$connection_name"
+    set -gx DATABASE_URL "$selectedDbType://$username:$password@$uri"
+  end
 end
