@@ -1,8 +1,17 @@
 #!/usr/bin/env fish
 
+# Script to connect to databases using credentials from Bitwarden or manual input
+# Supports PostgreSQL and MySQL connections
+# Sets environment variables with connection strings for each database
+
+# TODO: ssh tunnel
+# TODO: mysql
+
+# Define supported database types
 set -l dbTypes 'postgres' 'mysql'
 set -l selectedDbType (echo $dbTypes | string split " " | fzf --header "Select DB type" --cycle --ansi --layout=reverse --height=15)
 
+# Define available credential sources
 set -l dbCredentialsSources 'bitwarden' 'manual'
 set -l selectedDbCredentialsSource (
   echo $dbCredentialsSources | 
@@ -11,7 +20,8 @@ set -l selectedDbCredentialsSource (
 )
 
 if [ "$selectedDbCredentialsSource" = "bitwarden" ]
-  # Unlock Bitwarden and retrieve the session ID.
+  # Use Bitwarden as credentials source
+  # First unlock Bitwarden vault and retrieve the session ID
   set -l sessionId (bw unlock | grep -Eo 'BW_SESSION="[^"]+"' | cut -d '"' -f 2 | head -n 1)
 
   set -l bwItems (gum spin --title "Loading Bitwarden items" -- bw list items --session "$sessionId")
@@ -35,6 +45,8 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
   end
 
   if [ "$selectedDbType" = "postgres" ]
+    # For PostgreSQL, fetch all database names and create connection strings
+    # Sets environment variables in format DB_URI_DBNAME for each database
     echo "Loading database names"
     set -l database_names (PGPASSWORD="$password" psql --host $host --port $port --username $username --dbname postgres  --command 'SELECT datname FROM pg_catalog.pg_database' --no-align --tuples-only)
 
@@ -54,6 +66,8 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
   end
 
   if [ "$selectedDbType" = "mysql" ]
+    # For MySQL, set a single connection string and database name
+    # Sets DATABASE_NAME and DATABASE_URL environment variables
     set -gx DATABASE_NAME "$connection_name"
     set -gx DATABASE_URL "$selectedDbType://$username:$password@$uri"
   end
