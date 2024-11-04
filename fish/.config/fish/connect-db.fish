@@ -3,6 +3,19 @@
 # Script to connect to databases using credentials from Bitwarden or manual input
 # Supports PostgreSQL and MySQL connections
 # Sets environment variables with connection strings for each database
+#
+# Requirements:
+# - fzf: for interactive selection
+# - gum: for spinners and password input
+# - jq: for JSON parsing
+# - bw (Bitwarden CLI): for credential management
+# - psql/mysql: database clients
+#
+# Environment variables created:
+# DB_URI_<DATABASE_NAME>: Connection string for each database found
+#
+# Example output:
+# DB_URI_MYAPP=postgres://user:pass@host:5432/myapp
 
 # TODO: ssh tunnel
 # TODO: mysql
@@ -25,6 +38,7 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
   set -l sessionId (bw unlock | grep -Eo 'BW_SESSION="[^"]+"' | cut -d '"' -f 2 | head -n 1)
 
   set -l bwItems (gum spin --title "Loading Bitwarden items" -- bw list items --session "$sessionId")
+  # Get list of database credentials from Bitwarden and let user select one
   set -l selectedBwItem (
     echo $bwItems | 
     jq -r '.[].name' | 
@@ -44,6 +58,7 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
     set password (gum input --password --header "Enter password")
   end
 
+  # Query the database server to get list of available databases
   echo "Loading database names"
   
   set -l database_names ""
@@ -53,7 +68,10 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
     set database_names (mysql -h $host -P $port -u $username -p"$password" -e 'SHOW DATABASES' --silent --raw)
   end
 
+  # Create connection string prefix with credentials
   set -l prefix_db_uri "$selectedDbType://$username:$password@$uri"
+
+  # Generate environment variables for each database
   for database_name in $database_names
     # Skip template databases and empty lines
     if [ "$database_name" = "template0" -o "$database_name" = "template1" -o "$database_name" = "" ]
