@@ -13,6 +13,7 @@ fish_add_path $HOME/.local/share/nvim/mason/bin
 fish_add_path $HOME/.krew/bin
 fish_add_path $HOME/.local/share/nvm/v20.12.1/bin
 fish_add_path /home/linuxbrew/.linuxbrew/opt/postgresql@16/bin
+fish_add_path /home/linuxbrew/.linuxbrew/opt/mysql@8.4/bin
 fish_add_path $HOME/go/bin
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

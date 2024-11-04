@@ -89,7 +89,7 @@ function ssm_ec2_instances
   
   set selectedProfile $splitted_result[1]
   set default_region (awk -v profile="$selectedProfile-source" '
-      $0 ~ "\\[profile " profile "\\]" {found=1}
+      $0 ~ "\\\\[profile " profile "\\\\]" {found=1}
       found && /region/ {print $3; exit}
       /^$/ {found=0}
       ' ~/.aws/config)

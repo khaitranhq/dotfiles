@@ -44,31 +44,26 @@ if [ "$selectedDbCredentialsSource" = "bitwarden" ]
     set password (gum input --password --header "Enter password")
   end
 
+  echo "Loading database names"
+  
+  set -l database_names ""
   if [ "$selectedDbType" = "postgres" ]
-    # For PostgreSQL, fetch all database names and create connection strings
-    # Sets environment variables in format DB_URI_DBNAME for each database
-    echo "Loading database names"
-    set -l database_names (PGPASSWORD="$password" psql --host $host --port $port --username $username --dbname postgres  --command 'SELECT datname FROM pg_catalog.pg_database' --no-align --tuples-only)
-
-    set -l prefix_db_uri "$selectedDbType://$username:$password@$uri"
-    for database_name in $database_names
-      # Skip template databases and empty lines
-      if [ "$database_name" = "template0" -o "$database_name" = "template1" -o "$database_name" = "" ]
-        continue
-      end
-      
-      # Sanitize database name for variable name (remove special chars, convert to uppercase)
-      set -l sanitized_name (echo $database_name | string upper | string replace -a -r '[^A-Z0-9_]' '_')
-      
-      # Set global variable with format DB_URI_DBNAME
-      set -gx DB_UI_$sanitized_name "$prefix_db_uri/$database_name"
-    end
+    set database_names (PGPASSWORD="$password" psql --host $host --port $port --username $username --dbname postgres  --command 'SELECT datname FROM pg_catalog.pg_database' --no-align --tuples-only)
+  else if [ "$selectedDbType" = "mysql" ]
+    set database_names (mysql -h $host -P $port -u $username -p"$password" -e 'SHOW DATABASES' --silent --raw)
   end
 
-  if [ "$selectedDbType" = "mysql" ]
-    # For MySQL, set a single connection string and database name
-    # Sets DATABASE_NAME and DATABASE_URL environment variables
-    set -gx DATABASE_NAME "$connection_name"
-    set -gx DATABASE_URL "$selectedDbType://$username:$password@$uri"
+  set -l prefix_db_uri "$selectedDbType://$username:$password@$uri"
+  for database_name in $database_names
+    # Skip template databases and empty lines
+    if [ "$database_name" = "template0" -o "$database_name" = "template1" -o "$database_name" = "" ]
+      continue
+    end
+    
+    # Sanitize database name for variable name (remove special chars, convert to uppercase)
+    set -l sanitized_name (echo $database_name | string upper | string replace -a -r '[^A-Z0-9_]' '_')
+    
+    # Set global variable with format DB_URI_DBNAME
+    set -gx DB_UI_$sanitized_name "$prefix_db_uri/$database_name"
   end
 end
