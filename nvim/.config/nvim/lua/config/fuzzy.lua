@@ -27,7 +27,7 @@ return {
 				defaults = {
 					file_ignore_patterns = {
 						"node_modules/",
-						"/dist/",
+						"^dist/",
 						"^venv/",
 						"^.venv/",
 						"^.git/",

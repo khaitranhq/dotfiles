@@ -195,7 +195,7 @@ return {
 						},
 					},
 					{ name = "path" },
-					{ name = "codeium" },
+					-- { name = "codeium" },
 				},
 				---@diagnostic disable-next-line: missing-fields
 				formatting = {
