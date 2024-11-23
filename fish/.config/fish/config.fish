@@ -62,6 +62,7 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
     end
 
     if test $CMD_DURATION -gt 5000
+        paplay /usr/share/sounds/freedesktop/stereo/complete.oga
         notify-send 'command finished' "$argv"
     end
 end
@@ -77,9 +78,13 @@ alias tf='terraform'
 alias ld='lazydocker'
 alias lg='lazygit'
 alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b"
-alias y='yazi'
+# alias y='yazi'
+alias n='nnn -d -e -H -r -a -P "p"'
 alias t="tmux"
 alias au="source ~/.config/fish/aws-utils.fish"
 alias db="source ~/.config/fish/connect-db.fish"
 
+export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
+export NNN_PAGER="bat -p"
+export EDITOR=nvim
