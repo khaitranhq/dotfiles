@@ -62,8 +62,7 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
     end
 
     if test $CMD_DURATION -gt 5000
-        paplay /usr/share/sounds/freedesktop/stereo/complete.oga
-        notify-send 'command finished' "$argv"
+        paplay /usr/share/sounds/freedesktop/stereo/complete.oga & notify-send 'command finished' "$argv"
     end
 end
 
