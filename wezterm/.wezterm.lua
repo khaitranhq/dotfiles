@@ -32,6 +32,8 @@ config.use_fancy_tab_bar = false
 config.show_tab_index_in_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
 config.tab_bar_at_bottom = true
+config.tab_max_width = 100
+config.show_new_tab_button_in_tab_bar = false
 
 config.colors = {
 	tab_bar = {
@@ -42,8 +44,12 @@ config.colors = {
 }
 
 -- The filled in variant of the < symbol
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
+-- local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
+-- local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
+-- local SOLID_LEFT_ARROW = wezterm.nerdfonts.fa_stop
+-- local SOLID_RIGHT_ARROW = wezterm.nerdfonts.fa_stop
 local function tab_title(tab_info)
 	local title = tab_info.tab_title
 	-- if the tab title is explicitly set, take that
@@ -71,7 +77,7 @@ wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
 
 	-- Get tab index (add 1 since tab_index is 0-based)
 	local index = tostring(tab.tab_index + 1)
-	local title = string.format("%s: %s", index, tab_title(tab))
+	local title = string.format(" %s: %s ", index, tab_title(tab))
 
 	-- ensure that the titles fit in the available space,
 	-- and that we have room for the edges.
@@ -125,8 +131,8 @@ config.keys = {
 	},
 }
 
-wezterm.on("update-right-status", function(window, _)
-	window:set_right_status(window:active_workspace())
-end)
-
+-- wezterm.on("update-right-status", function(window, _)
+-- 	window:set_right_status(window:active_workspace())
+-- end)
+--
 return config
