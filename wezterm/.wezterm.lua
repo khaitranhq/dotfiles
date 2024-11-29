@@ -42,8 +42,8 @@ config.colors = {
 }
 
 -- The filled in variant of the < symbol
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
 local function tab_title(tab_info)
 	local title = tab_info.tab_title
 	-- if the tab title is explicitly set, take that
@@ -55,9 +55,9 @@ local function tab_title(tab_info)
 	return tab_info.active_pane.title
 end
 wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
-	local edge_background = "#0b0022"
-	local background = "#1b1032"
-	local foreground = "#808080"
+	local edge_background = "#24273a"
+	local background = "#363a4f"
+	local foreground = "#cad3f5"
 
 	if tab.is_active then
 		background = "#c6a0f6"
@@ -125,7 +125,7 @@ config.keys = {
 	},
 }
 
-wezterm.on("update-right-status", function(window, pane)
+wezterm.on("update-right-status", function(window, _)
 	window:set_right_status(window:active_workspace())
 end)
 
