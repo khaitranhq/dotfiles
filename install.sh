@@ -8,3 +8,4 @@ stow yazi
 stow lazygit
 stow kitty
 stow k9s
+stow wezterm

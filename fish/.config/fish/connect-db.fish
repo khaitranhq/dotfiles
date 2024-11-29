@@ -77,8 +77,8 @@ function get_database_names
         end
     end
     
-    echo "Turning on SSH Tunnel with port $local_port to $ssh_host" >&2
     if [ -n "$ssh_host" ]
+        echo "Turning on SSH Tunnel with port $local_port to $ssh_host" >&2
         # Start SSH tunnel in background
         ssh -f -N -L $local_port:$host:$port $ssh_host
         set -l tunnel_pid (ps aux | grep "ssh.*$local_port:$host:$port" | grep -v grep | awk '{print $2}')
