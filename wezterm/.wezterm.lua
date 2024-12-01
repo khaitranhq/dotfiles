@@ -9,7 +9,10 @@ end
 
 -- Font
 config.font = wezterm.font_with_fallback({
-	"FiraCode Nerd Font",
+  {
+    family="FiraCode Nerd Font",
+    weight="Medium",
+  }
 })
 config.font_size = 11
 
@@ -20,10 +23,10 @@ config.inactive_pane_hsb = {
 	brightness = 0.7,
 }
 config.window_padding = {
-	left = 0,
-	right = 0,
-	top = 0,
-	bottom = 0,
+	left = 5,
+	right = 5,
+	top = 5,
+	bottom = 5,
 }
 config.initial_cols = 150
 config.initial_rows = 40
@@ -131,8 +134,4 @@ config.keys = {
 	},
 }
 
--- wezterm.on("update-right-status", function(window, _)
--- 	window:set_right_status(window:active_workspace())
--- end)
---
 return config
