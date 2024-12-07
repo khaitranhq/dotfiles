@@ -26,7 +26,7 @@ M.general = {
 		["<leader>tt"] = { "<cmd>tabnew<CR>", "New tab" },
 		["<leader>tx"] = { "<cmd>tabclose<CR>", "Close tab" },
 		["<leader>tn"] = { "<cmd>tabnext<CR>", "Next tab" },
-    ["<leader>tp"] = { "<cmd>tabprevious<CR>", "Previous tab" },
+		["<leader>tp"] = { "<cmd>tabprevious<CR>", "Previous tab" },
 	},
 	v = {
 		["//"] = { "y/\\V<C-R>=escape(@\",'/')<CR><CR>", "Search with selected text" },
