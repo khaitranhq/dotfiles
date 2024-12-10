@@ -38,8 +38,9 @@ M.general = {
 
 M.nvimtree = {
 	n = {
-		["<leader>b"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
-		["<leader>cbv"] = { vim.nvim_tree_change_view_type, "Toggle nvim tree" },
+		["<leader>bb"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
+		["<leader>bf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
+		["<leader>bv"] = { vim.nvim_tree_change_view_type, "Toggle nvim tree" },
 	},
 }
 
@@ -85,16 +86,16 @@ M.notify = {
 
 M.git = {
 	n = {
-		["<leader>gs"] = { "<cmd>Neogit kind=floating<CR>", "Git branch" },
-		["<leader>gd"] = { "<cmd>DiffviewOpen<CR>", "Git branch" },
-		["<leader>gcm"] = { vim.opencommit, "Git commit with OpenCommit" },
-		["<leader>gb"] = { vim.current_git_branch, "current_branch" },
+    ["<leader>gl"] = { LazygitToggle, "LazyGit" },
+		["<leader>gcm"] = { OpenCommitToggle, "Git commit with OpenCommit" },
+		["<leader>gb"] = { GetCurrentGitBranch, "current_branch" },
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },
 		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git conflict: select none of the changes" },
 		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git conflict: select next conflict" },
 		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git conflict: select previous conflict" },
+
 	},
 }
 
