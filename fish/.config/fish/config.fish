@@ -82,8 +82,11 @@ alias n='nnn -d -e -H -r -a -P "p"'
 alias t="tmux"
 alias au="source ~/.config/fish/aws-utils.fish"
 alias db="source ~/.config/fish/connect-db.fish"
+alias current_branch="git rev-parse --abbrev-ref HEAD"
 
 export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
 export NNN_PAGER="bat -p"
-export EDITOR=nvim
+
+export VISUAL="nvim"
+export EDITOR="nvim"
