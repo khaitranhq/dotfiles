@@ -66,6 +66,10 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
     end
 end
 
+function __get_aws_secret_to_env
+   export $(aws secretsmanager get-secret-value --secret-id $argv[1] --query SecretString --output text | jq -r 'to_entries | map("\(.key)=\(.value)") | .[]')
+end
+
 fzf --fish | source
 
 alias v="nvim"
