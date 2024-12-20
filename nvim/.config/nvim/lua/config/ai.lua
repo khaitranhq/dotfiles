@@ -9,29 +9,6 @@ return {
 			vim.g.copilot_no_tab_map = true
 		end,
 	},
-	-- {
-	-- 	"Exafunction/codeium.nvim",
-	-- 	dependencies = {
-	-- 		"nvim-lua/plenary.nvim",
-	-- 		"hrsh7th/nvim-cmp",
-	-- 	},
-	-- 	config = function()
-	-- 		require("codeium").setup({
-	-- 			enable_cmp_source = false,
-	-- 			virtual_text = {
-	-- 				enabled = true,
-	-- 				key_bindings = {
-	-- 					-- Accept the current completion.
-	-- 					accept = "<M-CR>",
-	-- 				},
-	-- 			},
-	-- 		})
-	--
-	-- 		require("codeium.virtual_text").set_statusbar_refresh(function()
-	-- 			require("lualine").refresh()
-	-- 		end)
-	-- 	end,
-	-- },
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
@@ -52,6 +29,23 @@ return {
 			"MunifTanjim/nui.nvim",
 			--- The below dependencies are optional,
 			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+			-- {
+			-- 	"zbirenbaum/copilot.lua",
+			-- 	cmd = "Copilot",
+			-- 	event = "InsertEnter",
+			-- 	config = function()
+			-- 		require("copilot").setup({
+			--
+			-- 			suggestion = {
+			-- 				enabled = true,
+			-- 				auto_trigger = true,
+			-- 				keymap = {
+			-- 					accept = "<M-CR>",
+			-- 				},
+			-- 			},
+			-- 		})
+			-- 	end,
+			-- },
 			{
 				-- support for image pasting
 				"HakonHarnes/img-clip.nvim",
