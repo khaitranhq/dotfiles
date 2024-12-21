@@ -36,11 +36,18 @@ M.general = {
 	},
 }
 
-M.nvimtree = {
+local oil = require("oil")
+M.file_explorer = {
 	n = {
 		["<leader>ls"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
 		["<leader>lf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
-		["<leader>lv"] = { vim.nvim_tree_change_view_type, "Toggle nvim tree" },
+		["<leader>lc"] = {
+			function()
+				oil.open_float(".")
+			end,
+			"Toggle nvim tree",
+		},
+		["<leader>lv"] = { ChangeViewFileExplorer, "Toggle nvim tree" },
 	},
 }
 

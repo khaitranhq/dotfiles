@@ -1,4 +1,4 @@
-function vim.nvim_tree_change_view_type()
+function ChangeViewFileExplorer()
 	-- Get the current configuration
 	local nvim_tree = require("nvim-tree")
 	local config = nvim_tree.config
@@ -74,5 +74,29 @@ return {
 		config = function()
 			require("lsp-file-operations").setup()
 		end,
+	},
+	{
+		"stevearc/oil.nvim",
+		---@module 'oil'
+		---@type oil.SetupOpts
+		opts = {},
+		-- Optional dependencies
+		-- dependencies = { { "echasnovski/mini.icons", opts = {} } },
+		dependencies = {
+			"nvim-tree/nvim-web-devicons",
+			{
+				"antosha417/nvim-lsp-file-operations",
+				dependencies = {
+					"nvim-lua/plenary.nvim",
+					-- Uncomment whichever supported plugin(s) you use
+					-- "nvim-tree/nvim-tree.lua",
+					-- "nvim-neo-tree/neo-tree.nvim",
+					-- "simonmclean/triptych.nvim"
+				},
+				config = function()
+					require("lsp-file-operations").setup()
+				end,
+			},
+		},
 	},
 }
