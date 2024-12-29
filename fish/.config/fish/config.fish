@@ -53,7 +53,7 @@ complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (comma
 #
 # It is invoked by the fish shell automatically using its event system.
 function __postexec_notify_on_long_running_commands --on-event fish_postexec
-    set --function interactive_commands 'nvim' 'v' 'tmux' 't'
+    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn'
     for cmd in $interactive_commands
         if string match -q "$cmd*" $argv[1]
             # We quit interactive commands manually,
@@ -88,6 +88,7 @@ alias t="tmux"
 alias au="source ~/.config/fish/aws-utils.fish"
 alias db="source ~/.config/fish/connect-db.fish"
 alias current_branch="git rev-parse --abbrev-ref HEAD"
+alias qq="exit"
 
 export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
