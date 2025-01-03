@@ -47,7 +47,7 @@ M.file_explorer = {
 			end,
 			"Toggle nvim tree",
 		},
-		["<leader>lv"] = { ChangeViewFileExplorer, "Toggle nvim tree" },
+		["<leader>lv"] = { ChangeViewFileExplorer, "Change View of File Explorer" },
 	},
 }
 

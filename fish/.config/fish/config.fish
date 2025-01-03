@@ -75,7 +75,7 @@ fzf --fish | source
 
 alias v="nvim"
 alias fd='fdfind'
-alias l='eza -lah --icons'
+alias l='eza -lah --icons --total-size'
 # alias ssh='kitten ssh'
 alias cat="bat -p"
 alias tf='terraform'
