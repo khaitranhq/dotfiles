@@ -1,24 +1,24 @@
 return {
-	{
-		"github/copilot.vim",
-		config = function()
-			vim.keymap.set("i", "<M-CR>", 'copilot#Accept("\\<CR>")', {
-				expr = true,
-				replace_keycodes = false,
-			})
-			vim.g.copilot_no_tab_map = true
-		end,
-	},
+	-- {
+	-- 	"github/copilot.vim",
+	-- 	config = function()
+	-- 		vim.keymap.set("i", "<M-CR>", 'copilot#Accept("\\<CR>")', {
+	-- 			expr = true,
+	-- 			replace_keycodes = false,
+	-- 		})
+	-- 		vim.g.copilot_no_tab_map = true
+	-- 	end,
+	-- },
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
 		lazy = false,
 		version = false, -- set this if you want to always pull the latest change
 		opts = {
-			provider = "claude",
-			claude = {
-				model = "claude-3-5-sonnet-20241022",
-			},
+			provider = "copilot",
+			-- claude = {
+			-- 	model = "claude-3-5-sonnet-20241022",
+			-- },
 		},
 		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
 		build = "make",
@@ -29,23 +29,23 @@ return {
 			"MunifTanjim/nui.nvim",
 			--- The below dependencies are optional,
 			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-			-- {
-			-- 	"zbirenbaum/copilot.lua",
-			-- 	cmd = "Copilot",
-			-- 	event = "InsertEnter",
-			-- 	config = function()
-			-- 		require("copilot").setup({
-			--
-			-- 			suggestion = {
-			-- 				enabled = true,
-			-- 				auto_trigger = true,
-			-- 				keymap = {
-			-- 					accept = "<M-CR>",
-			-- 				},
-			-- 			},
-			-- 		})
-			-- 	end,
-			-- },
+			{
+				"zbirenbaum/copilot.lua",
+				cmd = "Copilot",
+				event = "InsertEnter",
+				config = function()
+					require("copilot").setup({
+
+						suggestion = {
+							enabled = true,
+							auto_trigger = true,
+							keymap = {
+								accept = "<M-CR>",
+							},
+						},
+					})
+				end,
+			},
 			{
 				-- support for image pasting
 				"HakonHarnes/img-clip.nvim",
