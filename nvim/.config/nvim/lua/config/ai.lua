@@ -15,10 +15,10 @@ return {
 		lazy = false,
 		version = false, -- set this if you want to always pull the latest change
 		opts = {
-			provider = "copilot",
-			-- claude = {
-			-- 	model = "claude-3-5-sonnet-20241022",
-			-- },
+			-- provider = "copilot",
+			claude = {
+				model = "claude-3-5-sonnet-20241022",
+			},
 		},
 		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
 		build = "make",

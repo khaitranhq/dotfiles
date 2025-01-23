@@ -75,7 +75,8 @@ fzf --fish | source
 
 alias v="nvim"
 alias fd='fdfind'
-alias l='eza -lah --icons --total-size'
+alias l='eza -lah --icons'
+alias ls='eza -lah --icons --total-size'
 # alias ssh='kitten ssh'
 alias cat="bat -p"
 alias tf='terraform'
@@ -89,6 +90,10 @@ alias au="source ~/.config/fish/aws-utils.fish"
 alias db="source ~/.config/fish/connect-db.fish"
 alias current_branch="git rev-parse --abbrev-ref HEAD"
 alias qq="exit"
+alias k='kubectl'
+alias kx='kubectx'
+alias p='pulumi'
+alias df='duf'
 
 export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
@@ -96,3 +101,6 @@ export NNN_PAGER="bat -p"
 
 export VISUAL="nvim"
 export EDITOR="nvim"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/lewis/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/home/lewis/Downloads/google-cloud-sdk/path.fish.inc'; end

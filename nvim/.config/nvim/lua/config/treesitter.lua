@@ -4,11 +4,23 @@ return {
 		dependencies = {
 			"windwp/nvim-ts-autotag",
 		},
+		init = function()
+			vim.filetype.add({
+				extension = {
+					gotmpl = "gotmpl",
+				},
+				pattern = {
+					[".*/templates/.*%.tpl"] = "helm",
+					[".*/templates/.*%.ya?ml"] = "helm",
+					["helmfile.*%.ya?ml"] = "helm",
+				},
+			})
+		end,
 		config = function()
 			require("nvim-treesitter.configs").setup({
-        modules = {},
+				modules = {},
 				ensure_installed = {},
-        ignore_install = {},
+				ignore_install = {},
 				-- Install parsers synchronously (only applied to `ensure_installed`)
 				sync_install = true,
 				-- Automatically install missing parsers when entering buffer
