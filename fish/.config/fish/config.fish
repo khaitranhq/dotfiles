@@ -94,6 +94,9 @@ alias k='kubectl'
 alias kx='kubectx'
 alias p='pulumi'
 alias df='duf'
+alias bwunlock='export BW_SESSION=$(bw unlock --raw)'
+alias bwotp='bw get totp'
+alias dt='devops-tools'
 
 export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
