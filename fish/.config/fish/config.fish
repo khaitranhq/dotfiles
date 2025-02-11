@@ -107,3 +107,17 @@ export EDITOR="nvim"
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/home/lewis/Downloads/google-cloud-sdk/path.fish.inc' ]; . '/home/lewis/Downloads/google-cloud-sdk/path.fish.inc'; end
+
+function setup_monitor
+  set setup_type "work" "home"
+  set selected_type (printf "%s\n" $setup_type | fzf --header "Select setup type" --cycle --ansi --layout=reverse --height=15)
+
+  switch $selected_type
+    case "work"
+      xrandr --output HDMI-1 --primary --auto --output eDP-1 --mode 0x52 --auto --left-of HDMI-1
+    case "home"
+      xrandr --output HDMI-1 --primary --auto --output DP-1 --auto --left-of HDMI-1 --rotate left --output eDP-1 --off
+    case '*'
+      echo "Unknown setup type"
+  end
+end
