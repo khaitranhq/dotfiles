@@ -116,7 +116,7 @@ function setup_monitor
     case "work"
       xrandr --output HDMI-1 --primary --auto --output eDP-1 --mode 0x52 --auto --left-of HDMI-1
     case "home"
-      xrandr --output HDMI-1 --primary --auto --output DP-1 --auto --left-of HDMI-1 --rotate left --output eDP-1 --off
+      xrandr --output DP-1 --auto --output HDMI-1 --pos 1080x371 --auto --output eDP-1 --off
     case '*'
       echo "Unknown setup type"
   end
