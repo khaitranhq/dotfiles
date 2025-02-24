@@ -14,6 +14,7 @@ fish_add_path $HOME/.krew/bin
 fish_add_path $HOME/.local/share/nvm/v20.12.1/bin
 fish_add_path /home/linuxbrew/.linuxbrew/opt/postgresql@16/bin
 fish_add_path /home/linuxbrew/.linuxbrew/opt/mysql@8.4/bin
+fish_add_path /home/linuxbrew/.linuxbrew/opt/mysql-client@8.0/bin
 fish_add_path $HOME/go/bin
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -97,6 +98,8 @@ alias df='duf'
 alias bwunlock='export BW_SESSION=$(bw unlock --raw)'
 alias bwotp='bw get totp'
 alias dt='devops-tools'
+alias cl='clear'
+alias ts='task'
 
 export NNN_PLUG="p:preview-tui"
 export KUBECONFIG="$HOME/.config/kubectl/config.yml"
@@ -114,9 +117,10 @@ function setup_monitor
 
   switch $selected_type
     case "work"
-      xrandr --output HDMI-1 --primary --auto --output eDP-1 --mode 0x52 --auto --left-of HDMI-1
+      # xrandr --output HDMI-1 --primary --auto --output eDP-1 --mode 0x52 --auto --left-of HDMI-1
+      xrandr --output HDMI-1 --primary --auto --output eDP-1 --off
     case "home"
-      xrandr --output DP-1 --auto --output HDMI-1 --pos 1080x371 --auto --output eDP-1 --off
+      xrandr --output DP-1 --pos 0x0 --auto --output HDMI-1 --pos 1080x371 --auto --output eDP-1 --off
     case "single"
       xrandr --output eDP-1 --auto
     case '*'
