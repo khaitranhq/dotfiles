@@ -124,9 +124,54 @@ function ssm_ec2_instances
   set -e selectedProfile
 end
 
+# Function to backup an RDS instance by creating a snapshot
+function backup_rds_instance
+  # Retrieve all AWS profiles from the config file, excluding those with "source".
+  set profiles (grep -oP '\[profile \K[^\]]+' ~/.aws/config | grep -v "source")
+  # Use fzf to select a profile interactively.
+  set selectedProfile (echo $profiles | string split " " | fzf --header "Select profile" --cycle --ansi --layout=reverse --height=15)
+  set default_region (awk -v profile="$selectedProfile" '
+      $0 ~ "\\\\[profile " profile "\\\\]" {found=1}
+      found && /region/ {print $3; exit}
+      /^$/ {found=0}
+      ' ~/.aws/config)
+
+  set -gx AWS_PROFILE $selectedProfile
+
+  # Get available regions and let user select one
+  set regions (gum spin --title "Loading regions..." -- aws ec2 describe-regions --region $default_region | jq -r '.Regions[].RegionName' | string match -v $default_region)
+  set regions $default_region $regions
+  set selectedRegion (echo $regions | string split " " | fzf --header "Select region" --cycle --ansi --layout=reverse --height=15)
+
+  # Get available RDS instances and let user select one
+  set rds_instances (
+    gum spin --title "Loading RDS instances..." -- aws rds describe-db-instances --region $selectedRegion --query 'DBInstances[].DBInstanceIdentifier' --output json | 
+      jq -r '.[]' | 
+      string split "\n" | 
+      fzf --header "Select RDS instance to backup" --cycle --ansi --layout=reverse --height=15
+  )
+
+  # Create timestamp for snapshot identifier
+  set timestamp (date +"%d%m%Y-%H%M")
+  set snapshot_identifier "$rds_instances-$timestamp"
+
+  # Create the snapshot
+  echo "Creating snapshot $snapshot_identifier for RDS instance $rds_instances..."
+  aws rds create-db-snapshot \
+    --db-instance-identifier $rds_instances \
+    --db-snapshot-identifier $snapshot_identifier \
+    --region $selectedRegion
+
+  echo "Snapshot creation initiated. You can check the status with:"
+  echo "aws rds describe-db-snapshots --db-snapshot-identifier $snapshot_identifier --region $selectedRegion"
+
+  # Unset the AWS environment variables.
+  set -e AWS_PROFILE
+end
+
 # Define available tasks for the user to select.
 # set tasks 'Authenticate AWS Profile\nSSM to EC2 instances'
-set tasks 'SSM to EC2 instances'
+set tasks 'SSM to EC2 instances\nBackup RDS Instance'
 
 # Use fzf to select a task interactively.
 set selectedTask (echo $tasks | string split "\n" | fzf --header "Select task" --cycle --ansi --layout=reverse --height=15)
@@ -137,4 +182,6 @@ set selectedTask (echo $tasks | string split "\n" | fzf --header "Select task" -
 # else 
 if test "$selectedTask" = "SSM to EC2 instances"
   ssm_ec2_instances
+else if test "$selectedTask" = "Backup RDS Instance"
+  backup_rds_instance
 end
