@@ -75,28 +75,4 @@ return {
 			require("lsp-file-operations").setup()
 		end,
 	},
-	{
-		"stevearc/oil.nvim",
-		---@module 'oil'
-		---@type oil.SetupOpts
-		opts = {},
-		-- Optional dependencies
-		-- dependencies = { { "echasnovski/mini.icons", opts = {} } },
-		dependencies = {
-			"nvim-tree/nvim-web-devicons",
-			{
-				"antosha417/nvim-lsp-file-operations",
-				dependencies = {
-					"nvim-lua/plenary.nvim",
-					-- Uncomment whichever supported plugin(s) you use
-					-- "nvim-tree/nvim-tree.lua",
-					-- "nvim-neo-tree/neo-tree.nvim",
-					-- "simonmclean/triptych.nvim"
-				},
-				config = function()
-					require("lsp-file-operations").setup()
-				end,
-			},
-		},
-	},
 }

@@ -36,17 +36,10 @@ M.general = {
 	},
 }
 
-local oil = require("oil")
 M.file_explorer = {
 	n = {
 		["<leader>ls"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
 		["<leader>lf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
-		["<leader>lc"] = {
-			function()
-				oil.open_float(".")
-			end,
-			"Toggle nvim tree",
-		},
 		["<leader>lv"] = { ChangeViewFileExplorer, "Change View of File Explorer" },
 	},
 }
@@ -63,7 +56,7 @@ M.telescope = {
 		["<leader>fc"] = { telescope_builtin.current_buffer_fuzzy_find, "Search text in current buffer" },
 	},
 	v = {
-		["<leader>fs"] = { vim.search_with_selected_text, "Search with selected text" },
+		["<leader>fs"] = { SearchWithSelectedText, "Search with selected text" },
 	},
 }
 
@@ -95,7 +88,6 @@ M.git = {
 	n = {
 		["<leader>gs"] = { LazygitToggle, "LazyGit" },
 		["<leader>gcm"] = { OpenCommitToggle, "Git commit with OpenCommit" },
-		["<leader>gb"] = { GetCurrentGitBranch, "current_branch" },
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },
@@ -105,10 +97,9 @@ M.git = {
 	},
 }
 
-local conform = require("conform")
 M.format = {
 	n = {
-		["<leader>fm"] = { conform.format, "Format file" },
+		["<leader>fm"] = { Format, "Format file" },
 	},
 }
 

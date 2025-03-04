@@ -1,9 +1,3 @@
-function GetCurrentGitBranch()
-	local current_branch = require("neogit.lib.git").branch.current()
-	vim.cmd.let(("@+='%s'"):format(current_branch))
-	print("Copied current branch to clipboard: " .. current_branch)
-end
-
 return {
 	{
 		"f-person/git-blame.nvim",

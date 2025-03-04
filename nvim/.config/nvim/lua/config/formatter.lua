@@ -1,3 +1,9 @@
+function Format()
+	require("conform").format()
+  vim.notify = require("notify")
+  vim.notify("Formatted", "info", { title = "Conform" })
+end
+
 return {
 	{
 		"stevearc/conform.nvim",

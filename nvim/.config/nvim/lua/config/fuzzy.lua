@@ -11,7 +11,7 @@ local function getVisualSelection()
 	end
 end
 
-function vim.search_with_selected_text()
+function SearchWithSelectedText()
 	local text = getVisualSelection()
 	local telescope_builtin = require("telescope.builtin")
 	telescope_builtin.live_grep({ default_text = text })

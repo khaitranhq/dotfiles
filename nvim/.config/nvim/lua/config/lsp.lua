@@ -1,102 +1,78 @@
 return {
 	{
-		"neovim/nvim-lspconfig",
-		dependencies = {
-			{ "folke/neodev.nvim" },
-			{
-				"williamboman/mason-lspconfig.nvim",
+		"folke/lazydev.nvim",
+		ft = "lua", -- only load on lua files
+		opts = {
+			library = {
+				-- See the configuration section for more details
+				-- Load luvit types when the `vim.uv` word is found
+				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
 			},
 		},
-		config = function()
-			require("neodev").setup({})
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+	},
+	{
+		"neovim/nvim-lspconfig",
+		dependencies = {
+			{ "saghen/blink.cmp" },
+			{ "williamboman/mason-lspconfig.nvim" },
+		},
+		opts = {
+			servers = {
+				lua_ls = {
+					settings = {
+						Lua = {
+							diagnostics = {
+								globals = { "vim" },
+							},
+						},
+					},
+				},
+				pyright = {
+					settings = {
+						pyright = {
+							-- Using Ruff's import organizer
+							disableOrganizeImports = true,
+						},
+						python = {
+							analysis = {
+								-- Ignore all files for analysis to exclusively use Ruff for linting
+								ignore = { "*" },
+							},
+						},
+					},
+				},
+				ts_ls = {
+					init_options = {
+						preferences = {
+							disableSuggestions = true,
+						},
+					},
+				},
+				gopls = {
+					settings = {
+						gopls = {
+							completeUnimported = true,
+						},
+					},
+				},
+				clangd = {},
+				bashls = {},
+				cssls = {},
+				jsonls = {},
+				dockerls = {},
+				docker_compose_language_service = {},
+			},
+		},
+		config = function(_, opts)
 			local lspconfig = require("lspconfig")
 
-			lspconfig.util.default_config = vim.tbl_extend("force", lspconfig.util.default_config, {
-				capabilities = vim.tbl_deep_extend(
-					"force",
-					vim.lsp.protocol.make_client_capabilities(),
-					require("lsp-file-operations").default_capabilities()
-				),
-			})
+			-- Setup each LSP server
+			for server, config in pairs(opts.servers) do
+				config.capabilities = require("blink.cmp").get_lsp_capabilities(config.capabilities)
+				lspconfig[server].setup(config)
+			end
 
-			lspconfig.lua_ls.setup({
-				settings = {
-					Lua = {
-						diagnostics = {
-							globals = { "vim" },
-						},
-					},
-				},
-				capabilities = capabilities,
-			})
-			lspconfig.pyright.setup({
-				settings = {
-					pyright = {
-						-- Using Ruff's import organizer
-						disableOrganizeImports = true,
-					},
-					python = {
-						analysis = {
-							-- Ignore all files for analysis to exclusively use Ruff for linting
-							ignore = { "*" },
-						},
-					},
-				},
-			})
-			lspconfig.ruff.setup({
-				init_options = {
-					settings = {
-						-- Any extra CLI arguments for `ruff` go here.
-						args = {},
-					},
-				},
-			})
-			lspconfig.ts_ls.setup({
-				capabilities = capabilities,
-				init_options = {
-					preferences = {
-						disableSuggestions = true,
-					},
-				},
-			})
-			lspconfig.gopls.setup({
-				capabilities = capabilities,
-				settings = {
-					gopls = {
-						completeUnimported = true,
-					},
-				},
-			})
-			lspconfig.clangd.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.bashls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.cssls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.jsonls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.dockerls.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.docker_compose_language_service.setup({
-				capabilities = capabilities,
-			})
-			lspconfig.rust_analyzer.setup({
-				capabilities = capabilities,
-				settings = {
-					["rust-analyzer"] = {
-						diagnostics = {
-							enable = false,
-						},
-					},
-				},
-			})
-
+			-- Setup LSP autocommands
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 				callback = function(ev)
@@ -107,111 +83,63 @@ return {
 		end,
 	},
 	{
-		"hrsh7th/nvim-cmp",
-		event = "InsertEnter",
-		dependencies = {
-			{
-				"L3MON4D3/LuaSnip",
-				-- follow latest release.
-				version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-				-- install jsregexp (optional!).
-				build = "make install_jsregexp",
-			},
-			-- autopairing of (){}[] etc
-			{
-				"windwp/nvim-autopairs",
-				opts = {
-					fast_wrap = {},
-					disable_filetype = { "TelescopePrompt", "vim" },
-				},
-				config = function(_, opts)
-					require("nvim-autopairs").setup(opts)
+		"saghen/blink.cmp",
+		-- optional: provides snippets for the snippet source
+		dependencies = "rafamadriz/friendly-snippets",
 
-					-- setup cmp for autopairs
-					local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-					require("cmp").event:on("confirm_done", cmp_autopairs.on_confirm_done())
-				end,
-			},
-			-- cmp sources plugins
-			{
-				"saadparwaiz1/cmp_luasnip",
-				"rafamadriz/friendly-snippets",
-				"hrsh7th/cmp-nvim-lua",
-				"hrsh7th/cmp-nvim-lsp",
-				"hrsh7th/cmp-buffer",
-				"hrsh7th/cmp-path",
-				"onsails/lspkind.nvim",
-			},
-		},
-		config = function(_, _)
-			-- luasnip setup
-			local luasnip = require("luasnip")
+		-- use a release tag to download pre-built binaries
+		version = "*",
+		-- AND/OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+		-- build = 'cargo build --release',
+		-- If you use nix, you can build from source using latest nightly rust with:
+		-- build = 'nix run .#build-plugin',
 
-			require("luasnip.loaders.from_vscode").lazy_load()
+		---@module 'blink.cmp'
+		---@type blink.cmp.Config
+		opts = {
+			-- 'default' (recommended) for mappings similar to built-in completions (C-y to accept, C-n/C-p for up/down)
+			-- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys for up/down)
+			-- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
+			--
+			-- All presets have the following mappings:
+			-- C-space: Open menu or open docs if already open
+			-- C-e: Hide menu
+			-- C-k: Toggle signature help
+			--
+			-- See the full "keymap" documentation for information on defining your own keymap.
+			keymap = { preset = "default", ["<enter>"] = { "accept" } },
 
-			-- nvim-cmp setup
-			local cmp = require("cmp")
-			cmp.setup({
-				snippet = {
-					expand = function(args)
-						luasnip.lsp_expand(args.body)
-					end,
-				},
-				mapping = cmp.mapping.preset.insert({
-					["<CR>"] = cmp.mapping.confirm({
-						behavior = cmp.ConfirmBehavior.Replace,
-						select = true,
-					}),
-					["<Tab>"] = cmp.mapping(function(fallback)
-						if cmp.visible() then
-							cmp.select_next_item()
-						elseif luasnip.expand_or_jumpable() then
-							luasnip.expand_or_jump()
-						else
-							fallback()
-						end
-					end, { "i", "s" }),
-					["<S-Tab>"] = cmp.mapping(function(fallback)
-						if cmp.visible() then
-							cmp.select_prev_item()
-						elseif luasnip.jumpable(-1) then
-							luasnip.jump(-1)
-						else
-							fallback()
-						end
-					end, { "i", "s" }),
-				}),
-				sources = {
-					{ name = "nvim_lsp" },
-					{ name = "nvim_lua" },
-					{ name = "neorg" },
-					{ name = "luasnip" },
-					{
-						name = "buffer",
-						option = {
-							get_bufnrs = function()
-								return vim.api.nvim_list_bufs()
-							end,
-						},
+			appearance = {
+				-- Sets the fallback highlight groups to nvim-cmp's highlight groups
+				-- Useful for when your theme doesn't support blink.cmp
+				-- Will be removed in a future release
+				use_nvim_cmp_as_default = true,
+				-- Set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+				-- Adjusts spacing to ensure icons are aligned
+				nerd_font_variant = "mono",
+			},
+
+			-- Default list of enabled providers defined so that you can extend it
+			-- elsewhere in your config, without redefining it, due to `opts_extend`
+			sources = {
+				default = { "lsp", "path", "snippets", "buffer" },
+
+				providers = {
+					lazydev = {
+						name = "LazyDev",
+						module = "lazydev.integrations.blink",
+						-- make lazydev completions top priority (see `:h blink.cmp`)
+						score_offset = 100,
 					},
-					{ name = "path" },
-					-- { name = "codeium" },
 				},
-				---@diagnostic disable-next-line: missing-fields
-				formatting = {
-					format = require("lspkind").cmp_format({
-						mode = "symbol", -- show only symbol annotations
-						maxwidth = 50, -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
-						-- can also be a function to dynamically calculate max width such as
-						-- maxwidth = function() return math.floor(0.45 * vim.o.columns) end,
-						ellipsis_char = "...", -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
-						show_labelDetails = true, -- show labelDetails in menu. Disabled by default
-						symbol_map = { Codeium = "" },
-					}),
-				},
-			})
-
-			require("luasnip.loaders.from_vscode").lazy_load()
-		end,
+			},
+			-- Blink.cmp uses a Rust fuzzy matcher by default for typo resistance and significantly better performance
+			-- You may use a lua implementation instead by using `implementation = "lua"` or fallback to the lua implementation,
+			-- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`
+			--
+			-- See the fuzzy documentation for more information
+			fuzzy = { implementation = "lua" },
+		},
+		opts_extend = { "sources.default" },
 	},
 }
