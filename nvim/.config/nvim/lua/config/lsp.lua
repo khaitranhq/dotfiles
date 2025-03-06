@@ -85,7 +85,7 @@ return {
 	{
 		"saghen/blink.cmp",
 		-- optional: provides snippets for the snippet source
-		dependencies = "rafamadriz/friendly-snippets",
+		dependencies = { "rafamadriz/friendly-snippets", "Kaiser-Yang/blink-cmp-avante" },
 
 		-- use a release tag to download pre-built binaries
 		version = "*",
@@ -107,7 +107,17 @@ return {
 			-- C-k: Toggle signature help
 			--
 			-- See the full "keymap" documentation for information on defining your own keymap.
-			keymap = { preset = "default", ["<enter>"] = { "accept" } },
+			keymap = {
+				-- ["<enter>"] = { "accept" },
+				-- ["Tab"] = { "select_next" },
+				-- ["S-Tab"] = { "select_prev" },
+				preset = "default",
+			},
+			completion = {
+
+				-- Show documentation when selecting a completion item
+				documentation = { auto_show = true, auto_show_delay_ms = 200 },
+			},
 
 			appearance = {
 				-- Sets the fallback highlight groups to nvim-cmp's highlight groups
@@ -122,7 +132,7 @@ return {
 			-- Default list of enabled providers defined so that you can extend it
 			-- elsewhere in your config, without redefining it, due to `opts_extend`
 			sources = {
-				default = { "lsp", "path", "snippets", "buffer" },
+				default = { "avante", "lazydev", "lsp", "path", "snippets", "buffer", "lazydev" },
 
 				providers = {
 					lazydev = {
@@ -131,6 +141,13 @@ return {
 						-- make lazydev completions top priority (see `:h blink.cmp`)
 						score_offset = 100,
 					},
+					avante = {
+						module = "blink-cmp-avante",
+						name = "Avante",
+						opts = {
+							-- options for blink-cmp-avante
+						},
+					},
 				},
 			},
 			-- Blink.cmp uses a Rust fuzzy matcher by default for typo resistance and significantly better performance
@@ -138,8 +155,15 @@ return {
 			-- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`
 			--
 			-- See the fuzzy documentation for more information
-			fuzzy = { implementation = "lua" },
+			fuzzy = { implementation = "prefer_rust" },
 		},
 		opts_extend = { "sources.default" },
+	},
+	{
+		"windwp/nvim-autopairs",
+		event = "InsertEnter",
+		config = true,
+		-- use opts = {} for passing setup options
+		-- this is equivalent to setup({}) function
 	},
 }
