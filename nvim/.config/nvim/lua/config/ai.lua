@@ -15,10 +15,16 @@ return {
 		lazy = false,
 		version = false, -- set this if you want to always pull the latest change
 		opts = {
-			-- provider = "copilot",
+			provider = "copilot",
+			-- provider = "claude",
 			claude = {
 				-- model = "claude-3-5-sonnet-20241022",
-        model = "claude-3-7-sonnet-20250219"
+				model = "claude-3-7-sonnet-20250219",
+			},
+			dual_boost = {
+				enabled = false,
+				first_provider = "claude",
+				second_provider = "copilot",
 			},
 		},
 		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
@@ -35,7 +41,6 @@ return {
 				event = "InsertEnter",
 				config = function()
 					require("copilot").setup({
-
 						suggestion = {
 							enabled = true,
 							auto_trigger = true,

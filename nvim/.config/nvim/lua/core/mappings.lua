@@ -74,6 +74,7 @@ M.lsp = {
 		["<leader>dco"] = { telescope_builtin.lsp_outgoing_calls, "Outgoing call" },
 		["<leader>dcm"] = { telescope_builtin.lsp_implementations, "Search and preview implementation" },
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Code action" },
+		["<leader>di"] = { vim.lsp.buf.implementation, "Show implementation of function" },
 	},
 }
 
