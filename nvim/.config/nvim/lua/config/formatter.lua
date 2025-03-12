@@ -1,7 +1,7 @@
 function Format()
 	require("conform").format()
-  vim.notify = require("notify")
-  vim.notify("Formatted", "info", { title = "Conform" })
+	vim.notify = require("notify")
+	vim.notify("Formatted", vim.log.levels.INFO, { title = "Conform" })
 end
 
 return {

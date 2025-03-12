@@ -87,8 +87,6 @@ M.notify = {
 
 M.git = {
 	n = {
-		["<leader>gs"] = { LazygitToggle, "LazyGit" },
-		["<leader>gcm"] = { OpenCommitToggle, "Git commit with OpenCommit" },
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },

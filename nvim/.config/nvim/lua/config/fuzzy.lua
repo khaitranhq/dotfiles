@@ -74,10 +74,20 @@ return {
 			},
 			indent = {},
 			input = {},
+			lazygit = {},
 			picker = {
 				-- your picker configuration comes here
 				-- or leave it empty to use the default settings
 				-- refer to the configuration section below
+			},
+		},
+		keys = {
+			{
+				"<leader>gs",
+				function()
+					Snacks.lazygit()
+				end,
+				desc = "Lazygit",
 			},
 		},
 	},
