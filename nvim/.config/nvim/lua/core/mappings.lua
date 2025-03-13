@@ -44,37 +44,19 @@ M.file_explorer = {
 	},
 }
 
-local telescope_builtin = require("telescope.builtin")
-M.telescope = {
-	n = {
-		["<leader>ff"] = {
-			telescope_builtin.find_files,
-			"Find files",
-		},
-		["<leader>fg"] = { telescope_builtin.live_grep, "Search text globally" },
-		["<leader>fb"] = { telescope_builtin.buffers, "Search buffers" },
-		["<leader>fc"] = { telescope_builtin.current_buffer_fuzzy_find, "Search text in current buffer" },
-	},
-	v = {
-		["<leader>fs"] = { SearchWithSelectedText, "Search with selected text" },
-	},
-}
-
 M.lsp = {
 	n = {
 		["<leader>dr"] = { vim.lsp.buf.rename, "Rename variable at cursor" },
+
 		["<leader>dp"] = { vim.diagnostic.goto_prev, "Previous diagnostic position" },
 		["<leader>dn"] = { vim.diagnostic.goto_next, "Next diagnostic position" },
-		["<leader>dw"] = { telescope_builtin.diagnostics, "Show Diagnostic of Workspace" },
 		["<leader>de"] = { vim.diagnostic.open_float, "Show diagnostic message in a float window" },
+
 		["<leader>dfd"] = { vim.lsp.buf.hover, "Show document in float window" },
-		["<leader>dd"] = { vim.lsp.buf.definition, "Show definition" },
-		["<leader>dfe"] = { telescope_builtin.lsp_definitions, "Peek definition" },
-		["<leader>dci"] = { telescope_builtin.lsp_incoming_calls, "Incoming call" },
-		["<leader>dco"] = { telescope_builtin.lsp_outgoing_calls, "Outgoing call" },
-		["<leader>dcm"] = { telescope_builtin.lsp_implementations, "Search and preview implementation" },
+
+		["<leader>dd"] = { Snacks.picker.lsp_definitions, "Show definition" },
+		["<leader>di"] = { Snacks.picker.lsp_implementations, "Show implementation" },
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Code action" },
-		["<leader>di"] = { vim.lsp.buf.implementation, "Show implementation of function" },
 	},
 }
 
@@ -87,12 +69,37 @@ M.notify = {
 
 M.git = {
 	n = {
+		["<leader>gs"] = {
+			Snacks.lazygit.open,
+			"Git conflict: select current change",
+		},
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },
 		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git conflict: select none of the changes" },
 		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git conflict: select next conflict" },
 		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git conflict: select previous conflict" },
+	},
+}
+
+M.fuzzy = {
+	n = {
+		["<leader>ff"] = {
+			function()
+				Snacks.picker.files({
+					hidden = true,
+				})
+			end,
+			"Find files",
+		},
+		["<leader>fg"] = {
+			function()
+				Snacks.picker.grep({
+					hidden = true,
+				})
+			end,
+			"Find files",
+		},
 	},
 }
 
