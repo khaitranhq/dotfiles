@@ -109,7 +109,7 @@ M.format = {
 	},
 }
 
-M.Navigate = {
+M.navigate = {
 	n = {
 		["s"] = { "<Plug>(leap)", "Navigate with leap" },
 		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Select buffers" },
