@@ -17,7 +17,7 @@ return {
 				typescript = { "prettier" },
 				typescriptreact = { "prettier" },
 				markdown = { "prettier" },
-				python = { "black" },
+				python = { "ruff" },
 				sh = { "shfmt" },
 				cpp = { "clang-format" },
 				yaml = { "yamlfmt" },

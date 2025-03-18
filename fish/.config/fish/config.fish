@@ -48,6 +48,8 @@ end
 
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
 
+pyenv init - fish | source
+
 # # This function allows you to switch to a different task
 # # when an interactive command takes too long
 # # by notifying you when it is finished.
