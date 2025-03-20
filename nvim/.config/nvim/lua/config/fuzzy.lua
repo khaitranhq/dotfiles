@@ -5,7 +5,7 @@ return {
 		lazy = false,
 		opts = {
 			indent = {},
-			input = {},
+			-- input = {},
 			lazygit = {},
 			picker = {},
 		},
