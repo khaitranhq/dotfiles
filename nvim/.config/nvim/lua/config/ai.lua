@@ -1,22 +1,12 @@
 return {
-	-- {
-	-- 	"github/copilot.vim",
-	-- 	config = function()
-	-- 		vim.keymap.set("i", "<M-CR>", 'copilot#Accept("\\<CR>")', {
-	-- 			expr = true,
-	-- 			replace_keycodes = false,
-	-- 		})
-	-- 		vim.g.copilot_no_tab_map = true
-	-- 	end,
-	-- },
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
 		lazy = false,
 		version = false, -- set this if you want to always pull the latest change
 		opts = {
-			provider = "copilot",
-			-- provider = "claude",
+			-- provider = "copilot",
+			provider = "claude",
 			claude = {
 				-- model = "claude-3-5-sonnet-20241022",
 				model = "claude-3-7-sonnet-20250219",
@@ -30,11 +20,15 @@ return {
 			file_selector = {
 				provider = "snacks",
 			},
+			behaviour = {
+				enable_token_counting = true, -- Whether to enable token counting. Default to true.
+			},
 		},
 		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
 		build = "make",
 		-- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
 		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
 			"nvim-lua/plenary.nvim",
 			"MunifTanjim/nui.nvim",
 			"stevearc/dressing.nvim",

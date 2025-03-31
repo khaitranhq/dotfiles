@@ -23,6 +23,8 @@ function setup-pnpm-project
         prettier \
         @trivago/prettier-plugin-sort-imports
 
+    npx tsc --init
+
     echo '{
   "trailingComma": "none",
   "tabWidth": 2,

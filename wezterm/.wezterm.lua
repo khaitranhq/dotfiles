@@ -7,11 +7,13 @@ if wezterm.config_builder then
 	config = wezterm.config_builder()
 end
 
+config.default_domain = 'WSL:Ubuntu-24.04'
+
 -- Font
 config.font = wezterm.font_with_fallback({
   {
-    family="FiraCode Nerd Font",
-    weight="Medium",
+    family="CaskaydiaCove Nerd Font",
+    --weight="Medium",
   }
 })
 config.font_size = 11
@@ -100,7 +102,7 @@ wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
 end)
 
 -- Window
-config.window_decorations = "NONE"
+-- config.window_decorations = "NONE"
 config.window_close_confirmation = "AlwaysPrompt"
 
 -- Keybinding
