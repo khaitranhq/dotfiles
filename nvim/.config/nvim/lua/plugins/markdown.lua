@@ -26,8 +26,14 @@ return {
 			-- 	"3rd/image.nvim",
 			-- 	config = function()
 			-- 		require("image").setup({
-			-- 			backend = "ueberzug",
+			-- 			backend = "kitty",
 			-- 			processor = "magick_rock", -- or "magick_cli"
+			-- 			integrations = {
+			-- 				markdown = {
+			-- 					enabled = true,
+			-- 					only_render_image_at_cursor = true,
+			-- 				},
+			-- 			},
 			-- 		})
 			-- 	end,
 			-- },
