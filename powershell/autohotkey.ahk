@@ -9,4 +9,15 @@
 {
     Run "C:\Users\khai.tran\AppData\Local\VirtualDesktop\move-desktop-to-right.bat"
 }
+
+^#h::
+{
+    SendInput "^#{Left}"
+}
+
+^#l::
+{
+    SendInput "^#{Right}"
+}
+
 return
