@@ -20,4 +20,14 @@
     SendInput "^#{Right}"
 }
 
+^Delete::
+{
+    SendInput "{Home}"
+}
+
+^Insert::
+{
+    SendInput "{Home}"
+}
+
 return
