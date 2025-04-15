@@ -118,4 +118,10 @@ M.navigate = {
 	},
 }
 
+M.ai = {
+  n = {
+		["<leader>aa"] = { "<cmd>CodeCompanionChat <CR>", "Open CodeCompanionChat" },
+  }
+}
+
 return M

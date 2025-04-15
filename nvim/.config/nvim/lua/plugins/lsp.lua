@@ -141,7 +141,9 @@ return {
 			-- elsewhere in your config, without redefining it, due to `opts_extend`
 			sources = {
 				default = { "avante", "lazydev", "lsp", "path", "snippets", "buffer", "lazydev" },
-
+				per_filetype = {
+					codecompanion = { "codecompanion" },
+				},
 				providers = {
 					lazydev = {
 						name = "LazyDev",
@@ -173,5 +175,15 @@ return {
 		config = true,
 		-- use opts = {} for passing setup options
 		-- this is equivalent to setup({}) function
+	},
+	{
+		"nvimdev/lspsaga.nvim",
+		config = function()
+			require("lspsaga").setup({})
+		end,
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter", -- optional
+			"nvim-tree/nvim-web-devicons", -- optional
+		},
 	},
 }
