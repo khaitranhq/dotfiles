@@ -26,10 +26,21 @@ return {
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"nvim-treesitter/nvim-treesitter",
-			"github/copilot.vim",
+			{
+				"github/copilot.vim",
+				config = function()
+					vim.g.copilot_no_tab_map = true
+					vim.keymap.set(
+						"i",
+						"<M-Enter>",
+						'copilot#Accept("<CR>")',
+						{ expr = true, silent = true, replace_keycodes = false }
+					)
+				end,
+			},
 		},
 	},
-  -- NOTE: Old config:
+	-- NOTE: Old config:
 	-- {
 	-- 	"yetone/avante.nvim",
 	-- 	event = "VeryLazy",
