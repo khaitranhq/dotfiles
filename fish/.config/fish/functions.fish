@@ -49,6 +49,7 @@ function __check_nvm --on-variable PWD --description 'Do nvm stuff'
 end
 
 function setup-pnpm-project
+    pnpm init
     pnpm install --save-dev \
         eslint \
         @eslint/js \
