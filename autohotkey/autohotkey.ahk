@@ -36,6 +36,12 @@
     Return
 }
 
+Insert::
+{
+    SendInput "{Home}"
+    Return
+}
+
 #^m::
 {
     Send "{Volume_Mute}"
