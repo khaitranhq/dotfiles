@@ -13,11 +13,13 @@
 ^#h::
 {
     SendInput "^#{Left}"
+    Return
 }
 
 ^#l::
 {
     SendInput "^#{Right}"
+    Return
 }
 
 ^Delete::
