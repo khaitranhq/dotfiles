@@ -1,4 +1,4 @@
-#Requires AutoHotkey v2.0
+; Requires AutoHotkey v2.0
 
 +#h::
 {
@@ -12,17 +12,17 @@
     Return
 }
 
-^#h::
-{
-    SendInput "^#{Left}"
-    Return
-}
-
-^#l::
-{
-    SendInput "^#{Right}"
-    Return
-}
+; #^h::
+; {
+;     SendInput "#^{Left}"
+;     Return
+; }
+; 
+; #^l::
+; {
+;     SendInput "#^{Right}"
+;     Return
+; }
 
 !Delete::
 {
