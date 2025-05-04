@@ -7,6 +7,6 @@ stow tmux
 #stow yazi
 stow eza
 stow lazygit
-#stow kitty
+stow kitty
 stow k9s
-stow wezterm
+#stow wezterm

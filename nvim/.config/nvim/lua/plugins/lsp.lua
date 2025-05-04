@@ -62,7 +62,7 @@ return {
 						},
 					},
 				},
-				clangd = {},
+				-- clangd = {},
 				bashls = {},
 				cssls = {},
 				jsonls = {},

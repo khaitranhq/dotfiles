@@ -16,7 +16,7 @@ config.automatically_reload_config = true
 config.font = wezterm.font_with_fallback({
   {
     family="FiraCode Nerd Font",
-    -- weight="Medium",
+    weight="Medium",
   }
 })
 config.font_size = 11
