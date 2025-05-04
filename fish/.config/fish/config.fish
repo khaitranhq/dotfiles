@@ -15,6 +15,9 @@ set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 set -Ux VISUAL "nvim"
 set -Ux EDITOR "nvim"
 
+#=========================Theme=========================
+fish_config theme save "Catppuccin Macchiato"
+
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 

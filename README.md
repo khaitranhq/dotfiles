@@ -57,6 +57,9 @@ cargo install ripgrep
 
 # bat
 cargo install --locked bat
+mkdir -p "$(bat --config-dir)/themes"
+wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme
+bat cache --build
 
 # eza
 cargo install eza
@@ -111,6 +114,9 @@ chsh -s $(which fish)
 
 # Install fisher
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
+
+# Install theme
+fisher install catppuccin/fish
 ```
 
 Then use `install.sh` to configure `fish`.
