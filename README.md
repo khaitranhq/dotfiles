@@ -211,3 +211,11 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
+
+### Dynamic workspace
+
+```bash
+sudo apt install -y wmctrl python3-gi gir1.2-wnck-3.0
+git clone https://github.com/DimseBoms/XFCE-Dynamic-Workspace
+# add `python3 ./XFCE-Dynamic-Workspace/dynamic_workspaces.py` to startup applications
+```
