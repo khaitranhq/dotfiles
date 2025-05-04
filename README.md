@@ -16,9 +16,13 @@ sudo apt upgrade -y
 
 ### Install fonts
 
+- Install dependencies
+
 ```bash
 sudo apt install fonts-noto fonts-noto-color-emoji fonts-symbola fontconfig build-essential
 ```
+
+- Download fonts: https://www.nerdfonts.com/font-downloads
 
 ### Browser
 
@@ -90,6 +94,9 @@ wget https://raw.githubusercontent.com/ahmetb/kubectx/refs/heads/master/kubectx
 
 # k9s
 # Download latest version .db file from https://github.com/derailed/k9s/releases
+
+# playerctl
+# Download deb from: https://github.com/altdesktop/playerctl/releases/
 ```
 
 ### Install fish
@@ -165,14 +172,9 @@ ln -sf $HOME/.local/share/nvim/bin/nvim $HOME/.local/bin/nvim
 nvim
 ```
 
-- `keyd` for remapping keys
-- Using [script](https://github.com/khaitranhq/swap-xfce-workspaces) to swap workspaces on XFCE
-- XFCE Plugins
-  - Generic monitor with [scripts](https://github.com/xtonousou/xfce4-genmon-scripts)
-- Required package: `libpango1.0-0`
-- Uninstall incompatible packages: `sudo apt remove ayatana-indicator-application ayatana-indicator-common`
-- Font: `Firacode Nerd Font` (additional dependencies: `sudo apt install fonts-noto fonts-noto-color-emoji fonts-symbola fontconfig`)
-- `playctl` for controlling music players
+### Remmap keys
+
+Install [keyd](https://github.com/rvaiya/keyd?tab=readme-ov-file#from-source)
 
 ### Centralized Notification
 
