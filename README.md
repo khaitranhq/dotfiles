@@ -17,7 +17,7 @@
 
 ### Browser
 
-- Chrome
+- Brave
 
 ### Terminal
 
