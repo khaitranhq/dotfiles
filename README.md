@@ -12,6 +12,7 @@
   - Generic monitor with [scripts](https://github.com/xtonousou/xfce4-genmon-scripts)
 - Required package: `libpango1.0-0`
 - Uninstall incompatible packages: `sudo apt remove ayatana-indicator-application ayatana-indicator-common`
+- Font: `Firacode Nerd Font` (additional dependencies: `sudo apt install fonts-noto fonts-noto-color-emoji fonts-symbola fontconfig`)
 
 ## Applications
 
