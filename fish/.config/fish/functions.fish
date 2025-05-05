@@ -1,5 +1,17 @@
 #!/usr/bin/env fish
 
+function setup_monitor
+    set options "home"
+    set selected_option (printf "%s\n" $options | fzf --prompt="Select an option: ")
+
+    if test "$selected_option" = "home"
+        xrandr \
+            --output eDP-1 --off \
+            --output HDMI-1 --primary --mode 1920x1080 --pos 1080x340 --rotate normal \
+            --output DP-1 --mode 1920x1080 --pos 0x0 --rotate left
+    end
+end
+
 function pick_files
   set pane_dir (tmux display-message -p '#{pane_current_path}')
   set pane_id (tmux display-message -p '#{pane_id}')
