@@ -117,11 +117,11 @@ M.navigate = {
 		["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
 	},
 }
---
--- M.ai = {
---   n = {
--- 		["<leader>aa"] = { "<cmd>CodeCompanionChat <CR>", "Open CodeCompanionChat" },
---   }
--- }
+
+M.ai = {
+  n = {
+		["<leader>ab"] = { "<cmd>CodeCompanionChat <CR>", "Open CodeCompanionChat" },
+  }
+}
 
 return M

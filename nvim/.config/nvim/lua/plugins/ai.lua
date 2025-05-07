@@ -1,45 +1,45 @@
 return {
-	-- {
-	-- 	"olimorris/codecompanion.nvim",
-	-- 	opts = {
-	-- 		strategies = {
-	-- 			chat = {
-	-- 				adapter = "copilot",
-	-- 				slash_commands = {
-	-- 					["file"] = {
-	-- 						-- Location to the slash command in CodeCompanion
-	-- 						callback = "strategies.chat.slash_commands.file",
-	-- 						description = "Select a file using Snacks",
-	-- 						opts = {
-	-- 							provider = "snacks", -- Other options include 'default', 'mini_pick', 'fzf_lua', snacks
-	-- 							contains_code = true,
-	-- 						},
-	-- 					},
-	-- 				},
-	-- 			},
-	-- 		},
-	-- 		opts = {
-	-- 			-- Set debug logging
-	-- 			log_level = "DEBUG",
-	-- 		},
-	-- 	},
-	-- 	dependencies = {
-	-- 		"nvim-lua/plenary.nvim",
-	-- 		"nvim-treesitter/nvim-treesitter",
-	-- 		{
-	-- 			"github/copilot.vim",
-	-- 			config = function()
-	-- 				vim.g.copilot_no_tab_map = true
-	-- 				vim.keymap.set(
-	-- 					"i",
-	-- 					"<M-Enter>",
-	-- 					'copilot#Accept("<CR>")',
-	-- 					{ expr = true, silent = true, replace_keycodes = false }
-	-- 				)
-	-- 			end,
-	-- 		},
-	-- 	},
-	-- },
+	{
+		"olimorris/codecompanion.nvim",
+		opts = {
+			strategies = {
+				chat = {
+					adapter = "copilot",
+					slash_commands = {
+						["file"] = {
+							-- Location to the slash command in CodeCompanion
+							callback = "strategies.chat.slash_commands.file",
+							description = "Select a file using Snacks",
+							opts = {
+								provider = "snacks", -- Other options include 'default', 'mini_pick', 'fzf_lua', snacks
+								contains_code = true,
+							},
+						},
+					},
+				},
+			},
+			opts = {
+				-- Set debug logging
+				log_level = "DEBUG",
+			},
+		},
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+			-- {
+			-- 	"github/copilot.vim",
+			-- 	config = function()
+			-- 		vim.g.copilot_no_tab_map = true
+			-- 		vim.keymap.set(
+			-- 			"i",
+			-- 			"<M-Enter>",
+			-- 			'copilot#Accept("<CR>")',
+			-- 			{ expr = true, silent = true, replace_keycodes = false }
+			-- 		)
+			-- 	end,
+			-- },
+		},
+	},
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
