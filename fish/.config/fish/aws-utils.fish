@@ -110,14 +110,15 @@ function ssm_ec2_instances
   set regions $default_region $regions
   set selectedRegion (echo $regions | string split " " | fzf --header "Select region" --cycle --ansi --layout=reverse --height=15)
 
-  set selected_instance (
+  set selected_option (
     gum spin --title "Loading instances..." -- aws ec2 describe-instances --region $selectedRegion --query 'Reservations[].Instances[?State.Name==`running`].[InstanceId, Tags[?Key==`Name`].Value | [0] || `NoName`]' --output json | 
       jq -r '.[][] | select(length > 0) | "\(.[0])(\(.[1]))"' | 
       string split "\n" | 
       fzf --header "Select instance" --cycle --ansi --layout=reverse --height=15
   )
-  set selected_instance (string split '(' $selected_instance)[1]
+  set selected_instance (string split '(' $selected_option)[1]
 
+  echo "Starting SSM session with instance $selected_option in region $selectedRegion..."
   aws ssm start-session --target $selected_instance --region $selectedRegion
 
   # Unset the AWS environment variables.
