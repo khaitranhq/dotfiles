@@ -12,7 +12,7 @@ return {
 					files = {
 						ignored = true,
 						hidden = true,
-						exclude = { ".git", "node_modules", "dist", ".venv", "venv", ".mypy_cache", ".aider*" },
+						exclude = { ".git", "node_modules", "dist", ".venv", "venv", ".mypy_cache", ".aider*", ".tmp" },
 					},
 				},
 			},
