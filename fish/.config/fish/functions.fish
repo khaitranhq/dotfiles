@@ -108,3 +108,19 @@ export default tseslint.config(
   },
 );' > eslint.config.mjs
 end
+
+# It is invoked by the fish shell automatically using its event system.
+function __postexec_notify_on_long_running_commands --on-event fish_postexec
+    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn'
+    for cmd in $interactive_commands
+        if string match -q "$cmd*" $argv[1]
+            # We quit interactive commands manually,
+            # no need for a notification.
+            return
+        end
+    end
+
+    if test $CMD_DURATION -gt 5000
+        paplay /usr/share/sounds/freedesktop/stereo/complete.oga & notify-send 'Command finished' "$argv"
+    end
+end
