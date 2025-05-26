@@ -120,7 +120,15 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
         end
     end
 
+    set --local exit_status $status
+
     if test $CMD_DURATION -gt 5000
-        paplay /usr/share/sounds/freedesktop/stereo/complete.oga & notify-send 'Command finished' "$argv"
+        if test $exit_status -eq 0
+            # Command succeeded
+            paplay /usr/share/sounds/freedesktop/stereo/complete.oga & notify-send 'Command finished' "$argv"
+        else
+            # Command failed
+            paplay /usr/share/sounds/freedesktop/stereo/trash-empty.oga & notify-send 'Command failed' "$argv"
+        end
     end
 end
