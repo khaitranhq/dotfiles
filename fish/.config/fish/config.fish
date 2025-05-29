@@ -51,3 +51,6 @@ alias qq="exit"
 alias k='kubectl'
 alias kx='kubectx'
 alias p='pulumi'
+alias sai='aider --model openai/claude-3.7-sonnet --openai-api-key $COPILOT_KEY_STS --openai-api-base https://api.githubcopilot.com --architect --dark-mode --no-auto-commits --vim --no-detect-urls --editor-edit-format editor-diff --no-show-model-warnings'
+alias rai='aider --model openai/gpt-4.1 --openai-api-key $COPILOT_KEY_RH --openai-api-base https://api.githubcopilot.com --architect --dark-mode --no-auto-commits --vim --no-detect-urls --editor-edit-format editor-diff'
+# alias ssh='kitten ssh'

@@ -38,7 +38,7 @@ M.general = {
 
 M.file_explorer = {
 	n = {
-		["<leader>ls"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
+		["<leader>b"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
 		["<leader>lf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
 		["<leader>lv"] = { ChangeViewFileExplorer, "Change View of File Explorer" },
 	},

@@ -38,7 +38,7 @@ function pick_files
   end
 
   set selected_files (
-      fd --type f | \
+      fd --type f --hidden | \
       fzf --multi \
           --reverse \
           --preview 'bat --style=numbers --color=always {}' | \
@@ -125,7 +125,7 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
     if test $CMD_DURATION -gt 5000
         if test $exit_status -eq 0
             # Command succeeded
-            paplay /usr/share/sounds/freedesktop/stereo/complete.oga & notify-send 'Command finished' "$argv"
+            paplay /usr/share/sounds/freedesktop/stereo/bell.oga & notify-send 'Command finished' "$argv"
         else
             # Command failed
             paplay /usr/share/sounds/freedesktop/stereo/trash-empty.oga & notify-send 'Command failed' "$argv"
