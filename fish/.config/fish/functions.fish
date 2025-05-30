@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 function setup_monitor
-    set options "home" "work"
+    set options "home" "work" "single"
     set selected_option (printf "%s\n" $options | fzf --prompt="Select an option: ")
 
     if test "$selected_option" = "home"
@@ -9,6 +9,11 @@ function setup_monitor
             --output eDP-1 --off \
             --output HDMI-1 --primary --mode 1920x1080 --pos 1080x340 --rotate normal \
             --output DP-1 --mode 1920x1080 --pos 0x0 --rotate left
+    end
+
+    if test "$selected_option" = "single"
+        xrandr \
+            --output eDP-1 --mode 1920x1080 --rotate normal --pos 0x0
     end
 
     if test "$selected_option" = "work"
