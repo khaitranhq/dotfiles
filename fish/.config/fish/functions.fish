@@ -114,26 +114,26 @@ export default tseslint.config(
 );' > eslint.config.mjs
 end
 
-# It is invoked by the fish shell automatically using its event system.
-function __postexec_notify_on_long_running_commands --on-event fish_postexec
-    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn'
-    for cmd in $interactive_commands
-        if string match -q "$cmd*" $argv[1]
-            # We quit interactive commands manually,
-            # no need for a notification.
-            return
-        end
-    end
-
-    set --local exit_status $status
-
-    if test $CMD_DURATION -gt 5000
-        if test $exit_status -eq 0
-            # Command succeeded
-            paplay /usr/share/sounds/freedesktop/stereo/bell.oga & notify-send 'Command finished' "$argv"
-        else
-            # Command failed
-            paplay /usr/share/sounds/freedesktop/stereo/trash-empty.oga & notify-send 'Command failed' "$argv"
-        end
-    end
-end
+## It is invoked by the fish shell automatically using its event system.
+#function __postexec_notify_on_long_running_commands --on-event fish_postexec
+#    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn'
+#    for cmd in $interactive_commands
+#        if string match -q "$cmd*" $argv[1]
+#            # We quit interactive commands manually,
+#            # no need for a notification.
+#            return
+#        end
+#    end
+#
+#    set --local exit_status $status
+#
+#    if test $CMD_DURATION -gt 5000
+#        if test $exit_status -eq 0
+#            # Command succeeded
+#            paplay /usr/share/sounds/freedesktop/stereo/bell.oga & notify-send 'Command finished' "$argv"
+#        else
+#            # Command failed
+#            paplay /usr/share/sounds/freedesktop/stereo/trash-empty.oga & notify-send 'Command failed' "$argv"
+#        end
+#    end
+#end
