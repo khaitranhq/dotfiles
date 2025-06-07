@@ -12,17 +12,17 @@
     Return
 }
 
-#^h::
-{
-    SendInput "#^{Left}"
-    Return
-}
-
-#^l::
-{
-    SendInput "#^{Right}"
-    Return
-}
+; #^h::
+; {
+;     SendInput "#^{Left}"
+;     Return
+; }
+;
+; #^l::
+; {
+;     SendInput "#^{Right}"
+;     Return
+; }
 
 !Delete::
 {
