@@ -12,17 +12,23 @@
     Return
 }
 
-; #^h::
-; {
-;     SendInput "#^{Left}"
-;     Return
-; }
-;
-; #^l::
-; {
-;     SendInput "#^{Right}"
-;     Return
-; }
+#^h::
+{
+    SendInput "#^{Left}"
+    Sleep 100  ; Small delay to let the desktop switch happen
+    SendInput "!{Tab}"  ; Send Alt+Tab to focus on the active window
+    SendInput "{Escape}"  ; Press Escape to close the Alt+Tab menu
+    Return
+}
+
+#^l::
+{
+    SendInput "#^{Right}"
+    Sleep 100
+    SendInput "!{Tab}"
+    SendInput "{Escape}"
+    Return
+}
 
 !Delete::
 {
