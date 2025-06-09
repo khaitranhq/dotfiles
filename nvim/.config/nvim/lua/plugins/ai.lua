@@ -26,18 +26,22 @@ return {
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"nvim-treesitter/nvim-treesitter",
-			-- {
-			-- 	"github/copilot.vim",
-			-- 	config = function()
-			-- 		vim.g.copilot_no_tab_map = true
-			-- 		vim.keymap.set(
-			-- 			"i",
-			-- 			"<M-Enter>",
-			-- 			'copilot#Accept("<CR>")',
-			-- 			{ expr = true, silent = true, replace_keycodes = false }
-			-- 		)
-			-- 	end,
-			-- },
+			{
+				"zbirenbaum/copilot.lua",
+				cmd = "Copilot",
+				event = "InsertEnter",
+				config = function()
+					require("copilot").setup({
+						suggestion = {
+							enabled = true,
+							auto_trigger = true,
+							keymap = {
+								accept = "<M-m>",
+							},
+						},
+					})
+				end,
+			},
 		},
 	},
 	-- {
