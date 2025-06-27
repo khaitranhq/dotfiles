@@ -52,7 +52,40 @@ alias qq="exit"
 alias k='kubectl'
 alias kx='kubectx'
 alias p='pulumi'
-# alias sai='aider --model openai/claude-3.7-sonnet --openai-api-key $COPILOT_KEY_STS --openai-api-base https://api.githubcopilot.com --dark-mode --no-auto-commits --vim --no-detect-urls --no-show-model-warnings'
-alias sai='aider --model openai/gpt-4.1 --editor-model openai/gpt-4o  --weak-model openai/gpt-4o-mini --openai-api-key $COPILOT_KEY_STS --openai-api-base https://api.githubcopilot.com --dark-mode --no-auto-commits --vim --no-detect-urls --no-show-model-warnings'
-alias rai='aider --model openai/gpt-4.1 --editor-model openai/gpt-4o --weak-model openai/gpt-4o-mini --openai-api-key $COPILOT_KEY_RH --openai-api-base https://api.githubcopilot.com --dark-mode --no-auto-commits --vim --no-detect-urls'
-# alias ssh='kitten ssh'
+alias sai='aider \
+  --model openai/gpt-4.1 \
+  --editor-model openai/gpt-4o \
+  --weak-model openai/gpt-4o-mini \
+  --openai-api-key $COPILOT_KEY_STS \
+  --openai-api-base https://api.githubcopilot.com \
+  --user-input-color "#c6a0f6" \
+  --tool-output-color "#8bd5ca" \
+  --tool-error-color "#ed8796" \
+  --tool-warning-color "#f5a97f" \
+  --assistant-output-color "#8aadf4" \
+  --completion-menu-color "#cad3f5" \
+  --completion-menu-bg-color "#24273a" \
+  --completion-menu-current-color "#24273a" \
+  --completion-menu-current-bg-color "#a6da95" \
+  --no-auto-commits \
+  --vim \
+  --no-detect-urls \
+  --no-show-model-warnings'
+alias rai='aider \
+  --model openai/gpt-4.1 \
+  --editor-model openai/gpt-4o \
+  --weak-model openai/gpt-4o \
+  --openai-api-key $COPILOT_KEY_RH \
+  --openai-api-base https://api.githubcopilot.com \
+  --user-input-color "#c6a0f6" \
+  --tool-output-color "#8bd5ca" \
+  --tool-error-color "#ed8796" \
+  --tool-warning-color "#f5a97f" \
+  --assistant-output-color "#8aadf4" \
+  --completion-menu-color "#cad3f5" \
+  --completion-menu-bg-color "#24273a" \
+  --completion-menu-current-color "#24273a" \
+  --completion-menu-current-bg-color "#a6da95" \
+  --no-auto-commits \
+  --vim \
+  --no-detect-urls'
