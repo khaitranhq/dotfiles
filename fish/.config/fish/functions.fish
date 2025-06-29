@@ -137,3 +137,18 @@ end
 #        end
 #    end
 #end
+
+function dotenv -d "Load environment variables from .env"
+    for line in (cat $argv[1])
+        if string match -qr '^\s*#' -- $line
+            continue
+        end
+        if string match -qr '^\s*$' -- $line
+            continue
+        end
+        set key (string match -r '^[^=]+' -- $line)
+        set val (string replace "$key=" '' -- $line)
+        set val (string trim -c '"' $val)
+        set -x $key $val
+    end
+end
