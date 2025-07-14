@@ -15,6 +15,9 @@ set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 set -Ux VISUAL "nvim"
 set -Ux EDITOR "nvim"
 
+set -Ux PYENV_ROOT $HOME/.pyenv
+test -d $PYENV_ROOT/bin; and fish_add_path $PYENV_ROOT/bin
+
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 
@@ -59,3 +62,4 @@ alias sai='aider \
 alias rai='aider \
   --openai-api-key $COPILOT_KEY_RH \
   --openai-api-base https://api.githubcopilot.com'
+

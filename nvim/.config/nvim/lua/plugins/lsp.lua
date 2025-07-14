@@ -69,6 +69,18 @@ return {
 				dockerls = {},
 				csharp_ls = {},
 				docker_compose_language_service = {},
+				rust_analyzer = {
+					settings = {
+						["rust-analyzer"] = {
+							checkOnSave = {
+								command = "clippy",
+							},
+							cargo = {
+								allFeatures = true,
+							},
+						},
+					},
+				},
 			},
 		},
 		config = function(_, opts)

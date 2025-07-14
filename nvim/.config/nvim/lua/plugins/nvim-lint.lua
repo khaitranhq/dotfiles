@@ -14,6 +14,11 @@ return {
 				typescriptreact = { "eslint" },
 				python = { "mypy" },
 			}
+
+			require("lint").linters.mypy.args = {
+				"--ignore-missing-imports",
+				"--show-column-numbers",
+			}
 		end,
 	},
 }
