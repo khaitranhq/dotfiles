@@ -62,7 +62,7 @@ return {
 						},
 					},
 				},
-				-- clangd = {},
+				clangd = {},
 				bashls = {},
 				cssls = {},
 				jsonls = {},
@@ -152,7 +152,7 @@ return {
 			-- Default list of enabled providers defined so that you can extend it
 			-- elsewhere in your config, without redefining it, due to `opts_extend`
 			sources = {
-				default = { "avante", "lazydev", "lsp", "path", "snippets", "buffer", "lazydev" },
+				default = { "lazydev", "lsp", "path", "snippets", "buffer", "lazydev" },
 				per_filetype = {
 					codecompanion = { "codecompanion" },
 				},
@@ -162,13 +162,6 @@ return {
 						module = "lazydev.integrations.blink",
 						-- make lazydev completions top priority (see `:h blink.cmp`)
 						score_offset = 100,
-					},
-					avante = {
-						module = "blink-cmp-avante",
-						name = "Avante",
-						opts = {
-							-- options for blink-cmp-avante
-						},
 					},
 				},
 			},

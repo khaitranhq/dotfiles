@@ -33,9 +33,22 @@ end
 opt.undodir = UNDODIR
 opt.undofile = true
 
--- set spell check
+-- Performance optimizations
+opt.swapfile = false -- Disable swap files since we have persistent undo
+opt.backup = false -- Disable backup files
+opt.writebackup = false -- Disable backup before overwriting
+opt.updatetime = 250 -- Faster completion and diagnostics
+opt.timeoutlen = 500 -- Faster which-key popup
+
+-- set spell check (filetype-specific)
 opt.spelllang = "en_us"
-opt.spell = true
+-- Enable spell check only for specific filetypes
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "markdown", "text", "gitcommit", "tex" },
+	callback = function()
+		vim.opt_local.spell = true
+	end,
+})
 
 -------------------------global-------------------------
 vim.g.mapleader = " "
