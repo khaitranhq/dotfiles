@@ -2,7 +2,7 @@ return {
 	{
 		"tadaa/vimade",
 		opts = {
-			fadelevel = 0.6,
+			fadelevel = 0.4,
 		},
 	},
 }
