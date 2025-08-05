@@ -1,12 +1,10 @@
 return {
-    {
-        "rasulomaroff/reactive.nvim",
-        config = function()
-            require("reactive").setup(
-                {
-                    load = {"catppuccin-macchiato-cursor", "catppuccin-mocha-cursorline"}
-                }
-            )
-        end
-    }
+	{
+		"rasulomaroff/reactive.nvim",
+		config = function()
+			require("reactive").setup({
+				-- load = {"catppuccin-macchiato-cursor", "catppuccin-mocha-cursorline"}
+			})
+		end,
+	},
 }

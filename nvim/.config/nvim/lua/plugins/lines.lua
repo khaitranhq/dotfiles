@@ -8,7 +8,8 @@ return {
 		config = function()
 			require("lualine").setup({
 				options = {
-					theme = "catppuccin",
+					-- theme = "catppuccin",
+					theme = "gruvbox",
 				},
 				sections = {
 					lualine_b = { "diagnostics" },
@@ -24,7 +25,7 @@ return {
 		after = "catppuccin",
 		config = function()
 			require("bufferline").setup({
-				highlights = require("catppuccin.groups.integrations.bufferline").get(),
+				-- highlights = require("c.groups.integrations.bufferline").get(),
 				options = {
 					numbers = "buffer_id",
 					diagnostics = "nvim_lsp",
