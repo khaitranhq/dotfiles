@@ -25,6 +25,8 @@ opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 opt.foldtext = ""
 opt.foldlevel = 99
 
+opt.fillchars = "eob: "
+
 -- set undodir
 UNDODIR = os.getenv("HOME") .. "/.local/share/nvim/undo/"
 if vim.fn.isdirectory(UNDODIR) == 0 then
