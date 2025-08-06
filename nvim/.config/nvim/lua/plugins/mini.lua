@@ -54,7 +54,6 @@ return {
 				end,
 			})
 			require("mini.trailspace").setup()
-			require("mini.cursorword").setup()
 
 			MiniPick.registry.files_fd = MiniPickFilesWithIcons
 		end,
