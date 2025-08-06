@@ -1,6 +1,7 @@
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
+		event = { "BufReadPost", "BufNewFile" }, -- Lazy load for better startup
 		dependencies = {
 			"windwp/nvim-ts-autotag",
 		},
@@ -22,7 +23,7 @@ return {
 				ensure_installed = {},
 				ignore_install = {},
 				-- Install parsers synchronously (only applied to `ensure_installed`)
-				sync_install = true,
+				sync_install = false, -- Async install for better performance
 				-- Automatically install missing parsers when entering buffer
 				auto_install = true,
 

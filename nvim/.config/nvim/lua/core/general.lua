@@ -42,6 +42,12 @@ opt.writebackup = false -- Disable backup before overwriting
 opt.updatetime = 250 -- Faster completion and diagnostics
 opt.timeoutlen = 500 -- Faster which-key popup
 
+-- Additional performance improvements
+opt.synmaxcol = 300 -- Limit syntax highlighting for long lines
+opt.regexpengine = 1 -- Use old regexp engine (often faster)
+opt.ttyfast = true -- Indicate a fast terminal connection
+opt.redrawtime = 1500 -- Time in ms for 'hlsearch' and :match highlighting
+
 -- set spell check (filetype-specific)
 opt.spelllang = "en_us"
 -- Enable spell check only for specific filetypes

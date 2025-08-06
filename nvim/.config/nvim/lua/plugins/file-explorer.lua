@@ -14,7 +14,7 @@ return {
 	{
 		"nvim-tree/nvim-tree.lua",
 		version = "*",
-		lazy = false,
+		cmd = { "NvimTreeToggle", "NvimTreeFocus", "NvimTreeOpen" }, -- Load only when needed
 		dependencies = {
 			"nvim-tree/nvim-web-devicons",
 		},

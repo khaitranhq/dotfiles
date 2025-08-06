@@ -7,7 +7,6 @@ return {
 				-- See the configuration section for more details
 				-- Load luvit types when the `vim.uv` word is found
 				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
-				{ path = "snacks.nvim", words = { "Snacks" } },
 				{ path = "lazy.nvim", words = { "LazyVim" } },
 			},
 		},
@@ -19,6 +18,7 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
 		dependencies = {
 			{ "saghen/blink.cmp" },
 			{ "williamboman/mason-lspconfig.nvim" },
@@ -173,26 +173,5 @@ return {
 			fuzzy = { implementation = "prefer_rust" },
 		},
 		opts_extend = { "sources.default" },
-	},
-	{
-		"windwp/nvim-autopairs",
-		event = "InsertEnter",
-		config = true,
-		-- use opts = {} for passing setup options
-		-- this is equivalent to setup({}) function
-	},
-	{
-		"nvimdev/lspsaga.nvim",
-		config = function()
-			require("lspsaga").setup({
-				lightbulb = {
-					enable = false,
-				},
-			})
-		end,
-		dependencies = {
-			"nvim-treesitter/nvim-treesitter", -- optional
-			"nvim-tree/nvim-web-devicons", -- optional
-		},
 	},
 }

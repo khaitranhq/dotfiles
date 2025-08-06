@@ -1,0 +1,15 @@
+--hidden
+--no-ignore
+--smart-case
+--glob=!.git
+--glob=!.cache
+--glob=!__pycache__
+--glob=!node_modules
+--glob=!vendor
+--glob=!.venv
+--glob=!.idea
+--glob=!.vscode
+--glob=!.DS_Store
+--glob=!venv
+--glob=!.tmp
+--glob=!dist

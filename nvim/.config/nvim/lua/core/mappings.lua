@@ -54,26 +54,13 @@ M.lsp = {
 
 		["<leader>dfd"] = { vim.lsp.buf.hover, "Show document in float window" },
 
-		["<leader>dd"] = { Snacks.picker.lsp_definitions, "Show definition" },
-		["<leader>di"] = { Snacks.picker.lsp_implementations, "Show implementation" },
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Code action" },
-	},
-}
-
-local notify = require("notify")
-M.notify = {
-	n = {
-		["<leader>zh"] = { notify.dismiss, "Dismiss all notifications" },
 	},
 }
 
 local gitsigns = require("gitsigns")
 M.git = {
 	n = {
-		["<leader>gs"] = {
-			Snacks.lazygit.open,
-			"Git conflict: select current change",
-		},
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
 		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git conflict: select incomming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git conflict: select both changes" },
@@ -104,23 +91,20 @@ M.git = {
 	},
 }
 
+local mini_pick = require("mini.pick")
 M.fuzzy = {
 	n = {
 		["<leader>ff"] = {
-			function()
-				Snacks.picker.files({
-					hidden = true,
-				})
-			end,
-			"Find files",
+      MiniPickFilesWithIcons,
+			"Find files (hidden + no-ignore)",
 		},
 		["<leader>fg"] = {
-			function()
-				Snacks.picker.grep({
-					hidden = true,
-				})
-			end,
-			"Find files",
+      function()
+        MiniPickGrepWithConfig(function()
+          mini_pick.builtin.grep()
+        end)
+      end,
+			"Grep in files",
 		},
 	},
 }
