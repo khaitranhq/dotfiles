@@ -42,7 +42,6 @@ end
 
 #=========================Aliases=========================
 alias v="nvim"
-# alias fd='fdfind'
 alias l='eza -lah --icons'
 alias ls='eza -lah --icons --total-size'
 alias cat="bat -p"
