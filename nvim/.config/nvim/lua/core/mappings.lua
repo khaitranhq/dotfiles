@@ -48,8 +48,18 @@ M.lsp = {
 	n = {
 		["<leader>dr"] = { vim.lsp.buf.rename, "Rename variable at cursor" },
 
-		["<leader>dp"] = { vim.diagnostic.goto_prev, "Previous diagnostic position" },
-		["<leader>dn"] = { vim.diagnostic.goto_next, "Next diagnostic position" },
+		["<leader>dp"] = {
+			function()
+				vim.diagnostic.jump({ count = -1, float = true })
+			end,
+			"Previous diagnostic position",
+		},
+		["<leader>dn"] = {
+			function()
+				vim.diagnostic.jump({ count = 1, float = true })
+			end,
+			"Next diagnostic position",
+		},
 		["<leader>de"] = { vim.diagnostic.open_float, "Show diagnostic message in a float window" },
 
 		["<leader>dfd"] = { vim.lsp.buf.hover, "Show document in float window" },
@@ -95,15 +105,15 @@ local mini_pick = require("mini.pick")
 M.fuzzy = {
 	n = {
 		["<leader>ff"] = {
-      MiniPickFilesWithIcons,
+			MiniPickFilesWithIcons,
 			"Find files (hidden + no-ignore)",
 		},
 		["<leader>fg"] = {
-      function()
-        MiniPickGrepWithConfig(function()
-          mini_pick.builtin.grep()
-        end)
-      end,
+			function()
+				MiniPickGrepWithConfig(function()
+					mini_pick.builtin.grep()
+				end)
+			end,
 			"Grep in files",
 		},
 	},
