@@ -16,7 +16,6 @@ return {
 		event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
 		dependencies = {
 			{ "saghen/blink.cmp" },
-			{ "williamboman/mason-lspconfig.nvim" },
 		},
 		opts = {
 			servers = {

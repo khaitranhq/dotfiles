@@ -256,6 +256,8 @@ return {
 			setup_trailspace()
 			setup_files()
 			setup_extra()
+			require("mini.git").setup()
+			require("mini.diff").setup()
 		end,
 	},
 }

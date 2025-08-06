@@ -81,7 +81,7 @@ M.lsp = {
 	},
 }
 
-local gitsigns = require("gitsigns")
+-- local gitsigns = require("gitsigns")
 M.git = {
 	n = {
 		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git conflict: select current change" },
@@ -90,27 +90,27 @@ M.git = {
 		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git conflict: select none of the changes" },
 		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git conflict: select next conflict" },
 		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git conflict: select previous conflict" },
-		["<leader>ga"] = {
-			function()
-				gitsigns.stage_hunk()
-				vim.notify("Hunk staged", vim.log.levels.INFO)
-			end,
-			"Git: Stage hunk",
-		},
-		["<leader>gr"] = {
-			function()
-				gitsigns.reset_hunk()
-				vim.notify("Hunk reset", vim.log.levels.INFO)
-			end,
-			"Git: Reset hunk",
-		},
-		["<leader>gp"] = {
-			function()
-				gitsigns.preview_hunk()
-				vim.notify("Hunk previewed", vim.log.levels.INFO)
-			end,
-			"Git: Preview hunk",
-		},
+		-- ["<leader>ga"] = {
+		-- 	function()
+		-- 		gitsigns.stage_hunk()
+		-- 		vim.notify("Hunk staged", vim.log.levels.INFO)
+		-- 	end,
+		-- 	"Git: Stage hunk",
+		-- },
+		-- ["<leader>gr"] = {
+		-- 	function()
+		-- 		gitsigns.reset_hunk()
+		-- 		vim.notify("Hunk reset", vim.log.levels.INFO)
+		-- 	end,
+		-- 	"Git: Reset hunk",
+		-- },
+		-- ["<leader>gp"] = {
+		-- 	function()
+		-- 		gitsigns.preview_hunk()
+		-- 		vim.notify("Hunk previewed", vim.log.levels.INFO)
+		-- 	end,
+		-- 	"Git: Preview hunk",
+		-- },
 	},
 }
 
