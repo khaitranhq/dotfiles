@@ -64,6 +64,11 @@ M.lsp = {
 
 		["<leader>dfd"] = { vim.lsp.buf.hover, "Show document in float window" },
 
+		-- Navigation mappings
+		["<leader>dd"] = { vim.lsp.buf.definition, "Go to definition" },
+		["<leader>di"] = { vim.lsp.buf.implementation, "Go to implementation" },
+
+		-- Code action
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Code action" },
 	},
 }
