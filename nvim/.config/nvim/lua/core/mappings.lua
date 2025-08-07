@@ -90,27 +90,6 @@ M.git = {
 		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git conflict: select none of the changes" },
 		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git conflict: select next conflict" },
 		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git conflict: select previous conflict" },
-		-- ["<leader>ga"] = {
-		-- 	function()
-		-- 		gitsigns.stage_hunk()
-		-- 		vim.notify("Hunk staged", vim.log.levels.INFO)
-		-- 	end,
-		-- 	"Git: Stage hunk",
-		-- },
-		-- ["<leader>gr"] = {
-		-- 	function()
-		-- 		gitsigns.reset_hunk()
-		-- 		vim.notify("Hunk reset", vim.log.levels.INFO)
-		-- 	end,
-		-- 	"Git: Reset hunk",
-		-- },
-		-- ["<leader>gp"] = {
-		-- 	function()
-		-- 		gitsigns.preview_hunk()
-		-- 		vim.notify("Hunk previewed", vim.log.levels.INFO)
-		-- 	end,
-		-- 	"Git: Preview hunk",
-		-- },
 	},
 }
 
@@ -118,12 +97,16 @@ local mini_pick = require("mini.pick")
 M.fuzzy = {
 	n = {
 		["<leader>ff"] = {
-			MiniPickFilesWithIcons,
+			function()
+				OverrideRipgrepConfig(function()
+					mini_pick.builtin.files({ tool = "rg" })
+				end)
+			end,
 			"Find files (hidden + no-ignore)",
 		},
 		["<leader>fg"] = {
 			function()
-				MiniPickGrepWithConfig(function()
+				OverrideRipgrepConfig(function()
 					mini_pick.builtin.grep()
 				end)
 			end,

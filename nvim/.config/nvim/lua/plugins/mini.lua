@@ -23,39 +23,9 @@ M.gruvbox_hard = {
 
 -- File picker with icons using fd command
 -- Excludes common build/cache directories for better performance
-function MiniPickFilesWithIcons()
-	local command = {
-		"fd",
-		"--type=f",
-		"--no-follow",
-		"--color=never",
-		"--hidden",
-		"--no-ignore",
-		"--exclude=.git",
-		"--exclude=.cache",
-		"--exclude=__pycache__",
-		"--exclude=node_modules",
-		"--exclude=vendor",
-		"--exclude=.venv",
-		"--exclude=.idea",
-		"--exclude=.vscode",
-		"--exclude=.DS_Store",
-		"--exclude=venv",
-		"--exclude=.tmp",
-		"--exclude=dist",
-	}
-
-	local show_with_icons = function(buf_id, items, query)
-		return MiniPick.default_show(buf_id, items, query, { show_icons = true })
-	end
-
-	local source = { name = "Files fd", show = show_with_icons }
-	return MiniPick.builtin.cli({ command = command }, { source = source })
-end
-
 -- Grep with custom ripgrep configuration
 -- Temporarily sets RIPGREP_CONFIG_PATH to use nvim-specific config
-function MiniPickGrepWithConfig(f)
+function OverrideRipgrepConfig(f)
 	local rg_env = "RIPGREP_CONFIG_PATH"
 	local cached_rg_config = vim.uv.os_getenv(rg_env) or ""
 	vim.uv.os_setenv(rg_env, vim.fn.stdpath("config") .. "/.rg")
@@ -257,7 +227,11 @@ return {
 			setup_files()
 			setup_extra()
 			require("mini.git").setup()
-			require("mini.diff").setup()
+			require("mini.diff").setup({
+				view = {
+					style = "sign",
+				},
+			})
 		end,
 	},
 }
