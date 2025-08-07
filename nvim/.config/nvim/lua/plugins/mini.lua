@@ -115,12 +115,29 @@ local function setup_statusline()
 	})
 end
 
+local function get_diagnostics(bufnr)
+	local diagnostics = vim.diagnostic.get(bufnr)
+	local counts = { error = 0, warn = 0 }
+	for _, d in ipairs(diagnostics) do
+		if d.severity == vim.diagnostic.severity.ERROR then
+			counts.error = counts.error + 1
+		elseif d.severity == vim.diagnostic.severity.WARN then
+			counts.warn = counts.warn + 1
+		end
+	end
+	return counts
+end
+
 -- Mini.tabline configuration with custom formatting
 local function setup_tabline()
 	require("mini.tabline").setup({
 		format = function(buf_id, label)
 			local suffix = vim.bo[buf_id].modified and "+ " or ""
-			return " " .. buf_id .. MiniTabline.default_format(buf_id, label) .. suffix
+
+			local diag = get_diagnostics(buf_id)
+			local err = diag.error > 0 and ("  " .. diag.error) or ""
+			local warn = diag.warn > 0 and ("  " .. diag.warn) or ""
+			return " " .. buf_id .. err .. warn .. MiniTabline.default_format(buf_id, label) .. suffix
 		end,
 	})
 end
