@@ -123,7 +123,7 @@ M.format = {
 
 M.navigate = {
 	n = {
-		["s"] = { "<Plug>(leap)", "Navigate with leap" },
+		["m"] = { "<Plug>(leap)", "Navigate with leap" },
 		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Select buffers" },
 		["<leader>w"] = { vim.window_picker_select, "Pick window" },
 		["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
