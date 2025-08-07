@@ -1,0 +1,17 @@
+{
+  "wcgw": {
+    "name": "wcgw",
+    "command": "uv",
+    "args": ["tool", "run", "--python", "3.12", "wcgw@latest"],
+    "enabledForAgents": [
+      "Engineer",
+      "PulumiGoReviewer",
+      "PromptMaker",
+      "DocumentationAgent",
+      "Architect",
+      "IELTSWritingReviewer",
+      "DevOpsEngineer",
+      "PresentationAgent"
+    ]
+  }
+}

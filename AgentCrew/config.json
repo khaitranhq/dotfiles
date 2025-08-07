@@ -1,0 +1,19 @@
+{
+  "api_keys": {
+    "GITHUB_COPILOT_API_KEY": ""
+  },
+  "global_settings": {
+    "theme": "dark",
+    "yolo_mode": false
+  },
+  "auto_approval_tools": [
+    "retrieve_memory",
+    "wcgw_Initialize",
+    "wcgw_ReadFiles",
+    "web_search",
+    "fetch_webpage",
+    "wcgw_BashCommand",
+    "read_file",
+    "analyze_repo"
+  ]
+}
