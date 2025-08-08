@@ -6,7 +6,7 @@ local M = {}
 
 -- Setup nui-based UI enhancements
 function M.setup_nui_ui()
-	local ok, nui_ui = pcall(require, "extra.nui-ui")
+	local ok, nui_ui = pcall(require, "modules.dressing.nui-ui")
 	if not ok then
 		vim.notify("Failed to load nui-ui module", vim.log.levels.ERROR)
 		return
@@ -54,18 +54,6 @@ function M.setup_nui_ui()
 	vim.api.nvim_create_user_command("NuiTestSelect", function()
 		nui_ui.test_select()
 	end, { desc = "Test nui.nvim select component" })
-
-	-- -- Setup demo commands
-	-- local demo_ok, demo = pcall(require, "extra.demo")
-	-- if demo_ok then
-	-- 	demo.setup_commands()
-	-- end
-
-	-- -- Setup debug test commands
-	-- local debug_ok, debug = pcall(require, "extra.debug-test")
-	-- if debug_ok then
-	-- 	-- Debug commands are created in the module itself
-	-- end
 end
 
 -- Main setup function
@@ -78,4 +66,3 @@ function M.setup()
 end
 
 return M
-
