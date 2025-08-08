@@ -17,7 +17,6 @@ opt.smartindent = true -- Smart autoindenting when starting a new line
 opt.number = true -- Show absolute line numbers
 opt.relativenumber = true -- Show relative line numbers
 opt.signcolumn = "yes" -- Always show sign column to prevent layout shifts
-opt.colorcolumn = "80" -- Highlight column 80 as a guide
 
 -- Search behavior
 opt.ignorecase = true -- Ignore case in search patterns
