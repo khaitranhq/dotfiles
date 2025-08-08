@@ -12,7 +12,7 @@ local GIT_STATUS_SYMBOLS = {
 	[" M"] = { symbol = "✗", hl_group = "MiniDiffSignChange" }, -- Modified in working dir
 	["MM"] = { symbol = "✗", hl_group = "MiniDiffSignChange" }, -- Modified in both
 	["??"] = { symbol = "★", hl_group = "MiniDiffSignAdd" }, -- Untracked (using Add color as it's new)
-	["!!"] = { symbol = "◌", hl_group = "MiniDiffSignDelete" }, -- Ignored
+	["!!"] = { symbol = "!", hl_group = "MiniDiffSignDelete" }, -- Ignored
 
 	-- Index changes (staged)
 	["M "] = { symbol = "✓", hl_group = "MiniDiffSignChange" }, -- Modified in index (staged)
@@ -62,37 +62,6 @@ end
 ---@return string Cleaned path
 local function clean_minifiles_path(path)
 	return path:gsub("^minifiles://%d+/", "")
-end
-
----Check if a Git status should be shown (exclude folders with only ignored items)
----@param status string Git status code
----@param is_directory boolean Whether the path is a directory
----@param status_map table<string, string> Complete status map for filtering
----@param current_path string Current file/folder path
----@return boolean True if status should be displayed
-local function should_show_status(status, is_directory, status_map, current_path)
-	-- Always show status for files
-	if not is_directory then
-		return true
-	end
-
-	-- For directories, check if they contain only ignored items
-	if status == "!!" then
-		-- Check if this directory has any non-ignored children
-		local has_non_ignored_children = false
-		for path, child_status in pairs(status_map) do
-			-- Check if this path is a child of current_path and has non-ignored status
-			if vim.startswith(path, current_path .. "/") and child_status ~= "!!" then
-				has_non_ignored_children = true
-				break
-			end
-		end
-
-		-- Don't show ignored status for directories that only contain ignored items
-		return has_non_ignored_children
-	end
-
-	return true
 end
 
 ---Map Git status and symlink information to display symbols and colors
@@ -147,23 +116,16 @@ local function parse_git_status(git_output)
 	for line in git_output:gmatch("[^\r\n]+") do
 		local status, file_path = line:match("^(..)%s+(.*)")
 		if status and file_path then
-			-- Build directory hierarchy for proper status inheritance
-			local path_parts = vim.split(file_path, "/", { plain = true })
-			local current_path = ""
+			-- Store both with and without trailing slash for directory matching
+			status_map[file_path] = status
 
-			for i, part in ipairs(path_parts) do
-				current_path = i == 1 and part or current_path .. "/" .. part
-
-				-- Mark file with its specific status
-				if i == #path_parts then
-					status_map[current_path] = status
-				else
-					-- Mark parent directories with status if not already marked
-					-- Don't override existing status with ignored status
-					if not status_map[current_path] or (status_map[current_path] == "!!" and status ~= "!!") then
-						status_map[current_path] = status
-					end
-				end
+			-- If it's a directory (ends with /), also store without trailing slash
+			if file_path:match("/$") then
+				local without_slash = file_path:gsub("/$", "")
+				status_map[without_slash] = status
+			else
+				-- If it doesn't end with /, also store with trailing slash for directories
+				status_map[file_path .. "/"] = status
 			end
 		end
 	end
@@ -206,31 +168,36 @@ local function update_buffer_git_indicators(buf_id, status_map)
 			local relative_path = entry.path:gsub("^" .. normalized_root .. "/", "")
 			local git_status = status_map[relative_path]
 
+			-- Debug: Add some logging to understand what's happening
+			if relative_path == "node_modules" or relative_path == "node_modules/" then
+				vim.schedule(function()
+					vim.notify(
+						"Debug: Found " .. relative_path .. " with status: " .. (git_status or "nil"),
+						vim.log.levels.INFO
+					)
+				end)
+			end
+
 			if git_status then
-				local is_directory = entry.fs_type == "directory"
+				local is_symlink_file = is_symlink(entry.path)
+				local symbol, hl_group = get_status_display(git_status, is_symlink_file)
 
-				-- Check if we should show this status
-				if should_show_status(git_status, is_directory, status_map, relative_path) then
-					local is_symlink_file = is_symlink(entry.path)
-					local symbol, hl_group = get_status_display(git_status, is_symlink_file)
+				-- Add Git status indicator to sign column
+				vim.api.nvim_buf_set_extmark(buf_id, NAMESPACE_ID, line_num - 1, 0, {
+					sign_text = symbol,
+					sign_hl_group = hl_group,
+					priority = 2,
+				})
 
-					-- Add Git status indicator to sign column
-					vim.api.nvim_buf_set_extmark(buf_id, NAMESPACE_ID, line_num - 1, 0, {
-						sign_text = symbol,
-						sign_hl_group = hl_group,
-						priority = 2,
-					})
-
-					-- Optionally highlight the filename with status color
-					local line_text = vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1]
-					if line_text then
-						local name_start = line_text:find(vim.pesc(entry.name))
-						if name_start then
-							vim.api.nvim_buf_set_extmark(buf_id, NAMESPACE_ID, line_num - 1, name_start - 1, {
-								end_col = name_start + #entry.name - 1,
-								hl_group = hl_group,
-							})
-						end
+				-- Optionally highlight the filename with status color
+				local line_text = vim.api.nvim_buf_get_lines(buf_id, line_num - 1, line_num, false)[1]
+				if line_text then
+					local name_start = line_text:find(vim.pesc(entry.name))
+					if name_start then
+						vim.api.nvim_buf_set_extmark(buf_id, NAMESPACE_ID, line_num - 1, name_start - 1, {
+							end_col = name_start + #entry.name - 1,
+							hl_group = hl_group,
+						})
 					end
 				end
 			end
