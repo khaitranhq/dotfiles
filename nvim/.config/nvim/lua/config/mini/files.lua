@@ -1,4 +1,9 @@
--- Mini.files configuration with Git integration
+-- Mini.files configuration with Git integration and entry index numbering
+-- This module provides:
+-- 1. Git status indicators in the sign column
+-- 2. Entry index numbers for easy navigation with count commands (e.g., 5j, 3k)
+-- 3. Symlink indicators
+-- 4. Integration with Mini.files buffer events
 local utils = require("config.mini.utils")
 
 local M = {}
@@ -374,6 +379,49 @@ local function setup_buffer_keymaps(buf_id)
 	})
 end
 
+-- Namespace for entry index numbers
+local INDEX_NAMESPACE_ID = vim.api.nvim_create_namespace("mini_files_index")
+
+---Add entry index numbers to mini.files buffer for easy navigation with count
+---This displays line numbers (1, 2, 3, etc.) as virtual text at the beginning of each line
+---allowing you to use count commands like "5j" to jump to entry 5, "3k" to go up 3 entries, etc.
+---@param buf_id integer Buffer ID
+local function add_entry_indices(buf_id)
+	vim.schedule(function()
+		if not vim.api.nvim_buf_is_valid(buf_id) then
+			return
+		end
+
+		local mini_files_ok, MiniFiles = pcall(require, "mini.files")
+		if not mini_files_ok then
+			return
+		end
+
+		local line_count = vim.api.nvim_buf_line_count(buf_id)
+
+		-- Clear existing index marks
+		vim.api.nvim_buf_clear_namespace(buf_id, INDEX_NAMESPACE_ID, 0, -1)
+
+		-- Calculate width needed for the largest number (minimum 2 digits)
+		local width = math.max(2, string.len(tostring(line_count)))
+
+		for line_num = 1, line_count do
+			local entry = MiniFiles.get_fs_entry(buf_id, line_num)
+			if entry then
+				-- Format the index number with consistent width
+				local index_text = string.format("%" .. width .. "d", line_num)
+
+				-- Add index number as virtual text at the beginning of the line
+				vim.api.nvim_buf_set_extmark(buf_id, INDEX_NAMESPACE_ID, line_num - 1, 0, {
+					virt_text = { { index_text .. " ", "LineNr" } },
+					virt_text_pos = "inline",
+					priority = 1, -- Lower priority than Git status
+				})
+			end
+		end
+	end)
+end
+
 ---Setup Mini.files with Git integration
 function M.setup()
 	-- Configure Mini.files
@@ -402,9 +450,21 @@ function M.setup()
 		group = create_augroup("git_integration"),
 		pattern = "MiniFilesExplorerOpen",
 		callback = function()
-			update_git_status(vim.api.nvim_get_current_buf())
+			local buf_id = vim.api.nvim_get_current_buf()
+			add_entry_indices(buf_id) -- Add entry index numbers
+			update_git_status(buf_id)
 		end,
-		desc = "Update Git status when Mini.files opens",
+		desc = "Update Git status and add entry indices when Mini.files opens",
+	})
+
+	-- Add entry indices when creating new buffers (navigating to different directories)
+	vim.api.nvim_create_autocmd("User", {
+		group = create_augroup("entry_numbering"),
+		pattern = "MiniFilesBufferCreate",
+		callback = function(args)
+			add_entry_indices(args.data.buf_id)
+		end,
+		desc = "Add entry indices for new directory views",
 	})
 
 	vim.api.nvim_create_autocmd("User", {
@@ -418,6 +478,10 @@ function M.setup()
 		group = create_augroup("git_refresh"),
 		pattern = "MiniFilesBufferUpdate",
 		callback = function(args)
+			-- Refresh entry indices first
+			add_entry_indices(args.data.buf_id)
+
+			-- Then refresh Git status
 			local git_root = get_git_root(args.data.buf_id)
 			local cached_data = git_status_cache[git_root]
 
@@ -425,7 +489,7 @@ function M.setup()
 				update_buffer_git_indicators(args.data.buf_id, cached_data.status_map)
 			end
 		end,
-		desc = "Refresh Git status display on buffer update",
+		desc = "Refresh entry indices and Git status display on buffer update",
 	})
 end
 
