@@ -180,6 +180,34 @@ local function update_buffer_git_indicators(buf_id, status_map)
 		-- Clear existing Git status marks
 		vim.api.nvim_buf_clear_namespace(buf_id, NAMESPACE_ID, 0, -1)
 
+		-- Build a list of newly added directories (untracked directories)
+		local newly_added_dirs = {}
+		for path, status in pairs(status_map) do
+			if status == "??" and path:match("/$") then
+				-- This is an untracked directory - remove trailing slash for matching
+				local dir_path = path:gsub("/$", "")
+				newly_added_dirs[dir_path] = true
+			end
+		end
+
+		---Check if a path is inside a newly added directory
+		---@param path string The path to check
+		---@return boolean True if path is inside a newly added directory
+		local function is_in_newly_added_dir(path)
+			-- Remove trailing slash for consistent comparison
+			local clean_path = path:gsub("/$", "")
+
+			-- Check if any newly added directory is a parent of this path
+			for added_dir, _ in pairs(newly_added_dirs) do
+				-- Check if path starts with the added directory path
+				if clean_path == added_dir or clean_path:find("^" .. vim.pesc(added_dir) .. "/") then
+					return true
+				end
+			end
+
+			return false
+		end
+
 		for line_num = 1, line_count do
 			local entry = MiniFiles.get_fs_entry(buf_id, line_num)
 			if not entry then
@@ -189,6 +217,11 @@ local function update_buffer_git_indicators(buf_id, status_map)
 			-- Calculate relative path from Git root
 			local relative_path = entry.path:gsub("^" .. normalized_root .. "/", "")
 			local git_status = status_map[relative_path]
+
+			-- If no direct status found, check if it's inside a newly added directory
+			if not git_status and is_in_newly_added_dir(relative_path) then
+				git_status = "??" -- Show as untracked/added
+			end
 
 			-- Check if path is inside ignored directory
 			if not git_status and is_path_ignored(relative_path, status_map) then
