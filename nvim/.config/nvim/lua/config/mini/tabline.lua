@@ -10,8 +10,8 @@ function M.setup()
 			local suffix = vim.bo[buf_id].modified and "+ " or ""
 
 			local diag = utils.get_diagnostics(buf_id)
-			local err = diag.error > 0 and ("  " .. diag.error) or ""
-			local warn = diag.warn > 0 and ("  " .. diag.warn) or ""
+			local err = diag.error > 0 and (" ❌" .. diag.error) or ""
+			local warn = diag.warn > 0 and (" ⚠️" .. diag.warn) or ""
 			return " " .. buf_id .. err .. warn .. MiniTabline.default_format(buf_id, label) .. suffix
 		end,
 	})
