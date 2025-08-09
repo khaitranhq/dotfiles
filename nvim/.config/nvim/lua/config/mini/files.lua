@@ -106,6 +106,28 @@ local function fetch_git_status(git_root, callback)
 	vim.system({ "git", "status", "--ignored", "--porcelain" }, { text = true, cwd = clean_root }, on_exit)
 end
 
+---Check if a path is inside an ignored directory
+---@param path string The path to check
+---@param status_map table<string, string> Map of ignored paths from git status
+---@return boolean True if path is inside an ignored directory
+local function is_path_ignored(path, status_map)
+	-- Remove trailing slash for consistent comparison
+	local clean_path = path:gsub("/$", "")
+
+	-- Check if any ignored path is a parent of this path
+	for ignored_path, status in pairs(status_map) do
+		if status == "!!" then
+			local clean_ignored = ignored_path:gsub("/$", "")
+			-- Check if path starts with ignored directory
+			if clean_path:find("^" .. vim.pesc(clean_ignored)) then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 ---Parse Git status output into a structured map
 ---@param git_output string Raw Git status output
 ---@return table<string, string> Map of file paths to Git status codes
@@ -168,14 +190,9 @@ local function update_buffer_git_indicators(buf_id, status_map)
 			local relative_path = entry.path:gsub("^" .. normalized_root .. "/", "")
 			local git_status = status_map[relative_path]
 
-			-- Debug: Add some logging to understand what's happening
-			if relative_path == "node_modules" or relative_path == "node_modules/" then
-				vim.schedule(function()
-					vim.notify(
-						"Debug: Found " .. relative_path .. " with status: " .. (git_status or "nil"),
-						vim.log.levels.INFO
-					)
-				end)
+			-- Check if path is inside ignored directory
+			if not git_status and is_path_ignored(relative_path, status_map) then
+				git_status = "!!"
 			end
 
 			if git_status then
