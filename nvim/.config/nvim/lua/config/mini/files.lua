@@ -208,6 +208,66 @@ local function update_buffer_git_indicators(buf_id, status_map)
 			return false
 		end
 
+		---Check if a directory contains modified or new items (excluding case where all items are new)
+		---@param dir_path string The directory path to check
+		---@param status_map table<string, string> Map of paths to Git status
+		---@return string|nil Git status to apply to directory, or nil if no status should be applied
+		local function get_directory_status_from_children(dir_path, status_map)
+			local clean_dir_path = dir_path:gsub("/$", "")
+			local has_modified_children = false
+			local has_new_children = false
+			local total_children = 0
+			local new_children_count = 0
+
+			-- Look through all status entries to find children of this directory
+			for file_path, status in pairs(status_map) do
+				local clean_file_path = file_path:gsub("/$", "")
+
+				-- Check if this file/folder is a direct or indirect child of our directory
+				if clean_file_path:find("^" .. vim.pesc(clean_dir_path) .. "/") then
+					total_children = total_children + 1
+
+					-- Check for modified states (including staged changes)
+					if
+						status:match("^[MAD]")
+						or status:match("[MAD]$")
+						or status == "MM"
+						or status == "AA"
+						or status == "UU"
+					then
+						has_modified_children = true
+					end
+
+					-- Check for new/untracked items
+					if status == "??" then
+						has_new_children = true
+						new_children_count = new_children_count + 1
+					end
+				end
+			end
+
+			-- If directory has children with changes
+			if total_children > 0 then
+				-- Exception: if ALL children are new (untracked), don't mark parent as modified
+				-- This preserves existing behavior for fully new directories
+				if has_new_children and new_children_count == total_children then
+					return nil -- Let existing logic handle this case
+				end
+
+				-- If directory contains modified children, mark as modified
+				if has_modified_children then
+					return " M" -- Modified in working directory
+				end
+
+				-- If directory contains new children (but not all are new), mark as modified
+				if has_new_children then
+					return " M" -- Modified in working directory (contains new items)
+				end
+			end
+
+			return nil
+		end
+
 		for line_num = 1, line_count do
 			local entry = MiniFiles.get_fs_entry(buf_id, line_num)
 			if not entry then
@@ -221,6 +281,11 @@ local function update_buffer_git_indicators(buf_id, status_map)
 			-- If no direct status found, check if it's inside a newly added directory
 			if not git_status and is_in_newly_added_dir(relative_path) then
 				git_status = "??" -- Show as untracked/added
+			end
+
+			-- If no direct status found and this is a directory, check if it contains modified/new children
+			if not git_status and entry.fs_type == "directory" then
+				git_status = get_directory_status_from_children(relative_path, status_map)
 			end
 
 			-- Check if path is inside ignored directory
