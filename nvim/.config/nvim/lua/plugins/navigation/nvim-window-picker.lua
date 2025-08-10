@@ -1,4 +1,4 @@
-function vim.window_picker_select()
+function SelectWindow()
     local window_id = require("window-picker").pick_window()
     if window_id == nil then
       print("No window selected")

@@ -35,7 +35,6 @@ require("lazy").setup({
 	},
 })
 require("core.utils").load_mappings()
-require("modules.dressing.init").setup()
 
 -- Setup extra enhancements (nui UI, etc.)
 vim.schedule(function()

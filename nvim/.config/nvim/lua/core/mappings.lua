@@ -91,45 +91,20 @@ M.fuzzy = {
 	n = {
 		["<leader>ff"] = {
 			function()
-				local mini_pick_ok, mini_pick = pcall(require, "mini.pick")
-				if not mini_pick_ok then
-					vim.notify("Mini.pick not available", vim.log.levels.WARN)
-					return
-				end
-
-				-- Use override config if available, otherwise use default
-				if _G.OverrideRipgrepConfig then
-					_G.OverrideRipgrepConfig(function()
-						mini_pick.builtin.files({ tool = "rg" })
-					end)
-				else
-					mini_pick.builtin.files({ tool = "rg" })
-				end
+				Snacks.picker.files({
+					hidden = true,
+				})
 			end,
-			"Find files (with ripgrep)",
+			"Find files",
 		},
-
 		["<leader>fg"] = {
 			function()
-				local mini_pick_ok, mini_pick = pcall(require, "mini.pick")
-				if not mini_pick_ok then
-					vim.notify("Mini.pick not available", vim.log.levels.WARN)
-					return
-				end
-
-				-- Use override config if available, otherwise use default
-				if _G.OverrideRipgrepConfig then
-					_G.OverrideRipgrepConfig(function()
-						mini_pick.builtin.grep()
-					end)
-				else
-					mini_pick.builtin.grep()
-				end
+				Snacks.picker.grep({
+					hidden = true,
+				})
 			end,
-			"Grep search in files",
+			"Find files",
 		},
-
-		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Buffer selector" },
 	},
 }
 
@@ -137,17 +112,13 @@ M.fuzzy = {
 
 M.navigate = {
 	n = {
-		["m"] = { "<Plug>(leap)", "Leap navigation" },
+		["s"] = { "<Plug>(leap)", "Leap navigation" },
 		["<leader>w"] = {
-			function()
-				if _G.vim and _G.vim.window_picker_select then
-					_G.vim.window_picker_select()
-				else
-					vim.notify("Window picker not available", vim.log.levels.WARN)
-				end
-			end,
+			SelectWindow,
 			"Interactive window picker",
 		},
+		["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
+		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Select buffers" },
 	},
 }
 
@@ -207,6 +178,7 @@ M.format = {
 
 -- GIT INTEGRATION
 
+local gitsigns = require("gitsigns")
 M.git = {
 	n = {
 		-- Git conflict resolution
@@ -218,6 +190,20 @@ M.git = {
 		-- Git conflict navigation
 		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git: next conflict" },
 		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git: previous conflict" },
+
+		-- Hunks actions
+		["<leader>ghs"] = { gitsigns.stage_hunk, "Git: stage hunk" },
+		["<leader>ghr"] = { gitsigns.reset_hunk, "Git: reset hunk" },
+		["<leader>ghp"] = { gitsigns.preview_hunk_inline, "Git: preview hunk" },
+		["<leader>ghd"] = { gitsigns.diffthis, "Git: diffthis" },
+
+		-- Lazygit
+		["<leader>gs"] = {
+			function()
+				Snacks.lazygit()
+			end,
+			"Open LazyGit",
+		},
 	},
 }
 

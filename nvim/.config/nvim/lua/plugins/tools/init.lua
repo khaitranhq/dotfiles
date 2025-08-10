@@ -14,3 +14,4 @@
 
 -- This module exports nothing - plugins are auto-loaded by lazy.nvim
 return {}
+
