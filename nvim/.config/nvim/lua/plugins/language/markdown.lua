@@ -19,25 +19,6 @@ return {
 				},
 			},
 		},
-		dependencies = {
-			"nvim-treesitter/nvim-treesitter",
-			"echasnovski/mini.nvim",
-			-- {
-			-- 	"3rd/image.nvim",
-			-- 	config = function()
-			-- 		require("image").setup({
-			-- 			backend = "kitty",
-			-- 			kitty_method = "normal", -- or "unicode-placeholders"
-			-- 			processor = "magick_rock", -- or "magick_cli"
-			-- 			integrations = {
-			-- 				markdown = {
-			-- 					enabled = true,
-			-- 					only_render_image_at_cursor = true,
-			-- 				},
-			-- 			},
-			-- 		})
-			-- 	end,
-			-- },
-		},
+		dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
 	},
 }
