@@ -1,7 +1,7 @@
--- Mini.files configuration with Git integration and entry index numbering
+-- Mini.files configuration with Git integration and relative line numbering
 -- This module provides:
 -- 1. Git status indicators in the sign column
--- 2. Entry index numbers for easy navigation with count commands (e.g., 5j, 3k)
+-- 2. Relative line numbers for consistent navigation matching Neovim's relativenumber behavior
 -- 3. Symlink indicators
 -- 4. Integration with Mini.files buffer events
 local utils = require("config.mini.utils")
@@ -382,9 +382,9 @@ end
 -- Namespace for entry index numbers
 local INDEX_NAMESPACE_ID = vim.api.nvim_create_namespace("mini_files_index")
 
----Add entry index numbers to mini.files buffer for easy navigation with count
----This displays line numbers (1, 2, 3, etc.) as virtual text at the beginning of each line
----allowing you to use count commands like "5j" to jump to entry 5, "3k" to go up 3 entries, etc.
+---Add relative line numbers to mini.files buffer for consistent navigation
+---This displays relative line numbers (3, 2, 1, 0, 1, 2, 3) as virtual text at the beginning of each line
+---matching Neovim's relativenumber behavior for consistent muscle memory
 ---@param buf_id integer Buffer ID
 local function add_entry_indices(buf_id)
 	vim.schedule(function()
@@ -402,18 +402,36 @@ local function add_entry_indices(buf_id)
 		-- Clear existing index marks
 		vim.api.nvim_buf_clear_namespace(buf_id, INDEX_NAMESPACE_ID, 0, -1)
 
-		-- Calculate width needed for the largest number (minimum 2 digits)
-		local width = math.max(2, string.len(tostring(line_count)))
+		-- Get current cursor position to calculate relative distances
+		local cursor_pos = vim.api.nvim_win_get_cursor(0)
+		local current_line = cursor_pos[1]
+
+		-- Calculate width needed for the largest relative number (minimum 2 digits)
+		local max_distance = math.max(current_line - 1, line_count - current_line)
+		local width = math.max(2, string.len(tostring(max_distance)))
 
 		for line_num = 1, line_count do
 			local entry = MiniFiles.get_fs_entry(buf_id, line_num)
 			if entry then
-				-- Format the index number with consistent width
-				local index_text = string.format("%" .. width .. "d", line_num)
+				local relative_num
+				local hl_group
 
-				-- Add index number as virtual text at the beginning of the line
+				if line_num == current_line then
+					-- Current line shows absolute line number
+					relative_num = line_num
+					hl_group = "CursorLineNr"
+				else
+					-- Other lines show relative distance
+					relative_num = math.abs(line_num - current_line)
+					hl_group = "LineNr"
+				end
+
+				-- Format the relative number with consistent width
+				local index_text = string.format("%" .. width .. "d", relative_num)
+
+				-- Add relative number as virtual text at the beginning of the line
 				vim.api.nvim_buf_set_extmark(buf_id, INDEX_NAMESPACE_ID, line_num - 1, 0, {
-					virt_text = { { index_text .. " ", "LineNr" } },
+					virt_text = { { index_text .. " ", hl_group } },
 					virt_text_pos = "inline",
 					priority = 1, -- Lower priority than Git status
 				})
@@ -451,20 +469,38 @@ function M.setup()
 		pattern = "MiniFilesExplorerOpen",
 		callback = function()
 			local buf_id = vim.api.nvim_get_current_buf()
-			add_entry_indices(buf_id) -- Add entry index numbers
+			add_entry_indices(buf_id) -- Add relative line numbers
 			update_git_status(buf_id)
+
+			-- Set up cursor movement tracking for the initial buffer
+			vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+				buffer = buf_id,
+				callback = function()
+					add_entry_indices(buf_id)
+				end,
+				desc = "Update relative line numbers on cursor movement",
+			})
 		end,
-		desc = "Update Git status and add entry indices when Mini.files opens",
+		desc = "Update Git status and add relative line numbers when Mini.files opens",
 	})
 
-	-- Add entry indices when creating new buffers (navigating to different directories)
+	-- Add relative line numbers when creating new buffers (navigating to different directories)
 	vim.api.nvim_create_autocmd("User", {
 		group = create_augroup("entry_numbering"),
 		pattern = "MiniFilesBufferCreate",
 		callback = function(args)
 			add_entry_indices(args.data.buf_id)
+
+			-- Set up cursor movement tracking for this buffer to update relative numbers
+			vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+				buffer = args.data.buf_id,
+				callback = function()
+					add_entry_indices(args.data.buf_id)
+				end,
+				desc = "Update relative line numbers on cursor movement",
+			})
 		end,
-		desc = "Add entry indices for new directory views",
+		desc = "Add relative line numbers for new directory views",
 	})
 
 	vim.api.nvim_create_autocmd("User", {
@@ -478,7 +514,7 @@ function M.setup()
 		group = create_augroup("git_refresh"),
 		pattern = "MiniFilesBufferUpdate",
 		callback = function(args)
-			-- Refresh entry indices first
+			-- Refresh relative line numbers first
 			add_entry_indices(args.data.buf_id)
 
 			-- Then refresh Git status
@@ -489,7 +525,7 @@ function M.setup()
 				update_buffer_git_indicators(args.data.buf_id, cached_data.status_map)
 			end
 		end,
-		desc = "Refresh entry indices and Git status display on buffer update",
+		desc = "Refresh relative line numbers and Git status display on buffer update",
 	})
 end
 
