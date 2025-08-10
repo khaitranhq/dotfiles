@@ -26,7 +26,9 @@ opt.incsearch = true -- Show search matches as you type
 
 -- Text rendering and display
 opt.conceallevel = 2 -- Hide markup characters in supported file types
-opt.wrap = false -- Don't wrap long lines by default
+opt.wrap = true -- Don't wrap long lines by default
+opt.showbreak = "↪ "
+opt.linebreak = true
 opt.scrolloff = 8 -- Keep 8 lines visible above/below cursor
 opt.sidescrolloff = 8 -- Keep 8 columns visible left/right of cursor
 opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
