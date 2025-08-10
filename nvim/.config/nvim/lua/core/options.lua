@@ -65,12 +65,12 @@ opt.foldlevelstart = 99 -- Always start editing with all folds open
 
 local function setup_undo_directory()
 	local undo_dir = vim.fn.stdpath("state") .. "/undo"
-	
+
 	-- Create undo directory if it doesn't exist
 	if vim.fn.isdirectory(undo_dir) == 0 then
 		vim.fn.mkdir(undo_dir, "p", 448) -- 0700 in octal = 448 in decimal
 	end
-	
+
 	opt.undodir = undo_dir
 	opt.undofile = true -- Enable persistent undo
 	opt.undolevels = 10000 -- Maximum number of undos
@@ -131,10 +131,24 @@ g.loaded_node_provider = 0 -- Disable Node.js provider
 -- Disable unused built-in plugins for faster startup
 
 local disabled_built_ins = {
-	"gzip", "zip", "zipPlugin", "tar", "tarPlugin",
-	"getscript", "getscriptPlugin", "vimball", "vimballPlugin",
-	"2html_plugin", "logipat", "rrhelper", "spellfile_plugin",
-	"matchit", "netrw", "netrwPlugin", "netrwSettings", "netrwFileHandlers"
+	"gzip",
+	"zip",
+	"zipPlugin",
+	"tar",
+	"tarPlugin",
+	"getscript",
+	"getscriptPlugin",
+	"vimball",
+	"vimballPlugin",
+	"2html_plugin",
+	"logipat",
+	"rrhelper",
+	"spellfile_plugin",
+	"matchit",
+	"netrw",
+	"netrwPlugin",
+	"netrwSettings",
+	"netrwFileHandlers",
 }
 
 for _, plugin in ipairs(disabled_built_ins) do
@@ -155,16 +169,39 @@ opt.showmode = false -- Don't show mode (handled by statusline)
 
 -- Session handling
 opt.sessionoptions = {
-	"buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds"
+	"buffers",
+	"curdir",
+	"tabpages",
+	"winsize",
+	"help",
+	"globals",
+	"skiprtp",
+	"folds",
 }
 
 -- Wildmenu (command completion)
 opt.wildmode = { "longest:full", "full" } -- Command completion behavior
 opt.wildignore:append({
-	"*.o", "*.obj", "*.dylib", "*.bin", "*.dll", "*.exe",
-	"*/.git/*", "*/.svn/*", "*/__pycache__/*", "*/build/**",
-	"*.jpg", "*.png", "*.jpeg", "*.gif", "*.ico", "*.pdf",
-	"*.pyc", "*.pyo", "*.class", "*.cache"
+	"*.o",
+	"*.obj",
+	"*.dylib",
+	"*.bin",
+	"*.dll",
+	"*.exe",
+	"*/.git/*",
+	"*/.svn/*",
+	"*/__pycache__/*",
+	"*/build/**",
+	"*.jpg",
+	"*.png",
+	"*.jpeg",
+	"*.gif",
+	"*.ico",
+	"*.pdf",
+	"*.pyc",
+	"*.pyo",
+	"*.class",
+	"*.cache",
 })
 
 -- Diff options
