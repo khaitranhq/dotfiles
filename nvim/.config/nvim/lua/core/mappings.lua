@@ -44,6 +44,15 @@ M.general = {
 	},
 }
 
+-- NOTIFICATION MANAGEMENT
+
+local notify = require("notify")
+M.notify = {
+	n = {
+		["<leader>zh"] = { notify.dismiss, "Dismiss all notifications" },
+	},
+}
+
 -- TAB MANAGEMENT
 
 M.tabs = {
@@ -70,37 +79,9 @@ M.tabs = {
 
 M.file_explorer = {
 	n = {
-		["<leader>b"] = {
-			function()
-				local mini_files_ok, mini_files = pcall(require, "mini.files")
-				if mini_files_ok then
-					mini_files.open()
-				else
-					vim.notify("Mini.files not available", vim.log.levels.WARN)
-				end
-			end,
-			"Open mini.files explorer",
-		},
-
-		-- File path utilities
-		["<leader>yp"] = {
-			function()
-				-- Try to use the global function if available, fallback to basic implementation
-				if _G.MiniFilesCopyRelativePath then
-					_G.MiniFilesCopyRelativePath()
-				else
-					local current_file = vim.api.nvim_buf_get_name(0)
-					if current_file ~= "" then
-						local relative_path = vim.fn.fnamemodify(current_file, ":~:.")
-						vim.fn.setreg("+", relative_path)
-						vim.notify("Copied: " .. relative_path, vim.log.levels.INFO)
-					else
-						vim.notify("No file path to copy", vim.log.levels.WARN)
-					end
-				end
-			end,
-			"Copy buffer relative path to clipboard",
-		},
+		["<leader>b"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
+		["<leader>lf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
+		["<leader>lv"] = { ChangeViewFileExplorer, "Change View of File Explorer" },
 	},
 }
 
@@ -241,4 +222,3 @@ M.git = {
 }
 
 return M
-

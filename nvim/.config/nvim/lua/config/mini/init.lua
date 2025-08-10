@@ -4,7 +4,6 @@ local utils = require("config.mini.utils")
 
 -- Expose global functions for compatibility
 OverrideRipgrepConfig = utils.override_ripgrep_config
-MiniFilesCopyRelativePath = utils.copy_relative_path
 
 -- Setup all mini modules
 local function setup_mini_modules()
@@ -26,7 +25,6 @@ local function setup_mini_modules()
 	require("config.mini.pick").setup()
 	require("config.mini.statusline").setup()
 	require("config.mini.tabline").setup()
-	require("config.mini.files").setup()
 	require("config.mini.extra").setup()
 end
 
