@@ -40,7 +40,9 @@ M.general = {
 		["//"] = { "y/\\V<C-R>=escape(@\",'/')<CR><CR>", "Search with selected text" },
 		["y"] = { '"+y', "Yank to system clipboard" },
 		["d"] = { '"+d', "Cut to system clipboard" },
+		["<leader>d"] = { '"_d', "Delete but not write to clipboard" },
 		["x"] = { '"+x', "Cut character to system clipboard" },
+		["<leader>x"] = { '"_x', "Delete but not write to clipboard" },
 	},
 }
 
