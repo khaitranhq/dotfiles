@@ -81,9 +81,12 @@ M.tabs = {
 
 M.file_explorer = {
 	n = {
-		["<leader>b"] = { "<cmd>NvimTreeToggle<CR>", "Toggle nvim tree" },
-		["<leader>lf"] = { "<cmd>NvimTreeFocus<CR>", "Toggle nvim tree" },
-		["<leader>lv"] = { ChangeViewFileExplorer, "Change View of File Explorer" },
+		["<leader>b"] = {
+			function()
+				Snacks.explorer()
+			end,
+			"Toggle nvim tree",
+		},
 	},
 }
 
