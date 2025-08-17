@@ -1,0 +1,33 @@
+{
+  "wcgw": {
+    "name": "wcgw",
+    "command": "uv",
+    "args": ["tool", "run", "--python", "3.12", "wcgw@latest"],
+    "enabledForAgents": [
+      "PulumiGoReviewer",
+      "PromptMaker",
+      "DocumentationAgent",
+      "Architect",
+      "IELTSWritingReviewer",
+      "DevOpsEngineer",
+      "PresentationAgent"
+    ]
+  },
+  "awslabs": {
+    "name": "awslabs",
+    "command": "uvx",
+    "args": ["awslabs.aws-api-mcp-server@latest"],
+    "enabledForAgents": ["DevOpsEngineer"]
+  },
+  "serena": {
+    "name": "serena",
+    "command": "uvx",
+    "args": [
+      "--from",
+      "git+https://github.com/oraios/serena",
+      "serena",
+      "start-mcp-server"
+    ],
+    "enabledForAgents": ["Engineer"]
+  }
+}
