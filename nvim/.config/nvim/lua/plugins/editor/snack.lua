@@ -25,12 +25,38 @@ return {
 						},
 					},
 					explorer = {
-            hidden = true,
+						hidden = true,
+						ignored = true,
 						win = {
 							list = {
 								keys = {
 									["Y"] = "copy_path",
+									["o"] = "confirm",
 								},
+								wo = {
+									number = true,
+									relativenumber = true,
+								},
+							},
+						},
+						auto_close = true,
+						layout = {
+							cycle = true,
+							preview = true, ---@diagnostic disable-line: assign-type-mismatch
+							layout = {
+								box = "horizontal",
+								position = "float",
+								height = 0.95,
+								width = 0,
+								border = "rounded",
+								{
+									box = "vertical",
+									width = 40,
+									min_width = 40,
+									{ win = "input", height = 1, title = "{title} {live} {flags}", border = "single" },
+									{ win = "list" },
+								},
+								{ win = "preview", width = 0, border = "left" },
 							},
 						},
 						actions = {

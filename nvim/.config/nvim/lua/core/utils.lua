@@ -50,4 +50,33 @@ M.select_tab = function()
     end)
 end
 
+--- Prompt user to copy current buffer's absolute or relative path to clipboard.
+--- Uses vim.ui.select for UI, copies result to system clipboard.
+--- - Absolute: Full path to file.
+--- - Relative: Path from current working directory.
+function M.copy_buffer_path()
+  local buf_path = vim.api.nvim_buf_get_name(0)
+  if buf_path == "" then
+    vim.notify("No file in current buffer.", vim.log.levels.WARN)
+    return
+  end
+
+  local abs_path = buf_path
+  local rel_path = vim.fn.fnamemodify(buf_path, ":~:.") -- relative to cwd and ~
+  local choices = {
+    { label = "Relative path (cwd)", value = rel_path },
+    { label = "Absolute path", value = abs_path },
+  }
+
+  vim.ui.select(choices, {
+    prompt = "Copy buffer path:",
+    format_item = function(item) return item.label .. "\n" .. item.value end,
+  }, function(choice)
+    if choice and choice.value then
+      vim.fn.setreg('+', choice.value)
+      vim.notify("Copied to clipboard: " .. choice.value, vim.log.levels.INFO)
+    end
+  end)
+end
+
 return M

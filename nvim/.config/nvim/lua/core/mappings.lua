@@ -31,6 +31,19 @@ M.general = {
 			"Show current buffer path",
 		},
 
+		-- Copy buffer path (absolute/relative) to clipboard
+		["<leader>cp"] = {
+			function()
+				local utils_ok, utils = pcall(require, "core.utils")
+				if utils_ok and utils.copy_buffer_path then
+					utils.copy_buffer_path()
+				else
+					vim.notify("Path copier not available", vim.log.levels.WARN)
+				end
+			end,
+			"Copy buffer path (absolute/relative) to clipboard",
+		},
+
 		-- System clipboard integration
 		["p"] = { '"+p', "Paste from system clipboard" },
 	},
