@@ -197,6 +197,7 @@ M.format = {
 -- GIT INTEGRATION
 
 local gitsigns = require("gitsigns")
+local neogit = require("neogit")
 M.git = {
 	n = {
 		-- Git conflict resolution
@@ -212,15 +213,39 @@ M.git = {
 		-- Hunks actions
 		["<leader>ghs"] = { gitsigns.stage_hunk, "Git: stage hunk" },
 		["<leader>ghr"] = { gitsigns.reset_hunk, "Git: reset hunk" },
-		["<leader>ghp"] = { gitsigns.preview_hunk_inline, "Git: preview hunk" },
+		["<leader>ghp"] = { gitsigns.preview_hunk, "Git: preview hunk" },
 		["<leader>ghd"] = { gitsigns.diffthis, "Git: diffthis" },
+		["<leader>g]"] = {
+			"<cmd>Gitsigns nav_hunk next<CR>",
+			"Git: next hunk",
+		},
+		["<leader>g["] = {
+			"<cmd>Gitsigns nav_hunk prev<CR>",
+			"Git: previous hunk",
+		},
+
+		["<leader>gb"] = {
+			function()
+				local current_branch = require("neogit.lib.git").branch.current()
+				vim.cmd.let(("@+='%s'"):format(current_branch))
+        vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
+			end,
+			"Git: blame line",
+		},
 
 		-- Lazygit
 		["<leader>gs"] = {
 			function()
-				Snacks.lazygit()
+				neogit.open()
 			end,
-			"Open LazyGit",
+			"Open Neogit",
+		},
+
+		["<leader>gl"] = {
+			function()
+				require("core.utils").run_oco_with_float()
+			end,
+			"Open Lazygit",
 		},
 	},
 }
