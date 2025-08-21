@@ -201,8 +201,8 @@ local neogit = require("neogit")
 M.git = {
 	n = {
 		-- Git conflict resolution
-		["<leader>gcc"] = { "<cmd>GitConflictChooseOurs<CR>", "Git: choose current change" },
-		["<leader>gci"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git: choose incoming change" },
+		["<leader>gco"] = { "<cmd>GitConflictChooseOurs<CR>", "Git: choose current change" },
+		["<leader>gct"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git: choose incoming change" },
 		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git: choose both changes" },
 		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git: reject all changes" },
 
@@ -228,7 +228,7 @@ M.git = {
 			function()
 				local current_branch = require("neogit.lib.git").branch.current()
 				vim.cmd.let(("@+='%s'"):format(current_branch))
-        vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
+				vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
 			end,
 			"Git: blame line",
 		},
@@ -241,7 +241,7 @@ M.git = {
 			"Open Neogit",
 		},
 
-		["<leader>gl"] = {
+		["<leader>gcc"] = {
 			function()
 				require("core.utils").run_oco_with_float()
 			end,
