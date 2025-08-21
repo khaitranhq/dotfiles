@@ -4,6 +4,7 @@
     "command": "uv",
     "args": ["tool", "run", "--python", "3.12", "wcgw@latest"],
     "enabledForAgents": [
+      "Engineer",
       "PulumiGoReviewer",
       "PromptMaker",
       "DocumentationAgent",
@@ -18,16 +19,5 @@
     "command": "uvx",
     "args": ["awslabs.aws-api-mcp-server@latest"],
     "enabledForAgents": ["DevOpsEngineer"]
-  },
-  "serena": {
-    "name": "serena",
-    "command": "uvx",
-    "args": [
-      "--from",
-      "git+https://github.com/oraios/serena",
-      "serena",
-      "start-mcp-server"
-    ],
-    "enabledForAgents": ["Engineer"]
   }
 }
