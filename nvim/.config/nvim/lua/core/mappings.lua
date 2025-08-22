@@ -243,7 +243,11 @@ M.git = {
 
 		["<leader>gcc"] = {
 			function()
-				require("core.utils").run_oco_with_float()
+				require("core.utils").run_shell_in_float("oco --yes", {
+					post_command_func = function()
+						require("neogit").refresh()
+					end,
+				})
 			end,
 			"Open Lazygit",
 		},
