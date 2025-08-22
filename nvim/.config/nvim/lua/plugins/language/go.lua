@@ -20,7 +20,6 @@ return {
 			lsp_inlay_hints = {
 				enable = true,
 			},
-			lsp_cfg = true,
 		},
 		config = function(_, opts)
 			require("go").setup(opts)
