@@ -9,7 +9,7 @@ return {
 			require("lualine").setup({
 				options = {
 					-- theme = "catppuccin",
-          theme = "gruvbox-material",
+          theme = "onedark_vivid",
 				},
 				sections = {
 					lualine_b = { "diagnostics" },
