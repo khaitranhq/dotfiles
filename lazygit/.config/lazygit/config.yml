@@ -2,29 +2,29 @@ gui:
   nerdFontsVersion: "3"
   theme:
     activeBorderColor:
-      - '#61afef'  # onedark_vivid blue
-      - bold
+      - "#ff9e64"
+      - "bold"
     inactiveBorderColor:
-      - '#5c6370'  # onedark_vivid gray
-    optionsTextColor:
-      - '#61afef'  # onedark_vivid blue
-    selectedLineBgColor:
-      - '#3a404a'  # slightly lighter than bg for selection
-    cherryPickedCommitBgColor:
-      - '#495162'  # line_number color for consistency
-    cherryPickedCommitFgColor:
-      - '#2bbac5'  # onedark_vivid cyan
-    unstagedChangesColor:
-      - '#ef596f'  # onedark_vivid red
-    defaultFgColor:
-      - '#abb2bf'  # onedark_vivid fg
+      - "#27a1b9"
     searchingActiveBorderColor:
-      - '#e5c07b'  # onedark_vivid yellow
-    # Additional onedark_vivid theme colors
-    stagedChangesColor:
-      - '#89ca78'  # onedark_vivid green
-    defaultBgColor:
-      - '#282c34'  # onedark_vivid bg
+      - "#ff9e64"
+      - "bold"
+    optionsTextColor:
+      - "#7aa2f7"
+    selectedLineBgColor:
+      - "#283457"
+    cherryPickedCommitFgColor:
+      - "#7aa2f7"
+    cherryPickedCommitBgColor:
+      - "#bb9af7"
+    markedBaseCommitFgColor:
+      - "#7aa2f7"
+    markedBaseCommitBgColor:
+      - "#e0af68"
+    unstagedChangesColor:
+      - "#db4b4b"
+    defaultFgColor:
+      - "#c0caf5"
 git:
   autoFetch: false
   paging:
@@ -34,7 +34,6 @@ customCommands:
   - key: '<c-a>'
     context: 'global'
     command: "oco --yes"
-
 
 # activeBorderColor:
 #   - '#89b4fa'
@@ -55,3 +54,28 @@ customCommands:
 #   - '#cdd6f4'
 # searchingActiveBorderColor:
 #   - '#f9e2af'
+
+# activeBorderColor:
+#   - '#61afef'  # onedark_vivid blue
+#   - bold
+# inactiveBorderColor:
+#   - '#5c6370'  # onedark_vivid gray
+# optionsTextColor:
+#   - '#61afef'  # onedark_vivid blue
+# selectedLineBgColor:
+#   - '#3a404a'  # slightly lighter than bg for selection
+# cherryPickedCommitBgColor:
+#   - '#495162'  # line_number color for consistency
+# cherryPickedCommitFgColor:
+#   - '#2bbac5'  # onedark_vivid cyan
+# unstagedChangesColor:
+#   - '#ef596f'  # onedark_vivid red
+# defaultFgColor:
+#   - '#abb2bf'  # onedark_vivid fg
+# searchingActiveBorderColor:
+#   - '#e5c07b'  # onedark_vivid yellow
+# # Additional onedark_vivid theme colors
+# stagedChangesColor:
+#   - '#89ca78'  # onedark_vivid green
+# defaultBgColor:
+#   - '#282c34'  # onedark_vivid bg

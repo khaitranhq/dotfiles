@@ -1,91 +1,92 @@
 colourful: true
 filekinds:
-  normal: {foreground: "#abb2bf"}  # fg (main text)
-  directory: {foreground: "#61afef"}  # blue (directories)
-  symlink: {foreground: "#2bbac5"}  # cyan (symlinks)
-  pipe: {foreground: "#5c6370"}  # gray (pipes)
-  block_device: {foreground: "#ef596f"}  # red (block devices)
-  char_device: {foreground: "#ef596f"}  # red (char devices)
-  socket: {foreground: "#7f848e"}  # comment (sockets)
-  special: {foreground: "#d55fde"}  # purple (special files)
-  executable: {foreground: "#89ca78"}  # green (executables)
-  mount_point: {foreground: "#d19a66"}  # orange (mount points)
+  normal: {foreground: "#c0caf5"}
+  directory: {foreground: "#7aa2f7"}
+  symlink: {foreground: "#2ac3de"}
+  pipe: {foreground: "#414868"}
+  block_device: {foreground: "#e0af68"}
+  char_device: {foreground: "#e0af68"}
+  socket: {foreground: "#414868"}
+  special: {foreground: "#9d7cd8"}
+  executable: {foreground: "#9ece6a"}
+  mount_point: {foreground: "#b4f9f8"}
 perms:
-  user_read: {foreground: "#abb2bf"}  # fg (user read)
-  user_write: {foreground: "#e5c07b"}  # yellow (user write)
-  user_execute_file: {foreground: "#89ca78"}  # green (user execute file)
-  user_execute_other: {foreground: "#89ca78"}  # green (user execute other)
-  group_read: {foreground: "#abb2bf"}  # fg (group read)
-  group_write: {foreground: "#e5c07b"}  # yellow (group write)
-  group_execute: {foreground: "#89ca78"}  # green (group execute)
-  other_read: {foreground: "#7f848e"}  # comment (other read)
-  other_write: {foreground: "#e5c07b"}  # yellow (other write)
-  other_execute: {foreground: "#89ca78"}  # green (other execute)
-  special_user_file: {foreground: "#d55fde"}  # purple (special user file)
-  special_other: {foreground: "#5c6370"}  # gray (special other)
-  attribute: {foreground: "#7f848e"}  # comment (attributes)
+  user_read: {foreground: "#2ac3de"}
+  user_write: {foreground: "#bb9af7"}
+  user_execute_file: {foreground: "#9ece6a"}
+  user_execute_other: {foreground: "#9ece6a"}
+  group_read: {foreground: "#2ac3de"}
+  group_write: {foreground: "#ff9e64"}
+  group_execute: {foreground: "#9ece6a"}
+  other_read: {foreground: "#2ac3de"}
+  other_write: {foreground: "#ff007c"}
+  other_execute: {foreground: "#9ece6a"}
+  special_user_file: {foreground: "#ff007c"}
+  special_other: {foreground: "#db4b4b"}
+  attribute: {foreground: "#737aa2"}
 size:
-  major: {foreground: "#7f848e"}  # comment (major)
-  minor: {foreground: "#2bbac5"}  # cyan (minor)
-  number_byte: {foreground: "#abb2bf"}  # fg (byte numbers)
-  number_kilo: {foreground: "#abb2bf"}  # fg (kilo numbers)
-  number_mega: {foreground: "#61afef"}  # blue (mega numbers)
-  number_giga: {foreground: "#d55fde"}  # purple (giga numbers)
-  number_huge: {foreground: "#ef596f"}  # red (huge numbers)
-  unit_byte: {foreground: "#7f848e"}  # comment (byte units)
-  unit_kilo: {foreground: "#61afef"}  # blue (kilo units)
-  unit_mega: {foreground: "#d55fde"}  # purple (mega units)
-  unit_giga: {foreground: "#d55fde"}  # purple (giga units)
-  unit_huge: {foreground: "#d19a66"}  # orange (huge units)
+  major: {foreground: "#2ac3de"}
+  minor: {foreground: "#9d7cd8"}
+  number_byte: {foreground: "#a9b1d6"}
+  number_kilo: {foreground: "#89ddff"}
+  number_mega: {foreground: "#2ac3de"}
+  number_giga: {foreground: "#ff9e64"}
+  number_huge: {foreground: "#ff007c"}
+  unit_byte: {foreground: "#a9b1d6"}
+  unit_kilo: {foreground: "#89ddff"}
+  unit_mega: {foreground: "#2ac3de"}
+  unit_giga: {foreground: "#ff9e64"}
+  unit_huge: {foreground: "#ff007c"}
 users:
-  user_you: {foreground: "#abb2bf"}  # fg (your user)
-  user_root: {foreground: "#ef596f"}  # red (root user)
-  user_other: {foreground: "#d55fde"}  # purple (other users)
-  group_yours: {foreground: "#abb2bf"}  # fg (your group)
-  group_other: {foreground: "#5c6370"}  # gray (other groups)
-  group_root: {foreground: "#ef596f"}  # red (root group)
+  user_you: {foreground: "#3d59a1"}
+  user_root: {foreground: "#bb9af7"}
+  user_other: {foreground: "#2ac3de"}
+  group_yours: {foreground: "#89ddff"}
+  group_root: {foreground: "#bb9af7"}
+  group_other: {foreground: "#c0caf5"}
 links:
-  normal: {foreground: "#2bbac5"}  # cyan (normal links)
-  multi_link_file: {foreground: "#d19a66"}  # orange (multi-link files)
+  normal: {foreground: "#89ddff"}
+  multi_link_file: {foreground: "#2ac3de"}
 git:
-  new: {foreground: "#89ca78"}  # green (new/added files)
-  modified: {foreground: "#e5c07b"}  # yellow (modified files)
-  deleted: {foreground: "#ef596f"}  # red (deleted files)
-  renamed: {foreground: "#2bbac5"}  # cyan (renamed files)
-  typechange: {foreground: "#d55fde"}  # purple (type changed)
-  ignored: {foreground: "#5c6370"}  # gray (ignored files)
-  conflicted: {foreground: "#ef596f"}  # red (conflicted files)
+  new: {foreground: "#9ece6a"}
+  modified: {foreground: "#bb9af7"}
+  deleted: {foreground: "#db4b4b"}
+  renamed: {foreground: "#2ac3de"}
+  typechange: {foreground: "#2ac3de"}
+  ignored: {foreground: "#545c7e"}
+  conflicted: {foreground: "#ff9e64"}
 git_repo:
-  branch_main: {foreground: "#abb2bf"}  # fg (main branch)
-  branch_other: {foreground: "#d55fde"}  # purple (other branches)
-  git_clean: {foreground: "#89ca78"}  # green (clean repo)
-  git_dirty: {foreground: "#ef596f"}  # red (dirty repo)
+  branch_main: {foreground: "#737aa2"}
+  branch_other: {foreground: "#b4f9f8"}
+  git_clean: {foreground: "#292e42"}
+  git_dirty: {foreground: "#bb9af7"}
 security_context:
-  colon: {foreground: "#5c6370"}  # gray (colons)
-  user: {foreground: "#abb2bf"}  # fg (user context)
-  role: {foreground: "#d55fde"}  # purple (role)
-  typ: {foreground: "#7f848e"}  # comment (type)
-  range: {foreground: "#d55fde"}  # purple (range)
+  colon: {foreground: "#545c7e"}
+  user: {foreground: "#737aa2"}
+  role: {foreground: "#2ac3de"}
+  typ: {foreground: "#3d59a1"}
+  range: {foreground: "#9d7cd8"}
 file_type:
-  image: {foreground: "#e5c07b"}  # yellow (images)
-  video: {foreground: "#ef596f"}  # red (videos)
-  music: {foreground: "#89ca78"}  # green (music)
-  lossless: {foreground: "#2bbac5"}  # cyan (lossless audio)
-  crypto: {foreground: "#5c6370"}  # gray (crypto files)
-  document: {foreground: "#abb2bf"}  # fg (documents)
-  compressed: {foreground: "#d55fde"}  # purple (compressed)
-  temp: {foreground: "#ef596f"}  # red (temp files)
-  compiled: {foreground: "#61afef"}  # blue (compiled)
-  build: {foreground: "#5c6370"}  # gray (build files)
-  source: {foreground: "#61afef"}  # blue (source code)
-punctuation: {foreground: "#5c6370"}  # gray (punctuation)
-date: {foreground: "#e5c07b"}  # yellow (dates)
-inode: {foreground: "#7f848e"}  # comment (inodes)
-blocks: {foreground: "#5c6370"}  # gray (blocks)
-header: {foreground: "#abb2bf"}  # fg (headers)
-octal: {foreground: "#2bbac5"}  # cyan (octal)
-flags: {foreground: "#d55fde"}  # purple (flags)
-symlink_path: {foreground: "#2bbac5"}  # cyan (symlink paths)
-control_char: {foreground: "#61afef"}  # blue (control chars)
-broken_symlink: {foreground: "#ef596f"}  # red (broken symlinks)
-broken_path_overlay: {foreground: "#5c6370"}  # gray (broken path overlay)
+  image: {foreground: "#89ddff"}
+  video: {foreground: "#b4f9f8"}
+  music: {foreground: "#73daca"}
+  lossless: {foreground: "#41a6b5"}
+  crypto: {foreground: "#db4b4b"}
+  document: {foreground: "#a9b1d6"}
+  compressed: {foreground: "#ff9e64"}
+  temp: {foreground: "#737aa2"}
+  compiled: {foreground: "#737aa2"}
+  build: {foreground: "#1abc9c"}
+  source: {foreground: "#bb9af7"}
+punctuation: {foreground: "#292e42"}
+date: {foreground: "#e0af68"}
+inode: {foreground: "#737aa2"}
+blocks: {foreground: "#737aa2"}
+header: {foreground: "#a9b1d6"}
+octal: {foreground: "#ff9e64"}
+flags: {foreground: "#9d7cd8"}
+symlink_path: {foreground: "#89ddff"}
+control_char: {foreground: "#ff9e64"}
+broken_symlink: {foreground: "#ff007c"}
+broken_path_overlay: {foreground: "#ff007c"}
+

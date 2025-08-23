@@ -8,8 +8,7 @@ return {
 		config = function()
 			require("lualine").setup({
 				options = {
-					-- theme = "catppuccin",
-          theme = "onedark_vivid",
+					theme = "tokyonight-night",
 				},
 				sections = {
 					lualine_b = { "diagnostics" },

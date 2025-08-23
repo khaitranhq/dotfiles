@@ -1,9 +1,11 @@
 return {
 	{
-		"olimorris/onedarkpro.nvim",
-		priority = 1000, -- Ensure it loads first
+		"folke/tokyonight.nvim",
+		lazy = false,
+		priority = 1000,
+		opts = {},
 		config = function()
-			vim.cmd("colorscheme onedark_vivid")
+			vim.cmd.colorscheme("tokyonight-night")
 		end,
 	},
 }
