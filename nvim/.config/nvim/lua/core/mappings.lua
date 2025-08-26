@@ -194,6 +194,34 @@ M.format = {
 	},
 }
 
+-- DROPBAR NAVIGATION
+
+M.dropbar = {
+	n = {
+		["<Leader>;"] = {
+			function()
+				local dropbar_api = require("dropbar.api")
+				dropbar_api.pick()
+			end,
+			"Pick symbols in winbar",
+		},
+		["[;"] = {
+			function()
+				local dropbar_api = require("dropbar.api")
+				dropbar_api.goto_context_start()
+			end,
+			"Go to start of current context",
+		},
+		["];"] = {
+			function()
+				local dropbar_api = require("dropbar.api")
+				dropbar_api.select_next_context()
+			end,
+			"Select next context",
+		},
+	},
+}
+
 -- GIT INTEGRATION
 
 local gitsigns = require("gitsigns")

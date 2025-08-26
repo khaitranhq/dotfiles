@@ -28,7 +28,7 @@ return {
 				options = {
 					numbers = "buffer_id",
 					diagnostics = "nvim_lsp",
-					diagnostics_indicator = function(count, level, diagnostics_dict, context)
+					diagnostics_indicator = function(_, _, diagnostics_dict, _)
 						local s = " "
 						for e, n in pairs(diagnostics_dict) do
 							local sym = e == "error" and " " or (e == "warning" and " " or "")
@@ -66,16 +66,5 @@ return {
 	},
 	{
 		"Bekaboo/dropbar.nvim",
-		-- -- optional, but required for fuzzy finder support
-		-- dependencies = {
-		-- 	"nvim-telescope/telescope-fzf-native.nvim",
-		-- 	build = "make",
-		-- },
-		config = function()
-			local dropbar_api = require("dropbar.api")
-			vim.keymap.set("n", "<Leader>;", dropbar_api.pick, { desc = "Pick symbols in winbar" })
-			vim.keymap.set("n", "[;", dropbar_api.goto_context_start, { desc = "Go to start of current context" })
-			vim.keymap.set("n", "];", dropbar_api.select_next_context, { desc = "Select next context" })
-		end,
 	},
 }
