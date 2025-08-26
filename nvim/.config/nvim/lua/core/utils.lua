@@ -169,7 +169,7 @@ function M.run_shell_in_float(command, opts)
 				for _, line in ipairs(data) do
 					if line ~= "" then
 						-- Safely send output to terminal with error handling
-						local success, err = pcall(api.nvim_chan_send, term_chan, line .. "\r\n")
+						local success, _ = pcall(api.nvim_chan_send, term_chan, line .. "\r\n")
 						if not success then
 							-- Terminal channel might be closed, stop trying to send
 							break
@@ -183,7 +183,7 @@ function M.run_shell_in_float(command, opts)
 				for _, line in ipairs(data) do
 					if line ~= "" then
 						-- Safely send error output to terminal with error handling
-						local success, err = pcall(api.nvim_chan_send, term_chan, "\027[31m" .. line .. "\027[0m\r\n")
+						local success, _ = pcall(api.nvim_chan_send, term_chan, "\027[31m" .. line .. "\027[0m\r\n")
 						if not success then
 							-- Terminal channel might be closed, stop trying to send
 							break
@@ -202,11 +202,18 @@ function M.run_shell_in_float(command, opts)
 				end
 
 				if not close_on_exit then
-					status_msg = status_msg .. "\r\n\r\nPress 'q' or <Esc> to close"
+					status_msg = status_msg .. "\r\n\r\nPress q or ESC to close"
 				end
 
 				-- Safely send the exit status message
-				local success, err = pcall(api.nvim_chan_send, term_chan, status_msg .. "\r\n")
+				local _, _ = pcall(api.nvim_chan_send, term_chan, status_msg .. "\r\n")
+
+				-- Switch to normal mode when command is done
+				vim.schedule(function()
+					if api.nvim_win_is_valid(win) and api.nvim_get_current_win() == win then
+						vim.cmd("stopinsert")
+					end
+				end)
 
 				-- Auto-close if requested
 				if close_on_exit then
@@ -224,22 +231,17 @@ function M.run_shell_in_float(command, opts)
 					local function close_window()
 						if api.nvim_win_is_valid(win) then
 							api.nvim_win_close(win, true)
+
 							-- Call post_command_func if provided
 							if post_command_func and type(post_command_func) == "function" then
 								post_command_func()
 							end
 						end
-
 					end
 
-					-- Set keymaps for both normal and terminal modes
+					-- Set keymaps for normal mode only to avoid conflicts with terminal input
 					vim.keymap.set("n", "q", close_window, { buffer = buf, nowait = true })
 					vim.keymap.set("n", "<Esc>", close_window, { buffer = buf, nowait = true })
-					vim.keymap.set("t", "q", close_window, { buffer = buf, nowait = true })
-					vim.keymap.set("t", "<Esc>", close_window, { buffer = buf, nowait = true })
-
-					-- Also set up a more intuitive keymap that works immediately
-					vim.keymap.set({ "n", "t" }, "<C-c>", close_window, { buffer = buf, nowait = true })
 				end
 			end
 		end,
