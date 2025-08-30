@@ -41,7 +41,7 @@ return {
 					settings = {
 						gopls = {
 							completeUnimported = true,
-							staticcheck = true,
+							-- staticcheck = true,
 							analysis = {
 								QF1003 = true,
 								QF1007 = true,

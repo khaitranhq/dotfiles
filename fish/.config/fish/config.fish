@@ -18,6 +18,9 @@ set -Ux EDITOR "nvim"
 set -Ux PYENV_ROOT $HOME/.pyenv
 test -d $PYENV_ROOT/bin; and fish_add_path $PYENV_ROOT/bin
 
+set -x VAGRANT_WSL_ENABLE_WINDOWS_ACCESS "1"
+set -x VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH "/mnt/c/Users/khai.tran/"
+
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 
@@ -27,6 +30,7 @@ fish_add_path $HOME/go/bin
 fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/.cargo/bin
 fish_add_path $HOME/.local/share/jdk/bin
+fish_add_path "/mnt/c/Program Files/Oracle/VirtualBox/"
 
 #=========================Init apps=========================
 # oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/jandedobbeleer.omp.json' | source

@@ -252,6 +252,13 @@ M.git = {
 			"Git: previous hunk",
 		},
 
+    ["<leader>lg"] = {
+      function()
+        Snacks.lazygit()
+      end,
+      "Git: toggle blame line",
+    },
+
 		["<leader>gb"] = {
 			function()
 				local current_branch = require("neogit.lib.git").branch.current()
