@@ -10,6 +10,7 @@ return {
 			picker = {
 				sources = {
 					files = {
+						cmd = "rg",
 						ignored = true,
 						hidden = true,
 						exclude = {
@@ -22,6 +23,23 @@ return {
 							".aider*",
 							".tmp",
 							"cdk.out",
+              ".vagrant"
+						},
+					},
+					grep = {
+						ignored = true,
+						hidden = true,
+						exclude = {
+							".git",
+							"node_modules",
+							"dist",
+							".venv",
+							"venv",
+							".mypy_cache",
+							".aider*",
+							".tmp",
+							"cdk.out",
+              ".vagrant"
 						},
 					},
 					explorer = {
