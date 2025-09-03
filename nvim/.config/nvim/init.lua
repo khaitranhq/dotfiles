@@ -34,7 +34,6 @@ require("lazy").setup({
 		notify = false, -- get a notification when changes are found
 	},
 })
-require("core.lsp").setup()
 require("core.utils").load_mappings()
 
 -- Setup extra enhancements (nui UI, etc.)
