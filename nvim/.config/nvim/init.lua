@@ -35,13 +35,3 @@ require("lazy").setup({
 	},
 })
 require("core.utils").load_mappings()
-
--- Setup extra enhancements (nui UI, etc.)
-vim.schedule(function()
-	local ok, extra = pcall(require, "extra")
-	if ok then
-		extra.setup()
-	else
-		vim.notify("Failed to load extra enhancements", vim.log.levels.WARN)
-	end
-end)

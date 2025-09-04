@@ -42,11 +42,10 @@ return {
 						gopls = {
 							completeUnimported = true,
 							-- staticcheck = true,
-							analysis = {
+							analyses = {
 								QF1003 = true,
 								QF1007 = true,
 								ST1003 = true,
-								fieldalignment = true,
 								unusedparams = true,
 								unusedfuncs = true,
 								unreachable = true,
