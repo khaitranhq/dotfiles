@@ -60,7 +60,6 @@ M.general = {
 }
 
 -- NOTIFICATION MANAGEMENT
-
 local notify = require("notify")
 M.notify = {
 	n = {
@@ -252,12 +251,12 @@ M.git = {
 			"Git: previous hunk",
 		},
 
-    ["<leader>lg"] = {
-      function()
-        Snacks.lazygit()
-      end,
-      "Git: toggle blame line",
-    },
+		["<leader>lg"] = {
+			function()
+				Snacks.lazygit()
+			end,
+			"Git: toggle blame line",
+		},
 
 		["<leader>gb"] = {
 			function()
