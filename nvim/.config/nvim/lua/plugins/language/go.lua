@@ -9,14 +9,6 @@ return {
 		opts = {
 			disable_defaults = true, -- true|false when true set false to all boolean settings and replace all tables
 			go = "go",
-			preludes = {
-				default = function()
-					return {}
-				end,
-				GoRun = function()
-					return {}
-				end,
-			},
 			lsp_inlay_hints = {
 				enable = true,
 			},
