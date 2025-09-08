@@ -22,6 +22,7 @@ return {
 				yaml = { "yamlfmt" },
 				ruby = { "rubyfmt" },
 				go = { "golines" },
+        rust = { "rustfmt" }
 			},
 		},
 	},

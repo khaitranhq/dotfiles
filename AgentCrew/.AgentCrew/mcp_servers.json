@@ -3,21 +3,35 @@
     "name": "wcgw",
     "command": "uv",
     "args": ["tool", "run", "--python", "3.12", "wcgw@latest"],
-    "enabledForAgents": [
-      "Engineer",
-      "PulumiGoReviewer",
-      "PromptMaker",
-      "DocumentationAgent",
-      "Architect",
-      "IELTSWritingReviewer",
-      "DevOpsEngineer",
-      "PresentationAgent"
-    ]
+    "enabledForAgents": []
   },
   "awslabs": {
     "name": "awslabs",
     "command": "uvx",
     "args": ["awslabs.aws-api-mcp-server@latest"],
     "enabledForAgents": ["DevOpsEngineer"]
+  },
+  "fs": {
+    "name": "fs",
+    "command": "/home/lewis/Workspaces/Temp/oss/mcp-filesystem-server/mcp-filesystem-server",
+    "args": ["/home/lewis"],
+    "enabledForAgents": ["Engineer"]
+  },
+  "shell": {
+    "name": "shell",
+    "command": "/home/lewis/Workspaces/Temp/oss/mcp-shell/mcp-shell",
+    "args": [],
+    "enabledForAgents": ["Engineer"]
+  },
+  "serena": {
+    "name": "serena",
+    "command": "uvx",
+    "args": [
+      "--from",
+      "git+https://github.com/oraios/serena",
+      "serena",
+      "start-mcp-server"
+    ],
+    "enabledForAgents": ["SerenaAgent", "RepoAnalyzer"]
   }
 }

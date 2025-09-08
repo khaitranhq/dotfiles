@@ -69,6 +69,15 @@ return {
 				jsonls = {},
 				docker_language_server = {},
 				docker_compose_language_service = {},
+				rust_analyzer = {
+					settings = {
+						["rust-analyzer"] = {
+							diagnostics = {
+								enable = false,
+							},
+						},
+					},
+				},
 			},
 		},
 		config = function(_, opts)
