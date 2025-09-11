@@ -32,6 +32,6 @@
       "serena",
       "start-mcp-server"
     ],
-    "enabledForAgents": ["SerenaAgent", "RepoAnalyzer"]
+    "enabledForAgents": ["SerenaAgent", "RepoAnalyzer", "RequirementsAnalysisSpecialist"]
   }
 }

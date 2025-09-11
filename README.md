@@ -219,3 +219,11 @@ sudo apt install -y wmctrl python3-gi gir1.2-wnck-3.0
 git clone https://github.com/DimseBoms/XFCE-Dynamic-Workspace
 # add `python3 ./XFCE-Dynamic-Workspace/dynamic_workspaces.py` to startup applications
 ```
+
+## AgentCrew
+
+Command to convert markdown file to inline system prompt:
+
+```bash
+perl -0777 -pe 's/\r?\n/\\\\n/g' AgentCrew/.AgentCrew/agents/requirements_analysis_agent_prompt.md | xsel -b
+```
