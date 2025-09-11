@@ -66,6 +66,7 @@ return {
 				clangd = {},
 				bashls = {},
 				cssls = {},
+        csharp_ls = {},
 				jsonls = {},
 				docker_language_server = {},
 				docker_compose_language_service = {},

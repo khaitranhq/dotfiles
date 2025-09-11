@@ -14,7 +14,7 @@ return {
 
 					-- Enable diagnostics in Insert mode
 					-- If enabled, it is better to set the `throttle` option to 0 to avoid visual artifacts
-					enable_on_insert = true,
+					enable_on_insert = false,
 				},
 			})
 			vim.diagnostic.config({ virtual_text = false }) -- Only if needed in your configuration, if you already have native LSP diagnostics
