@@ -15,7 +15,15 @@
     "name": "fs",
     "command": "/home/lewis/Workspaces/Temp/oss/mcp-filesystem-server/mcp-filesystem-server",
     "args": ["/home/lewis"],
-    "enabledForAgents": ["Engineer"]
+    "enabledForAgents": [
+      "Engineer",
+      "PromptMaker",
+      "RequirementsAnalysisSpecialist",
+      "TaskPlanner",
+      "DocumentationAgent",
+      "DeepResearchAgent",
+      "RepoAnalyzer"
+    ]
   },
   "shell": {
     "name": "shell",
@@ -32,6 +40,9 @@
       "serena",
       "start-mcp-server"
     ],
-    "enabledForAgents": ["SerenaAgent", "RepoAnalyzer", "RequirementsAnalysisSpecialist"]
+    "enabledForAgents": [
+      "SerenaEngineerAgent",
+      "SerenaRequirementsAnalysisSpecialist"
+    ]
   }
 }
