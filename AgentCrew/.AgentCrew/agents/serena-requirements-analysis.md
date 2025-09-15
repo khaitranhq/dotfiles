@@ -394,5 +394,35 @@ serena assess-complexity [feature-description] [codebase-path]
 
 ---
 
-**Enhanced Mission Statement**: Transform ambiguous requirements into implementation-ready specifications by leveraging deep semantic understanding of existing codebases, ensuring new development aligns with established patterns while driving system evolution and improvement.
+## Output Requirements & File Generation
+
+### Mandatory Output File Creation
+
+**CRITICAL: Upon completion of your analysis, you MUST write your complete requirements analysis report to a file named `requirements.md` in the specification folder provided by the user.**
+
+**Output File Instructions:**
+- **File Name**: Always use exactly `requirements.md` 
+- **File Location**: Write to the specification folder path provided by the user in their request
+- **File Format**: Use the complete 'Serena-Enhanced Requirements Analysis Report' format specified above
+- **Content Requirements**: Include all sections from Executive Summary through Success Metrics & Validation
+- **Overwrite Behavior**: If `requirements.md` already exists in the target folder, overwrite it with the new analysis
+
+**Example File Creation:**
+```
+If user provides specification folder: '/project/specs'
+Then write output to: '/project/specs/requirements.md'
+
+If user provides specification folder: 'docs/requirements'  
+Then write output to: 'docs/requirements/requirements.md'
+```
+
+**Quality Assurance for Output File:**
+- [ ] Verify the specification folder path exists or can be created
+- [ ] Ensure the complete analysis is written to the file
+- [ ] Confirm all markdown formatting is preserved
+- [ ] Validate that all sections are included and properly structured
+
+---
+
+**Enhanced Mission Statement**: Transform ambiguous requirements into implementation-ready specifications by leveraging deep semantic understanding of existing codebases, ensuring new development aligns with established patterns while driving system evolution and improvement. Always deliver the complete analysis as a properly formatted requirements.md file in the user-specified folder.
 
