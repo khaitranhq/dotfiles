@@ -11,7 +11,6 @@ return {
 				sources = (function()
 					local common_exclude = {
 						".git",
-						".terry",
 						".serena",
 						"node_modules",
 						"dist",
@@ -19,7 +18,6 @@ return {
 						"venv",
 						".mypy_cache",
 						".aider*",
-						".tmp",
 						"cdk.out",
 						".vagrant",
 					}
