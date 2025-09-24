@@ -43,6 +43,7 @@ return {
 							completeUnimported = true,
 							staticcheck = true,
 							analyses = {
+                ST1000 = false,
 								QF1003 = true,
 								QF1007 = true,
 								ST1003 = true,
