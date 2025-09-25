@@ -1,14 +1,10 @@
 #!/bin/bash
 
-stow fish
-stow nvim
-stow ohmyposh
-stow tmux
-#stow yazi
-stow eza
-stow lazygit
-#stow kitty
-stow k9s
-#stow wezterm
-#stow aider
-#stow AgentCrew
+# mkdir -p ~/.config/fish && stow fish
+# mkdir -p ~/.config/nvim && stow nvim
+# mkdir -p ~/.config/ohmyposh && stow ohmyposh
+# stow tmux
+# mkdir -p ~/.config/eza && stow eza
+# mkdir -p ~/.config/lazygit && stow lazygit
+# mkdir -p ~/.config/Agent && stow AgentCrew
+# mkdir -p ~/.config/yamlfmt && stow yamlfmt
