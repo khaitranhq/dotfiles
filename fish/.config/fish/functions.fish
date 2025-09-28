@@ -195,3 +195,21 @@ function azure_container_logs -d "Get Azure Container App logs"
         --analytics-query $query \
         --output table
 end
+
+function gotest -d "Run Go tests with colorized output"
+    # Check if go is available
+    if not command -v go >/dev/null 2>&1
+        echo "Error: go command not found" >&2
+        return 1
+    end
+
+    # Run go test with provided arguments and colorize the output
+    go test $argv | sed \
+        -e 's/--- PASS:/'(printf "\033[32m✅--- PASS:\033[0m")'/g' \
+        -e 's/--- FAIL:/'(printf "\033[31m❌--- FAIL:\033[0m")'/g' \
+        -e 's/^PASS$/'(printf "\033[32mPASS\033[0m")'/g' \
+        -e 's/^FAIL$/'(printf "\033[31mFAIL\033[0m")'/g' \
+        -e 's/^FAIL[[:space:]]/'(printf "\033[31mFAIL\033[0m")'\t/g' \
+        -e 's/^[[:space:]]*ok[[:space:]]/'(printf "\033[32mok\033[0m")'\t/g'
+end
+
