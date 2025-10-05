@@ -1,2 +1,3 @@
 formatter:
   retain_line_breaks: true
+  drop_merge_tag: true

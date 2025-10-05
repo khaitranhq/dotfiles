@@ -117,6 +117,8 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- GLOBAL SETTINGS
 
+g.markdown_recommended_style = 0
+
 -- Leader key
 g.mapleader = " " -- Set space as leader key
 g.maplocalleader = "\\" -- Set backslash as local leader
