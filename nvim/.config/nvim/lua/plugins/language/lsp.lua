@@ -43,7 +43,7 @@ return {
 							completeUnimported = true,
 							staticcheck = true,
 							analyses = {
-                ST1000 = false,
+								ST1000 = false,
 								QF1003 = true,
 								QF1007 = true,
 								ST1003 = true,
@@ -67,7 +67,7 @@ return {
 				clangd = {},
 				bashls = {},
 				cssls = {},
-        csharp_ls = {},
+				csharp_ls = {},
 				jsonls = {},
 				docker_language_server = {},
 				docker_compose_language_service = {},
@@ -80,6 +80,7 @@ return {
 						},
 					},
 				},
+				copilot = {},
 			},
 		},
 		config = function(_, opts)
@@ -95,9 +96,23 @@ return {
 			-- Setup LSP autocommands
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-				callback = function(ev)
+				callback = function(args)
+					local bufnr = args.buf
 					-- Enable completion triggered by <c-x><c-o>
-					vim.bo[ev.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+					vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+
+					local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
+
+					if client:supports_method(vim.lsp.protocol.Methods.textDocument_inlineCompletion, bufnr) then
+						vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
+
+						vim.keymap.set(
+							"i",
+							"<M-m>",
+							vim.lsp.inline_completion.get,
+							{ desc = "LSP: accept inline completion", buffer = bufnr }
+						)
+					end
 				end,
 			})
 		end,
