@@ -44,5 +44,11 @@
       "SerenaEngineerAgent",
       "SerenaRequirementsAnalysisSpecialist"
     ]
+  },
+  "pulumi": {
+    "name": "pulumi",
+    "command": "npx",
+    "args": ["@pulumi/mcp-server", "stdio"],
+    "enabledForAgents": ["SerenaEngineerAgent"]
   }
 }

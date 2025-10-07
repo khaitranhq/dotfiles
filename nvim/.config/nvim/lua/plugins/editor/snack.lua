@@ -20,6 +20,7 @@ return {
 						".aider*",
 						"cdk.out",
 						".vagrant",
+            ".terry"
 					}
 					return {
 						files = { cmd = "rg", ignored = true, hidden = true, exclude = common_exclude },
