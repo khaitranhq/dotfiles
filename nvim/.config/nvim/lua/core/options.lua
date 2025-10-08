@@ -33,6 +33,13 @@ opt.scrolloff = 8 -- Keep 8 lines visible above/below cursor
 opt.sidescrolloff = 8 -- Keep 8 columns visible left/right of cursor
 opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
+-- Whitespace visualization
+opt.list = true -- Show invisible characters
+opt.listchars = {
+	trail = "·", -- Show trailing spaces with a middle dot
+	tab = "▎ ",
+} -- Hide end-of-buffer tildes
+
 -- Window and buffer behavior
 opt.splitbelow = true -- Horizontal splits open below current window
 opt.splitright = true -- Vertical splits open to the right of current window
