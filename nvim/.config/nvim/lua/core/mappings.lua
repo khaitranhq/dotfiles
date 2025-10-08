@@ -46,6 +46,19 @@ M.general = {
 
 		-- System clipboard integration
 		["p"] = { '"+p', "Paste from system clipboard" },
+
+		-- Whitespace management
+		["<leader>rw"] = {
+			function()
+				local utils_ok, utils = pcall(require, "core.utils")
+				if utils_ok and utils.remove_trailing_whitespace then
+					utils.remove_trailing_whitespace()
+				else
+					vim.notify("Whitespace remover not available", vim.log.levels.WARN)
+				end
+			end,
+			"Remove trailing whitespace",
+		},
 	},
 
 	v = {

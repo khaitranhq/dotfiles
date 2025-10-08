@@ -88,6 +88,40 @@ end
 ---   - cwd: string - Working directory for command (default: current)
 ---   - close_on_exit: boolean - Auto-close on command completion (default: false)
 ---   - post_command_func: function - Function to call after window is closed (default: nil)
+--- Removes all trailing whitespace from the current buffer.
+--- Preserves cursor position after removal.
+--- Displays notification with count of lines modified.
+function M.remove_trailing_whitespace()
+	-- Save current cursor position
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	local line_count = vim.api.nvim_buf_line_count(0)
+	
+	-- Count lines with trailing whitespace before removal
+	local modified_count = 0
+	for i = 1, line_count do
+		local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
+		if line and line:match("%s+$") then
+			modified_count = modified_count + 1
+		end
+	end
+	
+	-- Remove trailing whitespace using substitute command
+	vim.cmd([[%s/\s\+$//e]])
+	
+	-- Restore cursor position
+	pcall(vim.api.nvim_win_set_cursor, 0, cursor_pos)
+	
+	-- Notify user of changes
+	if modified_count > 0 then
+		vim.notify(
+			string.format("Removed trailing whitespace from %d line(s)", modified_count),
+			vim.log.levels.INFO
+		)
+	else
+		vim.notify("No trailing whitespace found", vim.log.levels.INFO)
+	end
+end
+
 function M.run_shell_in_float(command, opts)
 	if not command then
 		vim.notify("No command provided", vim.log.levels.ERROR)
