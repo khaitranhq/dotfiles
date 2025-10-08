@@ -1,8 +1,3 @@
-function Format()
-	require("conform").format()
-	vim.notify("Formatted", vim.log.levels.INFO, { title = "Conform" })
-end
-
 return {
 	{
 		"stevearc/conform.nvim",
@@ -25,5 +20,16 @@ return {
 				rust = { "rustfmt" },
 			},
 		},
+		config = function(_, opts)
+			require("conform").setup(opts)
+			require("conform").formatters.prettier = {
+				append_args = { "--ignore-path", "" },
+			}
+
+			function Format()
+				require("conform").format()
+				vim.notify("Formatted", vim.log.levels.INFO, { title = "Conform" })
+			end
+		end,
 	},
 }
