@@ -1,4 +1,5 @@
 require("core.options")
+require("core.commands")
 
 -- bootstrap lazy.nvim!
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
