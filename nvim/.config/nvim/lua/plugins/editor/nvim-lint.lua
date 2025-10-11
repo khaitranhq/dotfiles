@@ -13,6 +13,7 @@ return {
 				typescript = { "eslint" },
 				typescriptreact = { "eslint" },
 				python = { "mypy" },
+				markdown = { "markdownlint-cli2" },
 			}
 
 			require("lint").linters.mypy.args = {

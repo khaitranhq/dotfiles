@@ -1,14 +1,8 @@
 {
-  "awslabs": {
-    "name": "awslabs",
+  "wcgw": {
+    "name": "wcgw",
     "command": "uvx",
-    "args": ["awslabs.aws-api-mcp-server@latest"],
-    "enabledForAgents": ["DevOpsEngineer"]
-  },
-  "fs": {
-    "name": "fs",
-    "command": "/home/lewis/Workspaces/Temp/oss/mcp-filesystem-server/mcp-filesystem-server",
-    "args": ["/home/lewis"],
+    "args": ["wcgw@latest", "--shell", "/bin/bash"],
     "enabledForAgents": [
       "Engineer",
       "PromptMaker",
@@ -20,11 +14,11 @@
       "DevOpsEngineer"
     ]
   },
-  "shell": {
-    "name": "shell",
-    "command": "/home/lewis/Workspaces/Temp/oss/mcp-shell/mcp-shell",
-    "args": [],
-    "enabledForAgents": ["Engineer"]
+  "awslabs": {
+    "name": "awslabs",
+    "command": "uvx",
+    "args": ["awslabs.aws-api-mcp-server@latest"],
+    "enabledForAgents": ["DevOpsEngineer"]
   },
   "serena": {
     "name": "serena",
