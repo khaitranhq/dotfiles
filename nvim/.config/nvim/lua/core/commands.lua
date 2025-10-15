@@ -15,3 +15,5 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 	end,
 	desc = "Remove carriage returns before saving",
 })
+
+vim.api.nvim_create_user_command("GitBlame", ":lua require('core.utils').blame_line()", {})

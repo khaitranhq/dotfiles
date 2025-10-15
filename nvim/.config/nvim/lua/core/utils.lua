@@ -95,7 +95,7 @@ function M.remove_trailing_whitespace()
 	-- Save current cursor position
 	local cursor_pos = vim.api.nvim_win_get_cursor(0)
 	local line_count = vim.api.nvim_buf_line_count(0)
-	
+
 	-- Count lines with trailing whitespace before removal
 	local modified_count = 0
 	for i = 1, line_count do
@@ -104,19 +104,16 @@ function M.remove_trailing_whitespace()
 			modified_count = modified_count + 1
 		end
 	end
-	
+
 	-- Remove trailing whitespace using substitute command
 	vim.cmd([[%s/\s\+$//e]])
-	
+
 	-- Restore cursor position
 	pcall(vim.api.nvim_win_set_cursor, 0, cursor_pos)
-	
+
 	-- Notify user of changes
 	if modified_count > 0 then
-		vim.notify(
-			string.format("Removed trailing whitespace from %d line(s)", modified_count),
-			vim.log.levels.INFO
-		)
+		vim.notify(string.format("Removed trailing whitespace from %d line(s)", modified_count), vim.log.levels.INFO)
 	else
 		vim.notify("No trailing whitespace found", vim.log.levels.INFO)
 	end
@@ -306,6 +303,22 @@ function M.run_shell_in_float(command, opts)
 		buffer = buf,
 		window = win,
 	}
+end
+
+function M.blame_line()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local filename = vim.api.nvim_buf_get_name(bufnr)
+	local row = vim.api.nvim_win_get_cursor(0)[1]
+	local blame_info = vim.fn.systemlist("git blame -L " .. row .. ",+1 " .. filename .. " --porcelain")
+	if blame_info[2] ~= nil then
+		local hash = string.sub(blame_info[1], 1, 8)
+		local author_name = string.sub(blame_info[2], 8)
+		local author_date = os.date("%Y %b %d", tonumber(string.sub(blame_info[4], 12)))
+		local summary = string.sub(blame_info[10], 9)
+		print(hash .. " - " .. author_name .. " - " .. author_date .. " - " .. summary)
+	else
+		print(blame_info[1])
+	end
 end
 
 return M

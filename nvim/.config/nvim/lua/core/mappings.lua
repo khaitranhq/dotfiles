@@ -236,34 +236,9 @@ M.dropbar = {
 
 -- GIT INTEGRATION
 
-local gitsigns = require("gitsigns")
 local neogit = require("neogit")
 M.git = {
 	n = {
-		-- Git conflict resolution
-		["<leader>gco"] = { "<cmd>GitConflictChooseOurs<CR>", "Git: choose current change" },
-		["<leader>gct"] = { "<cmd>GitConflictChooseTheirs<CR>", "Git: choose incoming change" },
-		["<leader>gcb"] = { "<cmd>GitConflictChooseBoth<CR>", "Git: choose both changes" },
-		["<leader>gcx"] = { "<cmd>GitConflictChooseNone<CR>", "Git: reject all changes" },
-
-		-- Git conflict navigation
-		["<leader>gcn"] = { "<cmd>GitConflictNextConflict<CR>", "Git: next conflict" },
-		["<leader>gcp"] = { "<cmd>GitConflictPrevConflict<CR>", "Git: previous conflict" },
-
-		-- Hunks actions
-		["<leader>ghs"] = { gitsigns.stage_hunk, "Git: stage hunk" },
-		["<leader>ghr"] = { gitsigns.reset_hunk, "Git: reset hunk" },
-		["<leader>ghp"] = { gitsigns.preview_hunk, "Git: preview hunk" },
-		["<leader>ghd"] = { gitsigns.diffthis, "Git: diffthis" },
-		["<leader>g]"] = {
-			"<cmd>Gitsigns nav_hunk next<CR>",
-			"Git: next hunk",
-		},
-		["<leader>g["] = {
-			"<cmd>Gitsigns nav_hunk prev<CR>",
-			"Git: previous hunk",
-		},
-
 		["<leader>lg"] = {
 			function()
 				Snacks.lazygit()
