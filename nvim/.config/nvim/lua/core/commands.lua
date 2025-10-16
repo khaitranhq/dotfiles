@@ -17,3 +17,5 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 })
 
 vim.api.nvim_create_user_command("GitBlame", ":lua require('core.utils').blame_line()", {})
+
+vim.api.nvim_create_user_command("Trouble", ":lua vim.diagnostic.setqflist()", {})
