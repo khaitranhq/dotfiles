@@ -79,15 +79,6 @@ function M.copy_buffer_path()
 	end)
 end
 
---- Runs a shell command and displays the result in a floating terminal window.
---- @param command string|table: The shell command to run (string or table of args)
---- @param opts table|nil: Optional configuration
----   - title: string - Window title (default: "Shell Command")
----   - width: number - Window width ratio (default: 0.8)
----   - height: number - Window height ratio (default: 0.7)
----   - cwd: string - Working directory for command (default: current)
----   - close_on_exit: boolean - Auto-close on command completion (default: false)
----   - post_command_func: function - Function to call after window is closed (default: nil)
 --- Removes all trailing whitespace from the current buffer.
 --- Preserves cursor position after removal.
 --- Displays notification with count of lines modified.
