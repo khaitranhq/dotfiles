@@ -14,10 +14,19 @@
       "DevOpsEngineer"
     ]
   },
-  "awslabs": {
-    "name": "awslabs",
+  "aws-api": {
+    "name": "aws-api",
     "command": "uvx",
     "args": ["awslabs.aws-api-mcp-server@latest"],
+    "enabledForAgents": ["DevOpsEngineer"]
+  },
+  "aws-cost": {
+    "name": "aws-cost",
+    "command": "uvx",
+    "args": ["awslabs.aws-pricing-mcp-server@latest"],
+    "env": {
+      "AWS_PROFILE": "default"
+    },
     "enabledForAgents": ["DevOpsEngineer"]
   },
   "serena": {
@@ -39,5 +48,16 @@
     "command": "npx",
     "args": ["@pulumi/mcp-server", "stdio"],
     "enabledForAgents": ["SerenaEngineerAgent"]
+  },
+  "new_server_5": {
+    "name": "azure",
+    "command": "npx",
+    "args": ["-y", "@azure/mcp@latest", "server", "start"],
+    "env": {},
+    "enabledForAgents": ["DevOpsEngineer"],
+    "streaming_server": false,
+    "url": "",
+    "headers": {}
   }
 }
+

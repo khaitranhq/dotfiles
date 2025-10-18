@@ -73,6 +73,7 @@ return {
 							staticcheck = true,
 							analyses = {
 								ST1000 = false,
+								ST1005 = false,
 								QF1003 = true,
 								QF1007 = true,
 								ST1003 = true,
