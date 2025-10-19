@@ -3,16 +3,11 @@
     "name": "wcgw",
     "command": "uvx",
     "args": ["wcgw@latest", "--shell", "/bin/bash"],
-    "enabledForAgents": [
-      "Engineer",
-      "PromptMaker",
-      "RequirementsAnalysisSpecialist",
-      "TaskPlanner",
-      "DocumentationAgent",
-      "DeepResearchAgent",
-      "RepoAnalyzer",
-      "DevOpsEngineer"
-    ]
+    "env": {},
+    "enabledForAgents": [],
+    "streaming_server": false,
+    "url": "",
+    "headers": {}
   },
   "aws-api": {
     "name": "aws-api",
@@ -55,6 +50,25 @@
     "args": ["-y", "@azure/mcp@latest", "server", "start"],
     "env": {},
     "enabledForAgents": ["DevOpsEngineer"],
+    "streaming_server": false,
+    "url": "",
+    "headers": {}
+  },
+  "new_server_7": {
+    "name": "desktop-commander",
+    "command": "npx",
+    "args": ["-y", "@wonderwhy-er/desktop-commander@latest"],
+    "env": {},
+    "enabledForAgents": [
+      "PromptMaker",
+      "Engineer",
+      "RequirementsAnalysisSpecialist",
+      "DeepResearchAgent",
+      "DocumentationAgent",
+      "RepoAnalyzer",
+      "TaskPlanner",
+      "DevOpsEngineer"
+    ],
     "streaming_server": false,
     "url": "",
     "headers": {}

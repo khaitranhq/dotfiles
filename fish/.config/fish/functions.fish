@@ -83,8 +83,6 @@ function setup-pnpm-project
         prettier \
         @trivago/prettier-plugin-sort-imports
 
-    npx tsc --init
-
     echo '{
   "trailingComma": "none",
   "tabWidth": 2,
@@ -112,6 +110,8 @@ export default tseslint.config(
     },
   },
 );' > eslint.config.mjs
+
+    npx tsc --init
 end
 
 # It is invoked by the fish shell automatically using its event system.
