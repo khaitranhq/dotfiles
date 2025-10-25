@@ -23,11 +23,12 @@ require("lazy").setup({
 		hererocks = true, -- recommended if you do not have global installation of Lua 5.1.
 	},
 	spec = {
-		{ import = "plugins.language" },
 		{ import = "plugins.editor" },
 		{ import = "plugins.ui" },
 		{ import = "plugins.navigation" },
 		{ import = "plugins.tools" },
+		{ import = "plugins.language" },
+		{ import = "plugins.ai" },
 	},
 	change_detection = {
 		-- automatically check for config file changes and reload the ui

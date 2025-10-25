@@ -110,41 +110,17 @@ return {
 						},
 					},
 				},
-				copilot = {},
 			},
 		},
 		config = function(_, opts)
-			-- Configure each LSP server using the new vim.lsp.config API
-			for server, config in pairs(opts.servers) do
-				vim.lsp.config(server, config)
-			end
-
 			-- Enable all configured LSP servers using the new vim.lsp.enable API
 			local servers = vim.tbl_keys(opts.servers)
 			vim.lsp.enable(servers)
 
-			-- Setup LSP autocommands
-			vim.api.nvim_create_autocmd("LspAttach", {
-				group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-				callback = function(args)
-					local bufnr = args.buf
-					-- Enable completion triggered by <c-x><c-o>
-					vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
-
-					local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
-
-					if client:supports_method(vim.lsp.protocol.Methods.textDocument_inlineCompletion, bufnr) then
-						vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
-
-						vim.keymap.set(
-							"i",
-							"<M-m>",
-							vim.lsp.inline_completion.get,
-							{ desc = "LSP: accept inline completion", buffer = bufnr }
-						)
-					end
-				end,
-			})
+			-- Configure each LSP server using the new vim.lsp.config API
+			for server, config in pairs(opts.servers) do
+				vim.lsp.config(server, config)
+			end
 		end,
 	},
 	{
@@ -164,12 +140,18 @@ return {
 			},
 
 			sources = {
-				default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+				default = { "lazydev", "lsp", "path", "snippets", "copilot", "buffer" },
 				providers = {
 					lazydev = {
 						name = "LazyDev",
 						module = "lazydev.integrations.blink",
 						score_offset = 100,
+					},
+					copilot = {
+						name = "copilot",
+						module = "blink-copilot",
+						score_offset = 100,
+						async = true,
 					},
 				},
 			},
@@ -178,6 +160,7 @@ return {
 		opts_extend = { "sources.default" },
 		dependencies = {
 			"rafamadriz/friendly-snippets",
+			"fang2hou/blink-copilot",
 			{
 				"folke/lazydev.nvim",
 				ft = "lua", -- only load on lua files
