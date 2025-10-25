@@ -1,28 +1,26 @@
 {
-  "wcgw": {
-    "name": "wcgw",
-    "command": "uvx",
-    "args": ["wcgw@latest", "--shell", "/bin/bash"],
-    "env": {},
-    "enabledForAgents": [],
-    "streaming_server": false,
-    "url": "",
-    "headers": {}
-  },
   "aws-api": {
     "name": "aws-api",
     "command": "uvx",
-    "args": ["awslabs.aws-api-mcp-server@latest"],
-    "enabledForAgents": ["DevOpsEngineer"]
+    "args": [
+      "awslabs.aws-api-mcp-server@latest"
+    ],
+    "enabledForAgents": [
+      "DevOpsEngineer"
+    ]
   },
   "aws-cost": {
     "name": "aws-cost",
     "command": "uvx",
-    "args": ["awslabs.aws-pricing-mcp-server@latest"],
+    "args": [
+      "awslabs.aws-pricing-mcp-server@latest"
+    ],
     "env": {
       "AWS_PROFILE": "default"
     },
-    "enabledForAgents": ["DevOpsEngineer"]
+    "enabledForAgents": [
+      "DevOpsEngineer"
+    ]
   },
   "serena": {
     "name": "serena",
@@ -34,6 +32,7 @@
       "start-mcp-server"
     ],
     "enabledForAgents": [
+      "PulumiEngineer",
       "SerenaEngineerAgent",
       "SerenaRequirementsAnalysisSpecialist"
     ]
@@ -41,37 +40,43 @@
   "pulumi": {
     "name": "pulumi",
     "command": "npx",
-    "args": ["@pulumi/mcp-server", "stdio"],
-    "enabledForAgents": ["SerenaEngineerAgent"]
+    "args": [
+      "@pulumi/mcp-server",
+      "stdio"
+    ],
+    "enabledForAgents": [
+      "SerenaEngineerAgent"
+    ]
   },
   "new_server_5": {
     "name": "azure",
     "command": "npx",
-    "args": ["-y", "@azure/mcp@latest", "server", "start"],
+    "args": [
+      "-y",
+      "@azure/mcp@latest",
+      "server",
+      "start"
+    ],
     "env": {},
-    "enabledForAgents": ["DevOpsEngineer"],
+    "enabledForAgents": [
+      "DevOpsEngineer"
+    ],
     "streaming_server": false,
     "url": "",
     "headers": {}
   },
-  "new_server_7": {
-    "name": "desktop-commander",
-    "command": "npx",
-    "args": ["-y", "@wonderwhy-er/desktop-commander@latest"],
+  "new_server_6": {
+    "name": "gopls",
+    "command": "gopls",
+    "args": [
+      "mcp"
+    ],
     "env": {},
     "enabledForAgents": [
-      "PromptMaker",
-      "Engineer",
-      "RequirementsAnalysisSpecialist",
-      "DeepResearchAgent",
-      "DocumentationAgent",
-      "RepoAnalyzer",
-      "TaskPlanner",
-      "DevOpsEngineer"
+      "PulumiEngineer"
     ],
     "streaming_server": false,
     "url": "",
     "headers": {}
   }
 }
-
