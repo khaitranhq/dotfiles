@@ -385,3 +385,89 @@ gotest() {
         -e "s/^FAIL[[:space:]]/$(printf "\033[31mFAIL\033[0m")\t/g" \
         -e "s/^[[:space:]]*ok[[:space:]]/$(printf "\033[32mok\033[0m")\t/g"
 }
+
+# AI-Powered Command Generation
+# -----------------------------
+# Generate and execute bash commands using AI
+ai_bash() {
+    # Validate required dependencies
+    if ! command -v agentcrew >/dev/null 2>&1; then
+        echo "❌ Error: agentcrew command not found" >&2
+        echo "   Please install agentcrew first" >&2
+        return 1
+    fi
+
+    if ! command -v gum >/dev/null 2>&1; then
+        echo "❌ Error: gum command not found" >&2
+        echo "   Install with: brew install gum" >&2
+        return 1
+    fi
+
+    # Validate prompt argument
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: ai_bash <prompt request command>" >&2
+        echo "Example: ai_bash 'find all python files modified in last 7 days'" >&2
+        return 1
+    fi
+
+    local prompt="$*"
+
+    echo "🤖 Generating command for: $prompt"
+    echo ""
+
+    # Call agentcrew to generate command
+    local generated_command
+    generated_command=$(agentcrew job \
+        --agent="BashAgent" \
+        --provider=github_copilot \
+        --model-id="gpt-4.1" \
+        --output-schema='{"type": "string"}' \
+        "$prompt" 2>&1)
+
+    local agentcrew_exit_code=$?
+
+    # Handle agentcrew execution errors
+    if [[ $agentcrew_exit_code -ne 0 ]]; then
+        echo "❌ Error: Failed to generate command" >&2
+        echo "   Exit code: $agentcrew_exit_code" >&2
+        echo "   Output: $generated_command" >&2
+        return 1
+    fi
+
+    # Validate generated command is not empty
+    if [[ -z "$generated_command" ]]; then
+        echo "❌ Error: Generated command is empty" >&2
+        return 1
+    fi
+
+    # Display the generated command with syntax highlighting
+    echo "📝 Generated command:"
+    echo "   $generated_command"
+    echo ""
+
+    # Ask user for confirmation using gum
+    if gum confirm "Execute this command?" --affirmative="✅ Yes, run it" --negative="❌ No, cancel"; then
+        echo ""
+        echo "🚀 Executing command..."
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+        # Execute the command and capture its exit code
+        eval "$generated_command"
+        local cmd_exit_code=$?
+
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+        # Report execution status
+        if [[ $cmd_exit_code -eq 0 ]]; then
+            echo "✅ Command executed successfully"
+        else
+            echo "⚠️  Command exited with code: $cmd_exit_code" >&2
+        fi
+
+        return $cmd_exit_code
+    else
+        echo ""
+        echo "🚫 Command execution cancelled"
+        return 0
+    fi
+}
