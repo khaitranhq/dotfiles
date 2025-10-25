@@ -10,9 +10,8 @@
           "properties": {
             "cache_duration": "none"
           },
-          "leading_diamond": "\ue0b6",
           "trailing_diamond": "\ue0b0",
-          "template": " {{ .UserName }} ",
+          "template": "<transparent,#bb9af7>\ue0b0</> {{ .UserName }} ",
           "foreground": "#1a1b26",
           "background": "#bb9af7",
           "type": "session",
@@ -107,7 +106,7 @@
         {
           "type": "pulumi",
           "style": "diamond",
-          "powerline_symbol": "",
+          "powerline_symbol": "\ue0b0",
           "foreground": "#ffffff",
           "background": "#662d91",
           "template": "{{ .Stack }}{{if .User }} :: {{ .User }}@{{ end }}{{ if .URL }}{{ .URL }}{{ end }}"
@@ -129,7 +128,7 @@
             "cache_duration": "none"
           },
           "template": " \ueba2 {{ .FormattedMs }}",
-          "trailing_diamond": "\ue0b4",
+          "trailing_diamond": "\ue0b0",
           "foreground": "#c0caf5",
           "background": "#414868",
           "type": "executiontime",
@@ -144,7 +143,7 @@
           "properties": {
             "cache_duration": "none"
           },
-          "template": "<#7aa2f7,transparent>\ue0b6</> \uf120 {{ .Name }} <transparent,#7aa2f7>\ue0b2</>",
+          "template": "<#7aa2f7,transparent>\ue0b2</> \uf120 {{ .Name }} <transparent,#7aa2f7>\ue0b2</>",
           "foreground": "#1a1b26",
           "background": "#7aa2f7",
           "type": "shell",
@@ -164,7 +163,7 @@
             "always_enabled": true
           },
           "style": "plain",
-          "template": " \u276f",
+          "template": "\u276f",
           "type": "status"
         }
       ]
