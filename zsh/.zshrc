@@ -1,46 +1,145 @@
-export KUBE_EDITOR=nvim
-export KUBECONFIG="$HOME/.config/kubectl/config.yaml"
-export VISUAL=nvim
-export EDITOR=nvim
+# =============================================================================
+# ZSH Configuration File
+# =============================================================================
+# This file configures Zsh shell behavior, environment variables, aliases,
+# functions, and integrations with various tools and utilities.
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+
+# Editor Configuration
+# -------------------
+# Set the default editors for various contexts
+export KUBE_EDITOR=nvim        # Default editor for kubectl edit commands
+export VISUAL=nvim             # Editor for programs that need a visual editor
+export EDITOR=nvim             # Default text editor for command line
+
+# Kubernetes Configuration
+# ------------------------
+export KUBECONFIG="$HOME/.config/kubectl/config.yaml"  # Custom kubectl config location
+
+# Zsh Completion System
+# --------------------
+# Add custom completion directory to function path
 export fpath=($HOME/.zsh/zsh-completions/src $fpath)
-export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000
-export SAVEHIST=10000
-setopt appendhistory
 
+# Command History Configuration
+# ----------------------------
+export HISTFILE="$HOME/.zsh_history"  # Location of history file
+export HISTSIZE=10000                  # Number of commands in memory
+export SAVEHIST=10000                  # Number of commands to save to file
+setopt appendhistory                   # Append to history file instead of overwriting
+
+# =============================================================================
+# SHELL INTEGRATIONS & PLUGINS
+# =============================================================================
+
+# Oh My Posh - Modern prompt theme engine
+# --------------------------------------
 eval "$(oh-my-posh init zsh --config '/home/lewis/.config/ohmyposh/tokyonigh.omp.json')"
-source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-eval "$(zoxide init zsh)"
-autoload bashcompinit && bashcompinit
-autoload -Uz compinit && compinit
-complete -C '/usr/local/bin/aws_completer' aws
-source <(fzf --zsh)
 
-alias v="nvim"
-alias l='eza -lah --icons'
-alias ls='eza -lah --icons --total-size'
-alias cat="bat -p"
-alias ld='lazydocker'
-alias lg='lazygit'
-alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b"
-alias t="tmux"
-alias au="~/.config/fish/aws-utils.fish"
+# Zsh Enhancements
+# ---------------
+source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh    # Fish-like autosuggestions
+source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh  # Syntax highlighting for commands
+
+# Directory Navigation
+# -------------------
+eval "$(zoxide init zsh)"  # Smart cd replacement that learns your habits
+
+# Completion System Setup
+# ----------------------
+autoload bashcompinit && bashcompinit  # Enable bash completions compatibility
+autoload -Uz compinit && compinit      # Initialize Zsh completion system
+
+# Tool-Specific Completions
+# -------------------------
+complete -C '/usr/local/bin/aws_completer' aws  # AWS CLI completions
+source <(fzf --zsh)                             # FZF fuzzy finder integration
+
+# =============================================================================
+# KEY BINDINGS
+# =============================================================================
+
+# Command Line Editing
+# --------------------
+autoload -z edit-command-line          # Load command line editor function
+zle -N edit-command-line               # Bind function to ZLE (Zsh Line Editor)
+bindkey "^[e" edit-command-line        # Alt+E to edit current command in $EDITOR
+
+# Word Movement
+# ------------
+bindkey "^[[1;5C" forward-word         # Ctrl+Right Arrow: move forward by word
+bindkey "^[[1;5D" backward-word        # Ctrl+Left Arrow: move backward by word
+
+# =============================================================================
+# ALIASES
+# =============================================================================
+
+# Text Editors
+# -----------
+alias v="nvim"                         # Quick nvim alias
+
+# File Listing (using eza - modern ls replacement)
+# ------------------------------------------------
+alias l='eza -lah --icons'            # Detailed list with icons and human-readable sizes
+alias ls='eza -lah --icons --total-size'  # Same as above with total directory size
+
+# File Viewing
+# -----------
+alias cat="bat -p"                    # Use bat (syntax-highlighted cat) in plain mode
+
+# Development Tools
+# ----------------
+alias ld='lazydocker'                 # Docker management TUI
+alias lg='lazygit'                    # Git management TUI
+
+# Utility Functions
+# ----------------
+alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b"  # Generate random password to clipboard
+
+# Session Management
+# -----------------
+alias t="tmux"                        # Quick tmux alias
+alias qq="exit"                       # Quick exit alias
+
+# Cloud & DevOps Tools
+# -------------------
+alias k='kubectl'                     # Kubernetes CLI shorthand
+alias kx='kubectx'                    # Kubernetes context switcher
+alias p='pulumi'                      # Infrastructure as Code tool
+
+# External Scripts
+# ---------------
+alias au="~/.config/fish/aws-utils.fish"  # AWS utility functions from Fish shell
+
+# Windows WSL SSH Integration
+# --------------------------
+# Use Windows SSH binaries for better integration with Windows SSH agent
 alias ssh='ssh.exe'
 alias ssh-add='ssh-add.exe'
 alias scp='scp.exe'
 alias sftp='sftp.exe'
-alias qq="exit"
-alias k='kubectl'
-alias kx='kubectx'
-alias p='pulumi'
 
+# =============================================================================
+# CONDITIONAL CONFIGURATION
+# =============================================================================
+
+# AI Configuration
+# ---------------
+# Load AI-related configuration if available
 if [ -f $HOME/.zsh/ai.zsh ]; then
   source $HOME/.zsh/ai.zsh
 fi
 
-# Functions ported from Fish shell
-# =================================
+# =============================================================================
+# CUSTOM FUNCTIONS
+# =============================================================================
+# Functions ported from Fish shell for enhanced functionality
+
+# File Selection and Tmux Integration
+# -----------------------------------
 # Pick files with fzf and send to tmux pane
 pick_files() {
     local pane_dir=$(tmux display-message -p '#{pane_current_path}')
@@ -49,7 +148,7 @@ pick_files() {
     cd "$pane_dir" || exit
     local git_root=$(git rev-parse --show-toplevel)
 
-    # Determine realpath command based on OS
+    # Determine realpath command based on OS (macOS compatibility)
     local realpath_cmd="realpath"
     if [[ "$OSTYPE" == darwin* ]]; then
         if ! command -v grealpath >/dev/null 2>&1; then
@@ -67,12 +166,15 @@ pick_files() {
         fi
     done < <(fd --type f --hidden | fzf --multi --reverse --preview 'bat --style=numbers --color=always {}')
 
+    # Send selected files to tmux pane
     if [[ ${#selected_files[@]} -gt 0 ]]; then
         local files_oneline="${selected_files[*]}"
         tmux send-keys -t "$pane_id" "$files_oneline"
     fi
 }
 
+# Node.js Version Management
+# -------------------------
 # Auto-switch Node version based on .nvmrc (ZSH hook equivalent)
 chpwd_check_nvm() {
     if [[ -f .nvmrc ]]; then
@@ -91,8 +193,11 @@ chpwd_check_nvm() {
 autoload -U add-zsh-hook
 add-zsh-hook chpwd chpwd_check_nvm
 
+# Project Setup Automation
+# ------------------------
 # Setup PNPM project with TypeScript and ESLint
 setup-pnpm-project() {
+    # Initialize PNPM project and install development dependencies
     pnpm init
     pnpm install --save-dev \
         eslint \
@@ -104,6 +209,7 @@ setup-pnpm-project() {
         prettier \
         @trivago/prettier-plugin-sort-imports
 
+    # Create Prettier configuration with import sorting
     cat > .prettierrc.json << 'EOF'
 {
   "trailingComma": "none",
@@ -117,6 +223,7 @@ setup-pnpm-project() {
 }
 EOF
 
+    # Create ESLint configuration with TypeScript support
     cat > eslint.config.mjs << 'EOF'
 // @ts-check
 
@@ -136,12 +243,15 @@ export default tseslint.config(
 );
 EOF
 
+    # Initialize TypeScript configuration
     npx tsc --init
 }
 
+# Command Execution Monitoring
+# ----------------------------
 # Post-command notification for long-running commands (ZSH hook equivalent)
 preexec_start_time() {
-    export CMD_START_TIME=$(date +%s%3N)  # milliseconds
+    export CMD_START_TIME=$(date +%s%3N)  # Record start time in milliseconds
 }
 
 precmd_notify_long_commands() {
@@ -163,17 +273,20 @@ precmd_notify_long_commands() {
 
         # Notify if command took longer than 5 seconds and wasn't interactive
         if [[ $CMD_DURATION -gt 5000 && $is_interactive == false ]]; then
-            printf '\a'  # Bell sound
+            printf '\a'  # Bell sound notification
         fi
 
         unset CMD_START_TIME
     fi
 }
 
-# # Add hooks for pre/post command execution
-# add-zsh-hook preexec preexec_start_time
-# add-zsh-hook precmd precmd_notify_long_commands
+# NOTE: Command monitoring hooks are commented out by default
+# Uncomment the following lines to enable long-running command notifications:
+add-zsh-hook preexec preexec_start_time
+add-zsh-hook precmd precmd_notify_long_commands
 
+# Environment Management
+# ----------------------
 # Load environment variables from .env file
 dotenv() {
     if [[ $# -eq 0 ]]; then
@@ -186,6 +299,7 @@ dotenv() {
         return 1
     fi
 
+    # Parse .env file and export variables
     while IFS= read -r line; do
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
@@ -203,6 +317,8 @@ dotenv() {
     done < "$1"
 }
 
+# Azure Cloud Functions
+# --------------------
 # Azure Container App logs viewer
 azure_container_logs() {
     # Check if required parameters are provided
@@ -223,7 +339,7 @@ EOF
     local container_group_name="$2"
     local time_range="${3:-5m}"  # Default to 5m if not provided
 
-    # Build the KQL query
+    # Build the KQL query for Azure Log Analytics
     local query="ContainerAppConsoleLogs_CL"
     query="$query | where ContainerGroupName_s contains \"$container_group_name\""
 
@@ -250,6 +366,8 @@ EOF
         --output table
 }
 
+# Go Development Tools
+# -------------------
 # Go test with colorized output
 gotest() {
     # Check if go is available
@@ -267,12 +385,3 @@ gotest() {
         -e "s/^FAIL[[:space:]]/$(printf "\033[31mFAIL\033[0m")\t/g" \
         -e "s/^[[:space:]]*ok[[:space:]]/$(printf "\033[32mok\033[0m")\t/g"
 }
-
-# --WCGW_ENVIRONMENT_START--
-if [ -n "$IN_WCGW_ENVIRONMENT" ]; then
- PROMPT_COMMAND='printf "◉ $(pwd)──➤ \r\e[2K"'
- prmptcmdwcgw() { eval "$PROMPT_COMMAND" }
- add-zsh-hook -d precmd prmptcmdwcgw
- precmd_functions+=prmptcmdwcgw
-fi
-# --WCGW_ENVIRONMENT_END--
