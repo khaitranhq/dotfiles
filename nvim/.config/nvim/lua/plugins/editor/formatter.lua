@@ -13,11 +13,13 @@ return {
 				markdown = { "prettier" },
 				python = { "ruff" },
 				sh = { "shfmt" },
+				zsh = { "shfmt" },
 				cpp = { "clang-format" },
 				yaml = { "yamlfmt" },
 				ruby = { "rubyfmt" },
 				go = { "golines" },
 				rust = { "rustfmt" },
+				toml = { "taplo" },
 			},
 		},
 		config = function(_, opts)

@@ -128,26 +128,22 @@
             "cache_duration": "none"
           },
           "template": " \ueba2 {{ .FormattedMs }}",
-          "trailing_diamond": "\ue0b0",
           "foreground": "#c0caf5",
+          "powerline_symbol": "\ue0b0",
           "background": "#414868",
           "type": "executiontime",
-          "style": "diamond"
-        }
-      ]
-    },
-    {
-      "type": "rprompt",
-      "segments": [
+          "style": "powerline"
+        },
         {
           "properties": {
             "cache_duration": "none"
           },
-          "template": "<#7aa2f7,transparent>\ue0b2</> \uf120 {{ .Name }} <transparent,#7aa2f7>\ue0b2</>",
+          "template": " \uf120 {{ .Name }} ",
           "foreground": "#1a1b26",
+          "powerline_symbol": "\ue0b0",
           "background": "#7aa2f7",
           "type": "shell",
-          "style": "plain"
+          "style": "powerline"
         }
       ]
     },
