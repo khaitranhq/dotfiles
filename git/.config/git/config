@@ -1,0 +1,11 @@
+[include]
+  path = ~/.config/git/workspaces.config
+
+[core]
+  excludesFile = ~/.config/git/ignore
+[status]
+  showUntrackedFiles = all
+[gpg]
+    format = ssh
+[gpg "ssh"]
+  program = "/mnt/c/Windows/System32/OpenSSH/ssh-keygen.exe"
