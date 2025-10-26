@@ -108,14 +108,13 @@ bindkey "^[[1;5D" backward-word # Ctrl+Left Arrow: move backward by word
 # -----------
 alias v="nvim" # Quick nvim alias
 
-# File Listing (using eza - modern ls replacement)
-# ------------------------------------------------
+# Files
 alias l='eza -lah --icons'               # Detailed list with icons and human-readable sizes
 alias ls='eza -lah --icons --total-size' # Same as above with total directory size
 
-# File Viewing
-# -----------
 alias cat="bat -p" # Use bat (syntax-highlighted cat) in plain mode
+
+alias y='yazi'
 
 # Development Tools
 # ----------------
