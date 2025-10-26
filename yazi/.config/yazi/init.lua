@@ -1,0 +1,10 @@
+Linemode:children_add("size", 2001)
+Linemode:children_add("spacer", 2002)
+Linemode:children_add("mtime", 2003)
+Linemode:children_add("spacer", 2004)
+Linemode:children_add("owner", 2005)
+Linemode:children_add("spacer", 2006)
+Linemode:children_add("permissions", 2007)
+
+require("git"):setup()
+require("full-border"):setup()
