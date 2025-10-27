@@ -149,6 +149,24 @@
     },
     {
       "type": "prompt",
+      "alignment": "right",
+      "segments": [
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "leading_diamond": "\ue0b2",
+          "template": " {{ .CurrentDate | date .Format }} <transparent,#414868>\ue0b2</>",
+          "foreground": "#c0caf5",
+          "background": "#414868",
+          "type": "time",
+          "style": "diamond",
+          "invert_powerline": true
+        }
+      ]
+    },
+    {
+      "type": "prompt",
       "newline": true,
       "alignment": "left",
       "segments": [
