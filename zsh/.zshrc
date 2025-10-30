@@ -58,6 +58,10 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
   --color=spinner:#ff007c \
 "
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
 # =============================================================================
 # SHELL INTEGRATIONS & PLUGINS
 # =============================================================================
@@ -173,17 +177,10 @@ pick_files() {
 
   cd "$pane_dir" || exit
   local git_root=$(git rev-parse --show-toplevel)
+  echo "$git_root"
 
   # Determine realpath command based on OS (macOS compatibility)
   local realpath_cmd="realpath"
-  if [[ "$OSTYPE" == darwin* ]]; then
-    if ! command -v grealpath >/dev/null 2>&1; then
-      echo "grealpath not found. Install with: brew install coreutils" >&2
-      return 1
-    fi
-    realpath_cmd="grealpath"
-  fi
-
   # Use fd and fzf to select files, then make paths relative to git root
   local selected_files=()
   while IFS= read -r file; do
@@ -191,6 +188,7 @@ pick_files() {
       selected_files+=("$($realpath_cmd --relative-to="$git_root" "$pane_dir/$file")")
     fi
   done < <(fd --type f --hidden | fzf --multi --reverse --preview 'bat --style=numbers --color=always {}')
+  echo "$selected_files"
 
   # Send selected files to tmux pane
   if [[ ${#selected_files[@]} -gt 0 ]]; then
@@ -476,7 +474,8 @@ ai_bash() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # Execute the command and capture its exit code
-    eval "$generated_command"
+    # Use zsh -c to properly parse the command with redirects and pipes
+    zsh -c $generated_command
     local cmd_exit_code=$?
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

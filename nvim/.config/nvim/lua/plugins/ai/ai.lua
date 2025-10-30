@@ -9,6 +9,7 @@ return {
 			filetypes = {
 				markdown = true,
 				help = true,
+				yaml = true,
 			},
 		},
 	},

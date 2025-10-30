@@ -45,7 +45,8 @@
       "stdio"
     ],
     "enabledForAgents": [
-      "SerenaEngineerAgent"
+      "SerenaEngineerAgent",
+      "PulumiEngineer"
     ]
   },
   "new_server_5": {
