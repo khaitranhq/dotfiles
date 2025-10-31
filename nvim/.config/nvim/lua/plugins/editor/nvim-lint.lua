@@ -13,6 +13,7 @@ return {
 				typescript = { "eslint" },
 				typescriptreact = { "eslint" },
 				python = { "mypy" },
+				yaml = { "yamllint" },
 			}
 
 			require("lint").linters.mypy.args = {

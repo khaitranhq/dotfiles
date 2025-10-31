@@ -111,6 +111,6 @@ if [ -f "$HOME/.config/zsh/functions.zsh" ]; then
 fi
 
 # AI Configuration - AI-related settings (optional)
-if [ -f "$HOME/.zsh/ai.zsh" ]; then
+if [ -f "$HOME/.config/zsh/ai.zsh" ]; then
   source "$HOME/.config/zsh/ai.zsh"
 fi
