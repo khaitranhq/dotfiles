@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Global pre-commit hook that runs for all repositories
+# Uses the global configuration at ~/.config/git/pre-commit-config.yaml
+
+set -e  # Exit on error (removed -x for cleaner output)
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+GLOBAL_CONFIG="$HOME/.config/git/pre-commit-config.yaml"
+
+# Check if pre-commit is installed
+if ! command -v pre-commit &> /dev/null; then
+    echo -e "${RED}❌ pre-commit is not installed!${NC}"
+    echo -e "${YELLOW}Install it with: pipx install pre-commit${NC}"
+    exit 1
+fi
+
+# Check if global config exists
+if [ ! -f "$GLOBAL_CONFIG" ]; then
+    echo -e "${RED}❌ Global pre-commit config not found at: $GLOBAL_CONFIG${NC}"
+    exit 1
+fi
+
+# If project has its own .pre-commit-config.yaml, prefer that
+if [ -f ".pre-commit-config.yaml" ]; then
+    echo -e "${YELLOW}ℹ️  Using project-specific .pre-commit-config.yaml${NC}"
+    # Check if pre-commit is installed for this repo
+    if [ ! -f ".git/hooks/pre-commit" ] || ! grep -q "pre-commit" ".git/hooks/pre-commit" 2>/dev/null; then
+        echo -e "${YELLOW}⚠️  Run 'pre-commit install' to use project-specific config${NC}"
+        echo -e "${YELLOW}   Using global config for now...${NC}"
+        exec pre-commit run --config "$GLOBAL_CONFIG" --hook-stage pre-commit
+    else
+        # Let the project-specific hook handle it
+        exec pre-commit run --hook-stage pre-commit
+    fi
+else
+    # Use global config
+    echo -e "${GREEN}🌐 Using global pre-commit config${NC}"
+    exec pre-commit run --config "$GLOBAL_CONFIG" --hook-stage pre-commit
+fi
