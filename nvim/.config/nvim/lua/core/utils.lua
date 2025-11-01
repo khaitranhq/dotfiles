@@ -178,7 +178,7 @@ function M.run_shell_in_float(command, opts)
 	local cmd_args
 	if type(command) == "string" then
 		-- Use shell to execute string commands
-		cmd_args = { "sh", "-c", command }
+		cmd_args = { "zsh", "-c", command }
 	else
 		cmd_args = command
 	end

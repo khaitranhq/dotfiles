@@ -265,7 +265,7 @@ M.git = {
 
 		["<leader>gcc"] = {
 			function()
-				require("core.utils").run_shell_in_float("ai_commit", {
+				require("core.utils").run_shell_in_float("source ~/.zshrc && ai_commit", {
 					post_command_func = function()
 						require("neogit").refresh()
 					end,
