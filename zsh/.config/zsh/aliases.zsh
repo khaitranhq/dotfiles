@@ -26,6 +26,7 @@ alias ac='agentcrew chat --console'
 # GUI for agentcrew: opens AgentCrew with graphical interface
 alias acg='agentcrew chat'
 alias gc='ai_commit' # AI-powered git commit message generator
+alias gp='git push'  # Quick git push alias
 
 # =============================================================================
 # UTILITY FUNCTIONS
