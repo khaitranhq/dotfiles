@@ -5,42 +5,6 @@
 # This file loads environment, plugins, aliases, and custom functions
 
 # =============================================================================
-# NVM (Node Version Manager) - LAZY LOADING
-# =============================================================================
-# Lazy load NVM to improve shell startup time by ~2-3 seconds
-
-export NVM_DIR="$HOME/.nvm"
-
-# Create placeholder functions that will trigger NVM loading on first use
-nvm() {
-  unset -f nvm node npm npx
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  nvm "$@"
-}
-
-node() {
-  unset -f nvm node npm npx
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  node "$@"
-}
-
-npm() {
-  unset -f nvm node npm npx
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  npm "$@"
-}
-
-npx() {
-  unset -f nvm node npm npx
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-  npx "$@"
-}
-
-# =============================================================================
 # SHELL INTEGRATIONS & PLUGINS
 # =============================================================================
 

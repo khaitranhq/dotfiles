@@ -47,11 +47,6 @@ alias kx='kubectx' # Kubernetes context switcher
 alias p='pulumi'   # Infrastructure as Code tool
 
 # =============================================================================
-# EXTERNAL SCRIPTS
-# =============================================================================
-alias au="~/.config/fish/aws-utils.fish" # AWS utility functions from Fish shell
-
-# =============================================================================
 # WINDOWS WSL SSH INTEGRATION
 # =============================================================================
 # Use Windows SSH binaries for better integration with Windows SSH agent
