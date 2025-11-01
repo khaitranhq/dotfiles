@@ -350,39 +350,16 @@ ai_commit() {
   echo "$generated_message"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
+  echo "🚀 Committing changes..."
 
-  # Ask user for confirmation (if gum is available, use it; otherwise use read)
-  local confirmed=false
-  if command -v gum >/dev/null 2>&1; then
-    if gum confirm "Use this commit message?" --affirmative="✅ Yes, commit" --negative="❌ No, cancel"; then
-      confirmed=true
-    fi
-  else
-    # Fallback to standard read prompt if gum is not available
-    echo -n "Use this commit message? [Y/n] "
-    read -r response
-    if [[ "$response" =~ "^[Yy]$" ]] || [[ -z "$response" ]]; then
-      confirmed=true
-    fi
-  fi
-
-  if [[ "$confirmed" == true ]]; then
-    echo ""
-    echo "🚀 Committing changes..."
-
-    # Commit using the generated message
-    # Use -m flag to pass message directly (safer than using heredoc or temp files)
-    if git commit -m "$generated_message"; then
-      echo "✅ Successfully committed changes"
-      return 0
-    else
-      echo "❌ Error: git commit failed" >&2
-      return 1
-    fi
-  else
-    echo ""
-    echo "🚫 Commit cancelled"
+  # Commit using the generated message
+  # Use -m flag to pass message directly (safer than using heredoc or temp files)
+  if git commit -m "$generated_message"; then
+    echo "✅ Successfully committed changes"
     return 0
+  else
+    echo "❌ Error: git commit failed" >&2
+    return 1
   fi
 }
 
