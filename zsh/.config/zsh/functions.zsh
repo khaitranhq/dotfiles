@@ -281,6 +281,111 @@ gotest() {
 # =============================================================================
 # AI-POWERED COMMAND GENERATION
 # =============================================================================
+# Generate git commit message from staged changes using AI
+ai_commit() {
+  # Validate required dependencies
+  if ! command -v agentcrew >/dev/null 2>&1; then
+    echo "❌ Error: agentcrew command not found" >&2
+    echo "   Please install agentcrew first" >&2
+    return 1
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "❌ Error: git command not found" >&2
+    return 1
+  fi
+
+  # Check if we're in a git repository
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "❌ Error: Not in a git repository" >&2
+    return 1
+  fi
+
+  # Get staged diff
+  local diff_content
+  diff_content=$(git diff --staged)
+
+  # Validate that there are staged changes
+  if [[ -z "$diff_content" ]]; then
+    echo "❌ Error: No staged changes found" >&2
+    echo "   Use 'git add' to stage files first" >&2
+    return 1
+  fi
+
+  echo "🤖 Generating commit message from staged changes..."
+  echo ""
+
+  # Generate commit message using agentcrew
+  # Use printf %q to properly escape the diff content for shell
+  local generated_message
+  generated_message=$(agentcrew job \
+    --agent="GitCommiter" \
+    --provider=openai \
+    --model-id="gpt-4.1-mini" \
+    --output-schema='{"type": "string"}' \
+    "$diff_content" 2>&1)
+
+  local agentcrew_exit_code=$?
+
+  # Handle agentcrew execution errors
+  if [[ $agentcrew_exit_code -ne 0 ]]; then
+    echo "❌ Error: Failed to generate commit message" >&2
+    echo "   Exit code: $agentcrew_exit_code" >&2
+    echo "   Output: $generated_message" >&2
+    return 1
+  fi
+
+  # Validate generated message is not empty
+  if [[ -z "$generated_message" ]]; then
+    echo "❌ Error: Generated commit message is empty" >&2
+    return 1
+  fi
+
+  # Strip surrounding quotes and whitespace from JSON output
+  generated_message=$(echo "$generated_message" | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
+
+  # Display the generated commit message
+  echo "📝 Generated commit message:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "$generated_message"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+
+  # Ask user for confirmation (if gum is available, use it; otherwise use read)
+  local confirmed=false
+  if command -v gum >/dev/null 2>&1; then
+    if gum confirm "Use this commit message?" --affirmative="✅ Yes, commit" --negative="❌ No, cancel"; then
+      confirmed=true
+    fi
+  else
+    # Fallback to standard read prompt if gum is not available
+    echo -n "Use this commit message? [Y/n] "
+    read -r response
+    if [[ "$response" =~ "^[Yy]$" ]] || [[ -z "$response" ]]; then
+      confirmed=true
+    fi
+  fi
+
+  if [[ "$confirmed" == true ]]; then
+    echo ""
+    echo "🚀 Committing changes..."
+
+    # Commit using the generated message
+    # Use -m flag to pass message directly (safer than using heredoc or temp files)
+    if git commit -m "$generated_message"; then
+      echo "✅ Successfully committed changes"
+      return 0
+    else
+      echo "❌ Error: git commit failed" >&2
+      return 1
+    fi
+  else
+    echo ""
+    echo "🚫 Commit cancelled"
+    return 0
+  fi
+}
+
 # Generate and execute bash commands using AI
 ai_bash() {
   # Validate required dependencies

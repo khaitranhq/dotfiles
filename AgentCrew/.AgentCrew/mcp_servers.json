@@ -66,14 +66,19 @@
     "url": "",
     "headers": {}
   },
-  "new_server_6": {
-    "name": "gopls",
-    "command": "gopls",
+  "new_server_7": {
+    "name": "git",
+    "command": "uvx",
     "args": [
-      "mcp"
+      "mcp-server-git"
     ],
     "env": {},
     "enabledForAgents": [
+      "Engineer",
+      "RepoAnalyzer",
+      "BashAgent",
+      "DevOpsEngineer",
+      "SerenaEngineerAgent",
       "PulumiEngineer"
     ],
     "streaming_server": false,

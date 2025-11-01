@@ -21,6 +21,11 @@ alias y='yazi'                           # Yazi file manager
 # =============================================================================
 alias ld='lazydocker' # Docker management TUI
 alias lg='lazygit'    # Git management TUI
+# TUI for agentcrew: opens AgentCrew in terminal UI mode
+alias ac='agentcrew chat --console'
+# GUI for agentcrew: opens AgentCrew with graphical interface
+alias acg='agentcrew chat'
+alias gc='ai_commit' # AI-powered git commit message generator
 
 # =============================================================================
 # UTILITY FUNCTIONS
