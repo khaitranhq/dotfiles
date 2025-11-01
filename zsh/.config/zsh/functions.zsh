@@ -25,12 +25,13 @@ pick_files() {
 
   # Use fd and fzf to select files, then make paths relative to git root
   local fzf_output
-  fzf_output=$(fd --type f --hidden --exclude .git |
-    fzf --multi \
-      --reverse \
-      --prompt="Select files: " \
-      --preview 'bat --style=numbers --color=always {} 2>/dev/null || cat {}' \
-      --preview-window=right:60% 
+  fzf_output=$(
+    fd --type f --hidden --exclude .git |
+      fzf --multi \
+        --reverse \
+        --prompt="Select files: " \
+        --preview 'bat --style=numbers --color=always {} 2>/dev/null || cat {}' \
+        --preview-window=right:60%
   )
 
   local fzf_exit_code=$?
@@ -332,6 +333,9 @@ ai_bash() {
     return 1
   fi
 
+  # Strip surrounding quotes from JSON output
+  generated_command=$(echo "$generated_command" | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
+
   # Display the generated command with syntax highlighting
   echo "📝 Generated command:"
   echo "   $generated_command"
@@ -345,7 +349,7 @@ ai_bash() {
 
     # Execute the command and capture its exit code
     # Use zsh -c to properly parse the command with redirects and pipes
-    zsh -c $generated_command
+    zsh -c "$generated_command"
     local cmd_exit_code=$?
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
