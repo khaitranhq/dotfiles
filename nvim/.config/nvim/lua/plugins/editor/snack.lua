@@ -25,9 +25,20 @@ return {
 						".chat_histories",
 						".ruff_cache",
 					}
+
+					-- Common configuration shared between files and grep
+					local common_picker_config = {
+						ignored = true,
+						hidden = true,
+						exclude = common_exclude,
+						args = { "--ignore-file=.rgignore", "--follow" },
+					}
+
 					return {
-						files = { cmd = "rg", ignored = true, hidden = true, exclude = common_exclude },
-						grep = { ignored = true, hidden = true, exclude = common_exclude },
+						files = vim.tbl_extend("force", common_picker_config, {
+							cmd = "rg",
+						}),
+						grep = vim.tbl_extend("force", common_picker_config, {}),
 						explorer = {
 							hidden = true,
 							ignored = true,
