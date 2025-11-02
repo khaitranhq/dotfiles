@@ -3,3 +3,4 @@
 .tmp
 .terry
 .spec
+.pre-commit-config.yaml

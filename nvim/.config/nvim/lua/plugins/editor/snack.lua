@@ -23,6 +23,7 @@ return {
 						".terry",
 						"build",
 						".chat_histories",
+						".ruff_cache",
 					}
 					return {
 						files = { cmd = "rg", ignored = true, hidden = true, exclude = common_exclude },

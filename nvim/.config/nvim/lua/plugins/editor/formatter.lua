@@ -11,7 +11,7 @@ return {
 				typescript = { "prettier" },
 				typescriptreact = { "prettier" },
 				markdown = { "prettier" },
-				python = { "ruff" },
+				python = { "ruff_format" },
 				sh = { "shfmt" },
 				zsh = { "shfmt" },
 				cpp = { "clang-format" },
