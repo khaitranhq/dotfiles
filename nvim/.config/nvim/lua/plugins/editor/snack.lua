@@ -20,7 +20,6 @@ return {
 						".aider*",
 						"cdk.out",
 						".vagrant",
-						".terry",
 						"build",
 						".chat_histories",
 						".ruff_cache",
