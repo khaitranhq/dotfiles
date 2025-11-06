@@ -450,3 +450,57 @@ ai_bash() {
     return 0
   fi
 }
+
+# Generate code snippets using AI
+code_snip() {
+  # Validate required dependencies
+  if ! command -v agentcrew >/dev/null 2>&1; then
+    echo "❌ Error: agentcrew command not found" >&2
+    echo "   Please install agentcrew first" >&2
+    return 1
+  fi
+
+  # Validate prompt argument
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: code_snip <code snippet request>" >&2
+    echo "Example: code_snip 'python function to parse JSON file'" >&2
+    return 1
+  fi
+
+  local prompt="$*"
+
+  echo "🤖 Generating code snippet for: $prompt"
+  echo ""
+
+  # Call agentcrew to generate code snippet
+  local generated_snippet
+  generated_snippet=$(agentcrew job \
+    --agent="CodeSnipper" \
+    --provider=github_copilot \
+    --model-id="claude-sonnet-4.5" \
+    "$prompt" 2>&1)
+
+  local agentcrew_exit_code=$?
+
+  # Handle agentcrew execution errors
+  if [[ $agentcrew_exit_code -ne 0 ]]; then
+    echo "❌ Error: Failed to generate code snippet" >&2
+    echo "   Exit code: $agentcrew_exit_code" >&2
+    echo "   Output: $generated_snippet" >&2
+    return 1
+  fi
+
+  # Validate generated snippet is not empty
+  if [[ -z "$generated_snippet" ]]; then
+    echo "❌ Error: Generated code snippet is empty" >&2
+    return 1
+  fi
+
+  # Display the generated snippet
+  echo "📝 Generated code snippet:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "$generated_snippet"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  return 0
+}

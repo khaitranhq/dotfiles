@@ -26,10 +26,10 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3fed74c572621f74eaffba6603801d153ffe5ce0
     hooks:
-      # File hygiene
-      - id: trailing-whitespace
-        name: "🧹 Trim trailing whitespace"
-        args: [--markdown-linebreak-ext=md]
+      # # File hygiene
+      # - id: trailing-whitespace
+      #   name: "🧹 Trim trailing whitespace"
+      #   args: [--markdown-linebreak-ext=md]
 
       # Git-specific checks
       - id: check-merge-conflict
