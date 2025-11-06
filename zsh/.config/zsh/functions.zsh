@@ -319,10 +319,10 @@ ai_commit() {
   # Use printf %q to properly escape the diff content for shell
   local generated_message
   generated_message=$(agentcrew job \
-    --agent="GitCommiter" \
+    --agent="CommitMessageGenerator" \
+    --agent-config='https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/agents/CommitMessageGenerator.toml' \
     --provider=openai \
     --model-id="gpt-4.1-mini" \
-    --output-schema='{"type": "string"}' \
     "$diff_content" 2>&1)
 
   local agentcrew_exit_code=$?
