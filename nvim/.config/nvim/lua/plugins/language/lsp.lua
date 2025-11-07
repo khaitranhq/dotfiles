@@ -1,7 +1,7 @@
 return {
 	{
 		"neovim/nvim-lspconfig",
-		event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
+		-- event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
 		dependencies = {
 			{ "saghen/blink.cmp" },
 		},
@@ -96,7 +96,6 @@ return {
 				},
 				clangd = {},
 				bashls = {},
-				cssls = {},
 				csharp_ls = {},
 				jsonls = {},
 				docker_language_server = {},
@@ -113,14 +112,16 @@ return {
 			},
 		},
 		config = function(_, opts)
-			-- Enable all configured LSP servers using the new vim.lsp.enable API
-			local servers = vim.tbl_keys(opts.servers)
-			vim.lsp.enable(servers)
-
 			-- Configure each LSP server using the new vim.lsp.config API
 			for server, config in pairs(opts.servers) do
 				vim.lsp.config(server, config)
 			end
+
+			-- Enable all configured LSP servers using the new vim.lsp.enable API
+			local servers = vim.tbl_keys(opts.servers)
+			vim.lsp.enable(servers)
+
+			vim.lsp.inlay_hint.enable()
 		end,
 	},
 	{
