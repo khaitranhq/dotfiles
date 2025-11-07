@@ -44,6 +44,7 @@ opt.listchars = {
 opt.splitbelow = true -- Horizontal splits open below current window
 opt.splitright = true -- Vertical splits open to the right of current window
 opt.hidden = true -- Allow switching buffers without saving changes
+opt.showtabline = 0
 
 -- SYSTEM INTEGRATION
 
