@@ -243,7 +243,7 @@ M.git = {
 			function()
 				Snacks.lazygit()
 			end,
-			"Git: toggle blame line",
+			"Toggle lazygit",
 		},
 
 		["<leader>gbn"] = {
@@ -264,7 +264,7 @@ M.git = {
 				vim.cmd.let(("@+='%s'"):format(current_branch))
 				vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
 			end,
-			"Git: blame line",
+			"Git: copy current branch name",
 		},
 
 		["<leader>gp"] = {
@@ -290,7 +290,7 @@ M.git = {
 					end,
 				})
 			end,
-			"Open Lazygit",
+			"Commit with AI message",
 		},
 	},
 }

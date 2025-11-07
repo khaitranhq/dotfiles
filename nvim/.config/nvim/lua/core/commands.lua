@@ -16,6 +16,6 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 	desc = "Remove carriage returns before saving",
 })
 
-vim.api.nvim_create_user_command("GitBlame", ":lua require('core.utils').blame_line()", {})
+vim.api.nvim_create_user_command("GitBlame", ":lua Snacks.git.blame_line()", {})
 
 vim.api.nvim_create_user_command("Trouble", ":lua vim.diagnostic.setqflist()", {})
