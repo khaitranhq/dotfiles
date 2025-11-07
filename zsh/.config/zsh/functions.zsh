@@ -26,7 +26,7 @@ pick_files() {
   # Use fd and fzf to select files, then make paths relative to git root
   local fzf_output
   fzf_output=$(
-    fd --type f --hidden --exclude .git |
+    rg --files --no-ignore --glob '!.git/*' --hidden |
       fzf --multi \
         --reverse \
         --prompt="Select files: " \

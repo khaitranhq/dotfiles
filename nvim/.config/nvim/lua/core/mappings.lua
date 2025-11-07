@@ -246,13 +246,32 @@ M.git = {
 			"Git: toggle blame line",
 		},
 
-		["<leader>gb"] = {
+		["<leader>gbn"] = {
+			neogit.action("branch", "checkout_create_branch"),
+			"Git: branches",
+		},
+		["<leader>gbc"] = {
+			neogit.action("branch", "checkout_local_branch"),
+			"Git: branches",
+		},
+		["<leader>gbr"] = {
+			neogit.action("branch", "rename_branch"),
+			"Git: branches",
+		},
+		["<leader>gby"] = {
 			function()
 				local current_branch = require("neogit.lib.git").branch.current()
 				vim.cmd.let(("@+='%s'"):format(current_branch))
 				vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
 			end,
 			"Git: blame line",
+		},
+
+		["<leader>gp"] = {
+			function()
+				Snacks.picker.gh_pr()
+			end,
+			"GitHub Pull Requests (open)",
 		},
 
 		-- Lazygit

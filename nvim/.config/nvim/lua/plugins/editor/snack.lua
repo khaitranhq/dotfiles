@@ -34,6 +34,7 @@ return {
 					}
 
 					return {
+						gh = {},
 						files = vim.tbl_extend("force", common_picker_config, {
 							cmd = "rg",
 						}),
