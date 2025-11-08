@@ -3,5 +3,6 @@
 .tmp
 .terry
 .spec
+.tasks
 .pre-commit-config.yaml
 .rgignore
