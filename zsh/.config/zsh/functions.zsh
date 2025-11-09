@@ -26,7 +26,19 @@ pick_files() {
   # Use fd and fzf to select files, then make paths relative to git root
   local fzf_output
   fzf_output=$(
-    rg --files --no-ignore --glob '!.git/*' --hidden |
+    rg --files --no-ignore --hidden \
+      --glob '!.git/**' \
+      --glob '!node_modules/**' \
+      --glob '!dist/**' \
+      --glob '!.venv/**' \
+      --glob '!venv/**' \
+      --glob '!.mypy_cache/**' \
+      --glob '!.aider*/**' \
+      --glob '!cdk.out/**' \
+      --glob '!.vagrant/**' \
+      --glob '!build/**' \
+      --glob '!.chat_histories/**' \
+      --glob '!.ruff_cache/**' |
       fzf --multi \
         --reverse \
         --prompt="Select files: " \
@@ -320,7 +332,7 @@ ai_commit() {
   local generated_message
   generated_message=$(agentcrew job \
     --agent="CommitMessageGenerator" \
-    --agent-config='https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/agents/CommitMessageGenerator.toml' \
+    --agent-config='https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/CommitMessageGenerator.toml' \
     --provider=openai \
     --model-id="gpt-4.1-mini" \
     "$diff_content" 2>&1)
@@ -394,6 +406,7 @@ ai_bash() {
   local generated_command
   generated_command=$(agentcrew job \
     --agent="BashAgent" \
+    --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/BashAgent.toml" \
     --provider=github_copilot \
     --model-id="gpt-4.1" \
     --output-schema='{"type": "string"}' \
@@ -476,6 +489,7 @@ code_snip() {
   local generated_snippet
   generated_snippet=$(agentcrew job \
     --agent="CodeSnipper" \
+    --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/CodeSnipper.toml" \
     --provider=github_copilot \
     --model-id="claude-sonnet-4.5" \
     "$prompt" 2>&1)
