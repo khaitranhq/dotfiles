@@ -2,13 +2,20 @@
   "aws-api": {
     "name": "aws-api",
     "command": "uvx",
-    "args": ["awslabs.aws-api-mcp-server@latest"],
-    "enabledForAgents": ["DevOpsEngineer", "PulumiEngineer"]
+    "args": [
+      "awslabs.aws-api-mcp-server@latest"
+    ],
+    "enabledForAgents": [
+      "DevOpsEngineer",
+      "PulumiEngineer"
+    ]
   },
   "aws-document": {
     "name": "aws-document",
     "command": "uvx",
-    "args": ["awslabs.aws-documentation-mcp-server@latest"],
+    "args": [
+      "awslabs.aws-documentation-mcp-server@latest"
+    ],
     "enabledForAgents": [
       "DevOpsEngineer",
       "PulumiEngineer",
@@ -19,11 +26,15 @@
   "aws-cost": {
     "name": "aws-cost",
     "command": "uvx",
-    "args": ["awslabs.aws-pricing-mcp-server@latest"],
+    "args": [
+      "awslabs.aws-pricing-mcp-server@latest"
+    ],
     "env": {
       "AWS_PROFILE": "default"
     },
-    "enabledForAgents": ["DevOpsEngineer"]
+    "enabledForAgents": [
+      "DevOpsEngineer"
+    ]
   },
   "serena": {
     "name": "serena",
@@ -34,24 +45,42 @@
       "serena",
       "start-mcp-server"
     ],
+    "env": {},
     "enabledForAgents": [
-      "PulumiEngineer",
+      "Engineer",
       "SerenaEngineerAgent",
-      "SerenaRequirementsAnalysisSpecialist"
-    ]
+      "SerenaRequirementsAnalysisSpecialist",
+      "PulumiEngineer"
+    ],
+    "streaming_server": false,
+    "url": "",
+    "headers": {}
   },
   "pulumi": {
     "name": "pulumi",
     "command": "npx",
-    "args": ["@pulumi/mcp-server", "stdio"],
-    "enabledForAgents": ["SerenaEngineerAgent", "PulumiEngineer"]
+    "args": [
+      "@pulumi/mcp-server",
+      "stdio"
+    ],
+    "enabledForAgents": [
+      "SerenaEngineerAgent",
+      "PulumiEngineer"
+    ]
   },
   "new_server_5": {
     "name": "azure",
     "command": "npx",
-    "args": ["-y", "@azure/mcp@latest", "server", "start"],
+    "args": [
+      "-y",
+      "@azure/mcp@latest",
+      "server",
+      "start"
+    ],
     "env": {},
-    "enabledForAgents": ["DevOpsEngineer"],
+    "enabledForAgents": [
+      "DevOpsEngineer"
+    ],
     "streaming_server": false,
     "url": "",
     "headers": {}
@@ -59,7 +88,9 @@
   "new_server_7": {
     "name": "git",
     "command": "uvx",
-    "args": ["mcp-server-git"],
+    "args": [
+      "mcp-server-git"
+    ],
     "env": {},
     "enabledForAgents": [
       "Engineer",

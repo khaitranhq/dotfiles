@@ -38,7 +38,9 @@ pick_files() {
       --glob '!.vagrant/**' \
       --glob '!build/**' \
       --glob '!.chat_histories/**' \
-      --glob '!.ruff_cache/**' |
+      --glob '!.ruff_cache/**' \
+      --ignore-file '.rgignore' \
+      --follow |
       fzf --multi \
         --reverse \
         --prompt="Select files: " \

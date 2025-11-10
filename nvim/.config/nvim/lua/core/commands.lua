@@ -19,3 +19,7 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 vim.api.nvim_create_user_command("GitBlame", ":lua Snacks.git.blame_line()", {})
 
 vim.api.nvim_create_user_command("Trouble", ":lua vim.diagnostic.setqflist()", {})
+
+vim.api.nvim_create_user_command("LspIncommingCalls", ":lua Snacks.picker.lsp_incoming_calls()", {})
+vim.api.nvim_create_user_command("LspOutgoingCalls", ":lua Snacks.picker.lsp_outgoing_calls()", {})
+vim.api.nvim_create_user_command("LspImplementations", ":lua Snacks.picker.lsp_implementations()", {})
