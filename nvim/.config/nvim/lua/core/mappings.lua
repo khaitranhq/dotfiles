@@ -237,6 +237,7 @@ M.dropbar = {
 -- GIT INTEGRATION
 
 local neogit = require("neogit")
+local gitsigns = require("gitsigns")
 M.git = {
 	n = {
 		["<leader>lg"] = {
@@ -291,6 +292,11 @@ M.git = {
 				})
 			end,
 			"Commit with AI message",
+		},
+
+		["<leader>ghp"] = {
+			gitsigns.preview_hunk,
+			"Preview hunk",
 		},
 	},
 }

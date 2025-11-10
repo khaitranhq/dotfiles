@@ -18,4 +18,5 @@ return {
 			"folke/snacks.nvim", -- optional
 		},
 	},
+	{ "lewis6991/gitsigns.nvim" },
 }
