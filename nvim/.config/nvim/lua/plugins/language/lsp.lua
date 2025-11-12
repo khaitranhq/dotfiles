@@ -141,18 +141,12 @@ return {
 			},
 
 			sources = {
-				default = { "lazydev", "lsp", "path", "snippets", "copilot", "buffer" },
+				default = { "lazydev", "lsp", "path", "snippets", "buffer" },
 				providers = {
 					lazydev = {
 						name = "LazyDev",
 						module = "lazydev.integrations.blink",
 						score_offset = 100,
-					},
-					copilot = {
-						name = "copilot",
-						module = "blink-copilot",
-						score_offset = 100,
-						async = true,
 					},
 				},
 			},
@@ -161,7 +155,6 @@ return {
 		opts_extend = { "sources.default" },
 		dependencies = {
 			"rafamadriz/friendly-snippets",
-			"fang2hou/blink-copilot",
 			{
 				"folke/lazydev.nvim",
 				ft = "lua", -- only load on lua files

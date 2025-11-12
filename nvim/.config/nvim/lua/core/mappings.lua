@@ -180,6 +180,9 @@ M.lsp = {
 		["<leader>dr"] = { vim.lsp.buf.rename, "Rename symbol" },
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Show code actions" },
 	},
+	i = {
+		["<M-m>"] = { "<Plug>(copilot-accept-line)", "Accept Copilot suggetsion" },
+	},
 }
 
 -- CODE FORMATTING
