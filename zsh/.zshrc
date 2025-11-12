@@ -18,6 +18,9 @@ source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh # Syntax h
 # Directory Navigation
 eval "$(zoxide init zsh)" # Smart cd replacement
 
+# Zellij
+eval "$(zellij setup --generate-auto-start zsh)"
+
 # =============================================================================
 # COMPLETION SYSTEM
 # =============================================================================
