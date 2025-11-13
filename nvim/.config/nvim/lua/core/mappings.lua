@@ -181,7 +181,7 @@ M.lsp = {
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Show code actions" },
 	},
 	i = {
-		["<M-m>"] = { "<Plug>(copilot-accept-line)", "Accept Copilot suggetsion" },
+		["<C-o>"] = { "<Plug>(copilot-accept-line)", "Accept Copilot suggetsion" },
 	},
 }
 
@@ -300,6 +300,14 @@ M.git = {
 		["<leader>ghp"] = {
 			gitsigns.preview_hunk,
 			"Preview hunk",
+		},
+		["<leader>ghx"] = {
+			gitsigns.reset_hunk,
+			"Reset hunk",
+		},
+		["<leader>ghs"] = {
+			gitsigns.stage_hunk,
+			"Stage hunk",
 		},
 	},
 }
