@@ -334,7 +334,7 @@ ai_commit() {
   local generated_message
   generated_message=$(agentcrew job \
     --agent="CommitMessageGenerator" \
-    --agent-config='https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/CommitMessageGenerator.toml' \
+    --agent-config='https://raw.githubusercontent.com/saigontechnology/AgentCrew/refs/heads/main/examples/agents/jobs/commit-message-generator.toml' \
     --provider=openai \
     --model-id="gpt-4.1-mini" \
     "$diff_content" 2>&1)

@@ -19,7 +19,7 @@ source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh # Syntax h
 eval "$(zoxide init zsh)" # Smart cd replacement
 
 # Zellij
-eval "$(zellij setup --generate-auto-start zsh)"
+# eval "$(zellij setup --generate-auto-start zsh)"
 
 # =============================================================================
 # COMPLETION SYSTEM
@@ -56,7 +56,7 @@ fi
 # Command Line Editing
 autoload -z edit-command-line   # Load command line editor function
 zle -N edit-command-line        # Bind function to ZLE (Zsh Line Editor)
-bindkey "^[e" edit-command-line # Alt+E to edit current command in $EDITOR
+bindkey "^e" edit-command-line # Alt+E to edit current command in $EDITOR
 
 # Word Movement
 bindkey "^[[1;5C" forward-word  # Ctrl+Right Arrow: move forward by word

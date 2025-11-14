@@ -37,6 +37,7 @@ alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b" #
 # SESSION MANAGEMENT
 # =============================================================================
 alias qq="exit" # Quick exit alias
+alias t="zellij" # Start zellij terminal multiplexer
 
 # =============================================================================
 # CLOUD & DEVOPS TOOLS

@@ -45,12 +45,8 @@ keybinds clear-defaults=true {
         bind "[" { BreakPaneLeft; SwitchToMode "normal"; }
         bind "]" { BreakPaneRight; SwitchToMode "normal"; }
         bind "b" { BreakPane; SwitchToMode "normal"; }
-        bind "h" { GoToPreviousTab; }
-        bind "j" { GoToNextTab; }
-        bind "k" { GoToPreviousTab; }
-        bind "l" { GoToNextTab; }
-        bind "n" { GoToNextTab; }
-        bind "p" { GoToPreviousTab; }
+        bind "n" { GoToNextTab; SwitchToMode "normal"; }
+        bind "p" { GoToPreviousTab; SwitchToMode "normal"; }
         bind "c" { NewTab; SwitchToMode "normal"; }
         bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
         bind "s" { ToggleActiveSyncTab; SwitchToMode "normal"; }
@@ -209,10 +205,10 @@ keybinds clear-defaults=true {
         bind "Alt c" { ScrollToBottom; SwitchToMode "normal"; }
         bind "d" { HalfPageScrollDown; }
         bind "Alt f" { PageScrollDown; }
-        bind "h" { PageScrollUp; }
+        bind "Ctrl u" { PageScrollUp; }
         bind "j" { ScrollDown; }
         bind "k" { ScrollUp; }
-        bind "l" { PageScrollDown; }
+        bind "Ctrl d" { PageScrollDown; }
         bind "Alt s" { SwitchToMode "normal"; }
         bind "u" { HalfPageScrollUp; }
     }
@@ -271,7 +267,7 @@ plugins {
     strider location="zellij:strider"
     tab-bar location="zellij:tab-bar"
     welcome-screen location="zellij:session-manager" {
-        welcome_screen false
+        welcome_screen true
     }
 }
 
@@ -313,7 +309,7 @@ theme "tokyo-night"
 // The name of the default layout to load on startup
 // Default: "default"
 //
-default_layout "custom"
+default_layout "welcome"
 
 // The folder in which Zellij will look for layouts
 // (Requires restart)

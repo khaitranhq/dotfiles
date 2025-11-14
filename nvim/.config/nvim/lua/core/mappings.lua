@@ -181,7 +181,14 @@ M.lsp = {
 		["<leader>dca"] = { vim.lsp.buf.code_action, "Show code actions" },
 	},
 	i = {
-		["<C-o>"] = { "<Plug>(copilot-accept-line)", "Accept Copilot suggetsion" },
+		["<C-o>"] = {
+			"copilot#Accept()",
+			"Accept Copilot suggetsion",
+			opts = {
+				expr = true,
+				replace_keycodes = false,
+			},
+		},
 	},
 }
 
