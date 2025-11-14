@@ -85,6 +85,8 @@ keybinds clear-defaults=true {
         bind "n" { MovePane; }
         bind "p" { MovePaneBackwards; }
         bind "tab" { MovePane; }
+        bind "Ctrl h" { MoveTab "left"; }
+        bind "Ctrl l" { MoveTab "right"; }
     }
     scroll {
         bind "e" { EditScrollback; SwitchToMode "normal"; }
@@ -147,20 +149,28 @@ keybinds clear-defaults=true {
         bind "Alt ]" { NextSwapLayout; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Alt g" { SwitchToMode "locked"; }
-        bind "Alt h" { MoveFocusOrTab "left"; }
-        bind "Alt h" { MoveTab "left"; }
+        // bind "Alt h" { MoveFocusOrTab "left"; }
+        // bind "Alt h" { MoveTab "left"; }
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt l" { MoveFocusOrTab "right"; }
         bind "Alt m" { NewPane; }
-        bind "Alt o" { MoveTab "right"; }
+        // bind "Alt o" { MoveTab "right"; }
         bind "Alt p" { TogglePaneInGroup; }
         bind "Alt Shift p" { ToggleGroupMarking; }
+        // bind "Alt e" {
+        //   LaunchPlugin "filepicker" {
+        //       floating true
+        //       show_hidden_files true
+        //       close_on_selection true
+        //   };
+        // }
         bind "Alt e" {
-          LaunchPlugin "filepicker" {
-              floating true
-              close_on_selection true
+          Run "bash" "-c" "$HOME/dotfiles/scripts/zellij-fzf-file-picker.sh" {
+            close_on_exit true
+            name "fzf-picker"
           };
+          SwitchToMode "normal";
         }
         bind "Alt q" { Quit; }
     }

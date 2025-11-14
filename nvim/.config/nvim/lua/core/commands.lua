@@ -23,6 +23,8 @@ vim.api.nvim_create_user_command("Trouble", ":lua Snacks.picker.diagnostics()", 
 vim.api.nvim_create_user_command("LspIncommingCalls", ":lua Snacks.picker.lsp_incoming_calls()", {})
 vim.api.nvim_create_user_command("LspOutgoingCalls", ":lua Snacks.picker.lsp_outgoing_calls()", {})
 vim.api.nvim_create_user_command("LspImplementations", ":lua Snacks.picker.lsp_implementations()", {})
+vim.api.nvim_create_user_command("LspReferences", ":lua Snacks.picker.lsp_references()", {})
+vim.api.nvim_create_user_command("LspTypeDefinitions", ":lua vim.lsp.buf.type_definition()", {})
 
 vim.api.nvim_create_autocmd("VimResized", {
 	command = "wincmd =",
