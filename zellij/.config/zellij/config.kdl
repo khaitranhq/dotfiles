@@ -53,6 +53,8 @@ keybinds clear-defaults=true {
         bind "Alt n" { SwitchToMode "normal"; }
         bind "x" { CloseTab; SwitchToMode "normal"; }
         bind "tab" { ToggleTab; }
+        bind "Ctrl h" { MoveTab "left"; }
+        bind "Ctrl l" { MoveTab "right"; }
     }
     resize {
         bind "left" { Resize "Increase left"; }
@@ -168,7 +170,6 @@ keybinds clear-defaults=true {
         bind "Alt e" {
           Run "bash" "-c" "$HOME/dotfiles/scripts/zellij-fzf-file-picker.sh" {
             close_on_exit true
-            name "fzf-picker"
           };
           SwitchToMode "normal";
         }

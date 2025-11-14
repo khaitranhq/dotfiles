@@ -293,6 +293,223 @@ gotest() {
 }
 
 # =============================================================================
+# ZELLIJ SESSION MANAGEMENT
+# =============================================================================
+# Interactive Zellij session manager using fzf
+zellij_session() {
+  # Validate required dependencies
+  if ! command -v zellij >/dev/null 2>&1; then
+    echo "❌ Error: zellij command not found" >&2
+    echo "   Install with: cargo install zellij" >&2
+    return 1
+  fi
+
+  if ! command -v fzf >/dev/null 2>&1; then
+    echo "❌ Error: fzf command not found" >&2
+    echo "   Install with: brew install fzf" >&2
+    return 1
+  fi
+
+  # Main action selection
+  local action
+  action=$(printf "📋 List & Attach to Session\n➕ Create New Session\n🗑️  Delete Session\n❌ Cancel" | \
+    fzf --prompt="🚀 Zellij Session Manager > " \
+        --height=40% \
+        --reverse \
+        --border \
+        --ansi)
+
+  local fzf_exit_code=$?
+
+  # Handle user cancellation (ESC key)
+  if [[ $fzf_exit_code -ne 0 ]] || [[ "$action" == "❌ Cancel" ]]; then
+    echo "🚫 Operation cancelled"
+    return 0
+  fi
+
+  case "$action" in
+  "📋 List & Attach to Session")
+    # Get list of active sessions
+    local sessions
+    sessions=$(zellij list-sessions --short 2>/dev/null)
+
+    if [[ -z "$sessions" ]]; then
+      echo "ℹ️  No active Zellij sessions found"
+      echo ""
+
+      # Offer to create a new session
+      if gum confirm "Would you like to create a new session?" --affirmative="✅ Yes" --negative="❌ No"; then
+        local new_session_name
+        new_session_name=$(gum input \
+          --placeholder "Enter session name (or leave empty for default)" \
+          --header="📝 New Session Name" \
+          --char-limit=50)
+
+        if [[ -n "$new_session_name" ]]; then
+          echo "🚀 Creating and attaching to session: $new_session_name"
+          zellij attach --create "$new_session_name"
+        else
+          echo "🚀 Creating new session with default name"
+          zellij
+        fi
+      fi
+      return 0
+    fi
+
+    # Let user select a session
+    local selected_session
+    selected_session=$(echo "$sessions" | \
+      fzf --prompt="Select a session to attach > " \
+          --height=40% \
+          --reverse \
+          --border)
+
+    local fzf_exit_code=$?
+
+    # Handle user cancellation
+    if [[ $fzf_exit_code -ne 0 ]] || [[ -z "$selected_session" ]]; then
+      echo "🚫 Operation cancelled"
+      return 0
+    fi
+
+    # Attach to selected session
+    echo "🔗 Attaching to session: $selected_session"
+    zellij attach "$selected_session"
+    ;;
+
+  "➕ Create New Session")
+    # Prompt for session name
+    local session_name
+    session_name=$(gum input \
+      --placeholder "Enter session name (or leave empty for default)" \
+      --header="📝 New Session Name" \
+      --char-limit=50)
+
+    local gum_exit_code=$?
+
+    # Handle user cancellation
+    if [[ $gum_exit_code -ne 0 ]]; then
+      echo "🚫 Operation cancelled"
+      return 0
+    fi
+
+    # Optionally select a layout
+    local layout_choice
+    layout_choice=$(printf "Default (no layout)\nSpecify layout file/name" | \
+      fzf --prompt="Select layout (optional) > " \
+          --height=40% \
+          --reverse \
+          --border)
+
+    if [[ "$layout_choice" == "Specify layout file/name" ]]; then
+      local layout_path
+      layout_path=$(gum input \
+        --placeholder "Enter layout name or path" \
+        --header="📐 Layout Name/Path")
+
+      if [[ -n "$layout_path" ]]; then
+        if [[ -n "$session_name" ]]; then
+          echo "🚀 Creating session '$session_name' with layout '$layout_path'"
+          zellij --session "$session_name" --layout "$layout_path"
+        else
+          echo "🚀 Creating new session with layout '$layout_path'"
+          zellij --layout "$layout_path"
+        fi
+        return 0
+      fi
+    fi
+
+    # Create session without layout
+    if [[ -n "$session_name" ]]; then
+      echo "🚀 Creating session: $session_name"
+      zellij attach --create "$session_name"
+    else
+      echo "🚀 Creating new session with default name"
+      zellij
+    fi
+    ;;
+
+  "🗑️  Delete Session")
+    # Get list of active sessions
+    local sessions
+    sessions=$(zellij list-sessions --short 2>/dev/null)
+
+    if [[ -z "$sessions" ]]; then
+      echo "ℹ️  No active Zellij sessions found"
+      return 0
+    fi
+
+    # Let user select session(s) to delete
+    echo "⚠️  Select session(s) to delete (use TAB to select multiple, ENTER to confirm)"
+    echo ""
+
+    local sessions_to_delete
+    sessions_to_delete=$(echo "$sessions" | \
+      fzf --prompt="Select sessions to delete > " \
+          --multi \
+          --height=40% \
+          --reverse \
+          --border)
+
+    local fzf_exit_code=$?
+
+    # Handle user cancellation
+    if [[ $fzf_exit_code -ne 0 ]] || [[ -z "$sessions_to_delete" ]]; then
+      echo "🚫 Operation cancelled"
+      return 0
+    fi
+
+    # Count selected sessions
+    local session_count
+    session_count=$(echo "$sessions_to_delete" | wc -l | tr -d ' ')
+
+    echo ""
+    echo "📋 Sessions to delete ($session_count):"
+    echo "$sessions_to_delete" | sed 's/^/  • /'
+    echo ""
+
+    # Confirm deletion
+    if gum confirm "Are you sure you want to delete these session(s)?" \
+      --affirmative="🗑️  Yes, delete" \
+      --negative="❌ No, cancel"; then
+
+      echo ""
+      local delete_count=0
+      local fail_count=0
+
+      # Delete each selected session
+      while IFS= read -r session; do
+        if [[ -n "$session" ]]; then
+          echo "🗑️  Deleting session: $session"
+          if zellij delete-session "$session" 2>/dev/null; then
+            ((delete_count++))
+            echo "   ✅ Deleted successfully"
+          else
+            ((fail_count++))
+            echo "   ❌ Failed to delete" >&2
+          fi
+        fi
+      done <<<"$sessions_to_delete"
+
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "📊 Summary: $delete_count deleted, $fail_count failed"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      return $([[ $fail_count -eq 0 ]] && echo 0 || echo 1)
+    else
+      echo ""
+      echo "🚫 Deletion cancelled"
+      return 0
+    fi
+    ;;
+  esac
+}
+
+# Alias for convenience
+alias zj='zellij_session'
+
+# =============================================================================
 # AI-POWERED COMMAND GENERATION
 # =============================================================================
 # Generate git commit message from staged changes using AI
