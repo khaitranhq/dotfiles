@@ -35,3 +35,4 @@ require("lazy").setup({
 	},
 })
 require("core.utils").load_mappings()
+require("custom.reach").setup()

@@ -148,7 +148,7 @@ M.navigate = {
 			"Interactive window picker",
 		},
 		["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
-		["<leader>s"] = { "<cmd>ReachOpen buffers<CR>", "Select buffers" },
+		["<leader>s"] = { require("custom.reach").open, "Select buffers" },
 	},
 }
 
