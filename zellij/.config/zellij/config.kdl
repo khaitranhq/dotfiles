@@ -320,7 +320,7 @@ theme "tokyo-night"
 // The name of the default layout to load on startup
 // Default: "default"
 //
-default_layout "welcome"
+default_layout "_custom"
 
 // The folder in which Zellij will look for layouts
 // (Requires restart)
