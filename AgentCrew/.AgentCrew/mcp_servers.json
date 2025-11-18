@@ -103,5 +103,20 @@
     "streaming_server": false,
     "url": "",
     "headers": {}
+  },
+  "new_server_8": {
+    "name": "go",
+    "command": "gopls",
+    "args": [
+      "mcp"
+    ],
+    "env": {},
+    "enabledForAgents": [
+      "Engineer",
+      "PulumiEngineer"
+    ],
+    "streaming_server": false,
+    "url": "",
+    "headers": {}
   }
 }

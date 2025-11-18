@@ -246,7 +246,6 @@ M.dropbar = {
 
 -- GIT INTEGRATION
 
-local neogit = require("neogit")
 local gitsigns = require("gitsigns")
 M.git = {
 	n = {
@@ -257,27 +256,6 @@ M.git = {
 			"Toggle lazygit",
 		},
 
-		["<leader>gbn"] = {
-			neogit.action("branch", "checkout_create_branch"),
-			"Git: branches",
-		},
-		["<leader>gbc"] = {
-			neogit.action("branch", "checkout_local_branch"),
-			"Git: branches",
-		},
-		["<leader>gbr"] = {
-			neogit.action("branch", "rename_branch"),
-			"Git: branches",
-		},
-		["<leader>gby"] = {
-			function()
-				local current_branch = require("neogit.lib.git").branch.current()
-				vim.cmd.let(("@+='%s'"):format(current_branch))
-				vim.notify("Copied current branch name to clipboard: " .. current_branch, vim.log.levels.INFO)
-			end,
-			"Git: copy current branch name",
-		},
-
 		["<leader>gp"] = {
 			function()
 				Snacks.picker.gh_pr()
@@ -285,21 +263,9 @@ M.git = {
 			"GitHub Pull Requests (open)",
 		},
 
-		-- Lazygit
-		["<leader>gs"] = {
-			function()
-				neogit.open()
-			end,
-			"Open Neogit",
-		},
-
 		["<leader>gcc"] = {
 			function()
-				require("core.utils").run_shell_in_float("source ~/.zshrc && ai_commit", {
-					post_command_func = function()
-						require("neogit").refresh()
-					end,
-				})
+				require("core.utils").run_shell_in_float("source ~/.zshrc && ai_commit")
 			end,
 			"Commit with AI message",
 		},
