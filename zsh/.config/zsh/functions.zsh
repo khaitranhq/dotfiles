@@ -628,7 +628,6 @@ ai_bash() {
     --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/BashAgent.toml" \
     --provider=github_copilot \
     --model-id="gpt-4.1" \
-    --output-schema='{"type": "string"}' \
     "$prompt" 2>&1)
 
   local agentcrew_exit_code=$?
