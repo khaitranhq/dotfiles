@@ -1,0 +1,16 @@
+version: "2"
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - godot
+    - exhaustruct
+    - funlen
+    - noinlineerr
+
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        text: "package-comments.*"

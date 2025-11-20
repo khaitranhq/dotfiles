@@ -9,6 +9,7 @@ keybinds clear-defaults=true {
         bind "j" { MoveFocus "down"; }
         bind "k" { MoveFocus "up"; }
         bind "l" { MoveFocus "right"; }
+        bind "f" { ToggleFocusFullscreen; }
         bind "Alt p" { SwitchToMode "normal"; }
         bind "-" { NewPane "down"; SwitchToMode "normal"; }
         bind "/" { NewPane "right"; SwitchToMode "normal"; }
@@ -45,6 +46,13 @@ keybinds clear-defaults=true {
     }
     scroll {
         bind "e" { EditScrollback; SwitchToMode "normal"; }
+        bind "Ctrl u" { PageScrollUp; }
+        bind "Ctrl d" { PageScrollDown; }
+        bind "g" { ScrollToTop; }
+        bind "G" { ScrollToBottom; }
+        bind "Alt s" { SwitchToMode "normal"; }
+        bind "k" { ScrollUp; }
+        bind "j" { ScrollDown; }
     }
     session {
         bind "Alt o" { SwitchToMode "normal"; }
@@ -89,14 +97,14 @@ keybinds clear-defaults=true {
     shared_except "resize" {
         bind "Alt r" { SwitchToMode "resize"; }
     }
+    shared_except "normal" {
+      bind "Enter" { SwitchToMode "normal";  }
+    }
     shared_except "normal" "renametab" "renamepane" {
         bind "esc" { SwitchToMode "normal"; }
     }
     renametab {
         bind "esc" { UndoRenameTab; SwitchToMode "normal"; }
-    }
-    shared_among "renametab" "renamepane" {
-        bind "Alt c" { SwitchToMode "normal"; }
     }
     renamepane {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }

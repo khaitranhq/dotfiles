@@ -29,3 +29,5 @@ vim.api.nvim_create_user_command("LspTypeDefinitions", ":lua vim.lsp.buf.type_de
 vim.api.nvim_create_autocmd("VimResized", {
 	command = "wincmd =",
 })
+
+vim.api.nvim_create_user_command("LspWorkspaceSymbols", ":lua Snacks.picker.lsp_workspace_symbols()", {})
