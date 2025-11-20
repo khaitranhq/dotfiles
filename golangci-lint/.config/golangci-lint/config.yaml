@@ -9,6 +9,10 @@ linters:
     - funlen
     - noinlineerr
 
+  settings:
+    perfsprint:
+      string-format: false
+
   exclusions:
     rules:
       - linters:

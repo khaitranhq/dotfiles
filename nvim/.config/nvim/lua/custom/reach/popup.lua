@@ -8,8 +8,9 @@ local M = {}
 
 --- Create and configure popup
 --- @param lines table Content lines to display
+--- @param modified_lines table List of line indices (0-based) that are modified
 --- @return table NUI Popup instance
-function M.create_popup(lines)
+function M.create_popup(lines, modified_lines)
 	local popup = Popup({
 		enter = true,
 		focusable = true,
@@ -34,8 +35,8 @@ function M.create_popup(lines)
 	-- Set content
 	vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
 
-	-- Highlight the selection keys
-	M.apply_highlights(popup.bufnr, #lines)
+	-- Highlight the selection keys and modified buffers
+	M.apply_highlights(popup.bufnr, #lines, modified_lines or {})
 
 	return popup
 end
@@ -43,17 +44,33 @@ end
 --- Apply syntax highlighting to buffer
 --- @param bufnr number Buffer number
 --- @param line_count number Number of lines
-function M.apply_highlights(bufnr, line_count)
+--- @param modified_lines table List of line indices (0-based) that are modified
+function M.apply_highlights(bufnr, line_count, modified_lines)
 	-- Create namespace for highlights
 	local ns_id = vim.api.nvim_create_namespace("reach_buffer_selector")
 
-	-- Highlight each selection key (the part in brackets)
+	-- Convert modified_lines to a set for O(1) lookup
+	local modified_set = {}
+	for _, line_idx in ipairs(modified_lines) do
+		modified_set[line_idx] = true
+	end
+
+	-- Highlight each line
 	for i = 0, line_count - 1 do
-		-- Highlight [key] part in the line
-		vim.api.nvim_buf_set_extmark(bufnr, ns_id, i, 0, {
-			end_col = 3,
-			hl_group = "Number",
-		})
+		if modified_set[i] then
+			-- Highlight entire line in yellow for modified buffers
+			local line_text = vim.api.nvim_buf_get_lines(bufnr, i, i + 1, false)[1]
+			vim.api.nvim_buf_set_extmark(bufnr, ns_id, i, 0, {
+				end_col = #line_text,
+				hl_group = "WarningMsg", -- Yellow/warning color
+			})
+		else
+			-- Highlight [key] part in the line for non-modified buffers
+			vim.api.nvim_buf_set_extmark(bufnr, ns_id, i, 0, {
+				end_col = 3,
+				hl_group = "Number",
+			})
+		end
 	end
 end
 

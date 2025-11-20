@@ -30,7 +30,3 @@ git:
   paging:
     colorArg: always
     pager: delta --dark --paging=never
-customCommands:
-  - key: '<c-a>'
-    context: 'global'
-    command: "oco --yes"

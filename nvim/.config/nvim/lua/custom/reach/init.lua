@@ -18,10 +18,10 @@ function M.open()
 	end
 
 	-- Format buffers for display and get key mapping
-	local lines, key_map = buffer_list.format_buffers(buffers)
+	local lines, key_map, modified_lines = buffer_list.format_buffers(buffers)
 
 	-- Create popup
-	local popup = popup_module.create_popup(lines)
+	local popup = popup_module.create_popup(lines, modified_lines)
 
 	-- Setup keymaps for selection
 	keymaps.setup_keymaps(popup, key_map)

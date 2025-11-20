@@ -312,12 +312,12 @@ zellij_session() {
 
   # Main action selection
   local action
-  action=$(printf "📋 List & Attach to Session\n➕ Create New Session\n🗑️  Delete Session\n❌ Cancel" | \
+  action=$(printf "📋 List & Attach to Session\n➕ Create New Session\n🗑️  Delete Session\n❌ Cancel" |
     fzf --prompt="🚀 Zellij Session Manager > " \
-        --height=40% \
-        --reverse \
-        --border \
-        --ansi)
+      --height=40% \
+      --reverse \
+      --border \
+      --ansi)
 
   local fzf_exit_code=$?
 
@@ -358,11 +358,11 @@ zellij_session() {
 
     # Let user select a session
     local selected_session
-    selected_session=$(echo "$sessions" | \
+    selected_session=$(echo "$sessions" |
       fzf --prompt="Select a session to attach > " \
-          --height=40% \
-          --reverse \
-          --border)
+        --height=40% \
+        --reverse \
+        --border)
 
     local fzf_exit_code=$?
 
@@ -395,11 +395,11 @@ zellij_session() {
 
     # Optionally select a layout
     local layout_choice
-    layout_choice=$(printf "Default (no layout)\nSpecify layout file/name" | \
+    layout_choice=$(printf "Default (no layout)\nSpecify layout file/name" |
       fzf --prompt="Select layout (optional) > " \
-          --height=40% \
-          --reverse \
-          --border)
+        --height=40% \
+        --reverse \
+        --border)
 
     if [[ "$layout_choice" == "Specify layout file/name" ]]; then
       local layout_path
@@ -444,12 +444,12 @@ zellij_session() {
     echo ""
 
     local sessions_to_delete
-    sessions_to_delete=$(echo "$sessions" | \
+    sessions_to_delete=$(echo "$sessions" |
       fzf --prompt="Select sessions to delete > " \
-          --multi \
-          --height=40% \
-          --reverse \
-          --border)
+        --multi \
+        --height=40% \
+        --reverse \
+        --border)
 
     local fzf_exit_code=$?
 
@@ -585,13 +585,26 @@ ai_commit() {
 
   # Commit using the generated message
   # Use -m flag to pass message directly (safer than using heredoc or temp files)
+  local commit_exit_code=0
   if git commit -m "$generated_message"; then
     echo "✅ Successfully committed changes"
-    return 0
   else
     echo "❌ Error: git commit failed" >&2
-    return 1
+    commit_exit_code=1
   fi
+
+  echo ""
+  echo "Press q to exit"
+
+  # Wait for user to press 'q'
+  while true; do
+    read -sk 1 key
+    if [[ "$key" == "q" ]]; then
+      break
+    fi
+  done
+
+  return $commit_exit_code
 }
 
 # Generate and execute bash commands using AI

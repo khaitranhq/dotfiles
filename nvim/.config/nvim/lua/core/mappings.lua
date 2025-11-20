@@ -263,13 +263,6 @@ M.git = {
 			"GitHub Pull Requests (open)",
 		},
 
-		["<leader>gcc"] = {
-			function()
-				require("core.utils").run_shell_in_float("source ~/.zshrc && ai_commit")
-			end,
-			"Commit with AI message",
-		},
-
 		["<leader>ghp"] = {
 			gitsigns.preview_hunk,
 			"Preview hunk",

@@ -71,8 +71,14 @@ keybinds clear-defaults=true {
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt l" { MoveFocus "right"; }
+        bind "Alt c" {
+          Run "zsh" "-c" "source $HOME/.config/zsh/functions.zsh && ai_commit" {
+            close_on_exit true
+          };
+          SwitchToMode "normal";
+        }
         bind "Alt e" {
-          Run "bash" "-c" "$HOME/dotfiles/scripts/zellij-fzf-file-picker.sh" {
+          Run "bash" "-c" "$HOME/.config/zellij/scripts/zellij-fzf-file-picker.sh" {
             close_on_exit true
           };
           SwitchToMode "normal";
