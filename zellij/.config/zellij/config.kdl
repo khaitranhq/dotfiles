@@ -9,7 +9,7 @@ keybinds clear-defaults=true {
         bind "j" { MoveFocus "down"; }
         bind "k" { MoveFocus "up"; }
         bind "l" { MoveFocus "right"; }
-        bind "f" { ToggleFocusFullscreen; }
+        bind "f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "Alt p" { SwitchToMode "normal"; }
         bind "-" { NewPane "down"; SwitchToMode "normal"; }
         bind "/" { NewPane "right"; SwitchToMode "normal"; }
@@ -73,6 +73,7 @@ keybinds clear-defaults=true {
         bind "Alt l" { MoveFocus "right"; }
         bind "Alt c" {
           Run "zsh" "-c" "source $HOME/.config/zsh/functions.zsh && ai_commit" {
+            floating true
             close_on_exit true
           };
           SwitchToMode "normal";

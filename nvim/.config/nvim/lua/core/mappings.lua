@@ -110,13 +110,12 @@ M.file_explorer = {
 			function()
 				Snacks.explorer()
 			end,
-			"Toggle nvim tree",
+			"Toggle file explorer",
 		},
 	},
 }
 
 -- FUZZY FINDING & SEARCH
-
 M.fuzzy = {
 	n = {
 		["<leader>ff"] = {
