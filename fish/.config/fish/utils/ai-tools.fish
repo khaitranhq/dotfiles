@@ -32,12 +32,12 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     echo ""
 
     # Generate commit message using agentcrew
-    set generated_message (agentcrew job \
+    set generated_message "$(agentcrew job \
         --agent="CommitMessageGenerator" \
         --agent-config='https://raw.githubusercontent.com/saigontechnology/AgentCrew/refs/heads/main/examples/agents/jobs/commit-message-generator.toml' \
-        --provider=openai \
+        --provider='openai' \
         --model-id="gpt-4.1-mini" \
-        "$diff_content" 2>&1)
+        "$diff_content" 2>&1)"
 
     set agentcrew_exit_code $status
 
