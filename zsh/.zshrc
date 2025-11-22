@@ -85,3 +85,4 @@ fi
 if [ -f "$HOME/.config/zsh/ai.zsh" ]; then
   source "$HOME/.config/zsh/ai.zsh"
 fi
+eval "$(goenv init -)"

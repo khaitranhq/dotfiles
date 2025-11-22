@@ -1,5 +1,8 @@
 #=========================Functions=========================
-source ~/.config/fish/functions.fish
+# Load all fish files from utils directory
+for file in $HOME/.config/fish/utils/*.fish
+    source $file
+end
 
 #=========================Variables=========================
 # Disable Fish Greeting
@@ -15,22 +18,10 @@ set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 set -Ux VISUAL "nvim"
 set -Ux EDITOR "nvim"
 
-set -Ux PYENV_ROOT $HOME/.pyenv
-test -d $PYENV_ROOT/bin; and fish_add_path $PYENV_ROOT/bin
-
-set -x VAGRANT_WSL_ENABLE_WINDOWS_ACCESS "1"
-set -x VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH "/mnt/c/Users/khai.tran/"
-
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
-
-fish_add_path $HOME/.local/share/nvim/mason/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
-fish_add_path $HOME/go/bin
 fish_add_path $HOME/.pulumi/bin
-fish_add_path $HOME/.cargo/bin
-fish_add_path $HOME/.local/share/jdk/bin
-fish_add_path "/mnt/c/Program Files/Oracle/VirtualBox/"
 
 #=========================Init apps=========================
 # oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/jandedobbeleer.omp.json' | source
@@ -53,22 +44,14 @@ alias cat="bat -p"
 alias ld='lazydocker'
 alias lg='lazygit'
 alias randompass="cat /dev/random | tr -dc '[:alnum:]' | head -c 40 | xsel -b"
-alias t="tmux"
 alias au="~/.config/fish/aws-utils.fish"
 alias ssh='ssh.exe'
 alias ssh-add='ssh-add.exe'
 alias scp='scp.exe'
 alias sftp='sftp.exe'
-## alias db="source ~/.config/fish/connect-db.fish"
 alias qq="exit"
 alias k='kubectl'
 alias kx='kubectx'
 alias p='pulumi'
-alias sai='aider \
-  --openai-api-key $COPILOT_KEY_STS \
-  --openai-api-base https://api.githubcopilot.com'
-
-alias rai='aider \
-  --openai-api-key $COPILOT_KEY_RH \
-  --openai-api-base https://api.githubcopilot.com'
-
+alias zj='zellij_session'
+alias ac='agentcrew chat --console'

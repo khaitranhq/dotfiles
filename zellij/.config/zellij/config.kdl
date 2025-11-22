@@ -9,6 +9,7 @@ keybinds clear-defaults=true {
         bind "j" { MoveFocus "down"; }
         bind "k" { MoveFocus "up"; }
         bind "l" { MoveFocus "right"; }
+        bind "x" { CloseFocus; SwitchToMode "normal"; }
         bind "f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "Alt p" { SwitchToMode "normal"; }
         bind "-" { NewPane "down"; SwitchToMode "normal"; }
@@ -72,7 +73,7 @@ keybinds clear-defaults=true {
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt l" { MoveFocus "right"; }
         bind "Alt c" {
-          Run "zsh" "-c" "source $HOME/.config/zsh/functions.zsh && ai_commit" {
+          Run "fish" "-c" "source $HOME/.config/fish/utils/session.fish && ai_commit" {
             floating true
             close_on_exit true
           };
