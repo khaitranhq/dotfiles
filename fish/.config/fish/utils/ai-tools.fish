@@ -55,9 +55,6 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
         return 1
     end
 
-    # Strip surrounding quotes and whitespace from JSON output
-    set generated_message (echo $generated_message | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
-
     # Display the generated commit message
     echo "📝 Generated commit message:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

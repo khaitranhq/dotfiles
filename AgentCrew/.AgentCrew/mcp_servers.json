@@ -1,97 +1,95 @@
 {
   "aws-api": {
-    "name": "aws-api",
-    "command": "uvx",
     "args": [
       "awslabs.aws-api-mcp-server@latest"
     ],
+    "command": "uvx",
     "enabledForAgents": [
       "DevOpsEngineer",
       "PulumiEngineer"
-    ]
+    ],
+    "name": "aws-api"
   },
   "aws-document": {
-    "name": "aws-document",
-    "command": "uvx",
     "args": [
       "awslabs.aws-documentation-mcp-server@latest"
     ],
+    "command": "uvx",
     "enabledForAgents": [
       "DevOpsEngineer",
       "PulumiEngineer",
       "SerenaEngineerAgent",
       "Engineer"
-    ]
+    ],
+    "name": "aws-document"
   },
   "aws-cost": {
-    "name": "aws-cost",
-    "command": "uvx",
     "args": [
       "awslabs.aws-pricing-mcp-server@latest"
+    ],
+    "command": "uvx",
+    "enabledForAgents": [
+      "DevOpsEngineer"
     ],
     "env": {
       "AWS_PROFILE": "default"
     },
-    "enabledForAgents": [
-      "DevOpsEngineer"
-    ]
+    "name": "aws-cost"
   },
   "serena": {
-    "name": "serena",
-    "command": "uvx",
     "args": [
       "--from",
       "git+https://github.com/oraios/serena",
       "serena",
       "start-mcp-server"
     ],
-    "env": {},
+    "command": "uvx",
     "enabledForAgents": [
       "Engineer",
       "SerenaEngineerAgent",
       "SerenaRequirementsAnalysisSpecialist",
       "PulumiEngineer"
     ],
+    "env": {},
+    "headers": {},
+    "name": "serena",
     "streaming_server": false,
-    "url": "",
-    "headers": {}
+    "url": ""
   },
   "pulumi": {
-    "name": "pulumi",
-    "command": "npx",
     "args": [
       "@pulumi/mcp-server",
       "stdio"
     ],
+    "command": "npx",
     "enabledForAgents": [
       "SerenaEngineerAgent",
       "PulumiEngineer"
-    ]
+    ],
+    "name": "pulumi"
   },
   "new_server_5": {
-    "name": "azure",
-    "command": "npx",
     "args": [
       "-y",
       "@azure/mcp@latest",
       "server",
       "start"
     ],
-    "env": {},
+    "command": "npx",
     "enabledForAgents": [
       "DevOpsEngineer"
     ],
+    "env": {},
+    "headers": {},
+    "name": "azure",
     "streaming_server": false,
-    "url": "",
-    "headers": {}
+    "url": ""
   },
   "new_server_7": {
-    "name": "git",
-    "command": "uvx",
     "args": [
       "mcp-server-git"
     ],
-    "env": {},
+    "command": "uvx",
     "enabledForAgents": [
       "Engineer",
       "RepoAnalyzer",
@@ -100,23 +98,41 @@
       "SerenaEngineerAgent",
       "PulumiEngineer"
     ],
+    "env": {},
+    "headers": {},
+    "name": "git",
     "streaming_server": false,
-    "url": "",
-    "headers": {}
+    "url": ""
   },
   "new_server_8": {
-    "name": "go",
-    "command": "gopls",
     "args": [
       "mcp"
     ],
-    "env": {},
+    "command": "gopls",
     "enabledForAgents": [
       "Engineer",
       "PulumiEngineer"
     ],
+    "env": {},
+    "headers": {},
+    "name": "go",
     "streaming_server": false,
-    "url": "",
-    "headers": {}
+    "url": ""
+  },
+  "new_server_9": {
+    "args": [
+      "run",
+      "-i",
+      "--rm"
+    ],
+    "command": "docker",
+    "enabledForAgents": [
+      "Engineer"
+    ],
+    "env": {},
+    "headers": {},
+    "name": "mermiad",
+    "streaming_server": true,
+    "url": "https://mcp.mermaidchart.com/mcp"
   }
 }
