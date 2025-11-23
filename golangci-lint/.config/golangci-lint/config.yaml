@@ -3,18 +3,26 @@ version: "2"
 linters:
   default: all
   disable:
+    - testpackage
     - depguard
     - godot
     - exhaustruct
+    - wsl
     - funlen
     - noinlineerr
 
   settings:
     perfsprint:
       string-format: false
+    gosec:
+      excludes:
+        - G204 #  Subprocess launched with variable
 
   exclusions:
     rules:
       - linters:
           - revive
         text: "package-comments.*"
+      - linters:
+          - revive
+        text: exported (.+) should have comment( \(or a comment on this block\))? or be unexported

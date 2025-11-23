@@ -22,6 +22,7 @@ set -Ux EDITOR "nvim"
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
 fish_add_path $HOME/.pulumi/bin
+fish_add_path $HOME/go/bin
 
 #=========================Init apps=========================
 # oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/jandedobbeleer.omp.json' | source

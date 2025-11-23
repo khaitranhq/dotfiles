@@ -114,12 +114,12 @@ function ai_bash -d "Generate and execute bash commands using AI"
     echo ""
 
     # Call agentcrew to generate command
-    set generated_command (agentcrew job \
+    set generated_command "$(agentcrew job \
         --agent="BashAgent" \
         --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/BashAgent.toml" \
         --provider=github_copilot \
         --model-id="gpt-4.1" \
-        "$prompt" 2>&1)
+        "$prompt" 2>&1)"
 
     set agentcrew_exit_code $status
 
@@ -195,12 +195,12 @@ function code_snip -d "Generate code snippets using AI"
     echo ""
 
     # Call agentcrew to generate code snippet
-    set generated_snippet (agentcrew job \
+    set generated_snippet "$(agentcrew job \
         --agent="CodeSnipper" \
         --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/CodeSnipper.toml" \
         --provider=github_copilot \
         --model-id="claude-sonnet-4.5" \
-        "$prompt" 2>&1)
+        "$prompt" 2>&1)"
 
     set agentcrew_exit_code $status
 
