@@ -14,9 +14,9 @@ function zellij_session -d "Interactive Zellij session manager using fzf"
 
     # Get list of active sessions
     set -l sessions "$(zellij list-sessions --short 2>/dev/null)"
-    set sessions "$(echo "$sessions\n✨ Create a new session")"
+    set sessions "$sessions\n✨ Create a new session"
 
-    set -l selection "$(echo "$sessions" | \
+    set -l selection "$(echo -e "$sessions" | \
         fzf --prompt="🚀 Zellij Session Manager > " \
             --height=40% \
             --reverse \

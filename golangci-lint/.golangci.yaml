@@ -6,10 +6,12 @@ linters:
     - testpackage
     - depguard
     - godot
-    - exhaustruct
+    # - exhaustruct
     - wsl
     - funlen
     - noinlineerr
+    - forbidigo
+    - revive
 
   settings:
     perfsprint:
