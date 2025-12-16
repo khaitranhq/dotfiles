@@ -5,10 +5,13 @@
     ],
     "command": "uvx",
     "enabledForAgents": [
-      "DevOpsEngineer",
-      "PulumiEngineer"
+      "DevOpsEngineer"
     ],
-    "name": "aws-api"
+    "env": {},
+    "headers": {},
+    "name": "aws-api",
+    "streaming_server": false,
+    "url": ""
   },
   "aws-document": {
     "args": [
@@ -16,12 +19,13 @@
     ],
     "command": "uvx",
     "enabledForAgents": [
-      "DevOpsEngineer",
-      "PulumiEngineer",
-      "SerenaEngineerAgent",
-      "Engineer"
+      "DevOpsEngineer"
     ],
-    "name": "aws-document"
+    "env": {},
+    "headers": {},
+    "name": "aws-document",
+    "streaming_server": false,
+    "url": ""
   },
   "aws-cost": {
     "args": [
@@ -35,24 +39,6 @@
       "AWS_PROFILE": "default"
     },
     "name": "aws-cost"
-  },
-  "serena": {
-    "args": [
-      "--from",
-      "git+https://github.com/oraios/serena",
-      "serena",
-      "start-mcp-server"
-    ],
-    "command": "uvx",
-    "enabledForAgents": [
-      "PulumiEngineer",
-      "GoEngineer"
-    ],
-    "env": {},
-    "headers": {},
-    "name": "serena",
-    "streaming_server": false,
-    "url": ""
   },
   "pulumi": {
     "args": [
@@ -106,8 +92,6 @@
     ],
     "command": "gopls",
     "enabledForAgents": [
-      "Engineer",
-      "PulumiEngineer",
       "GoEngineer"
     ],
     "env": {},
@@ -123,11 +107,7 @@
       "--rm"
     ],
     "command": "docker",
-    "enabledForAgents": [
-      "Engineer",
-      "DevOpsEngineer",
-      "GoEngineer"
-    ],
+    "enabledForAgents": [],
     "env": {},
     "headers": {},
     "name": "mermaid",
@@ -153,6 +133,24 @@
     "env": {},
     "headers": {},
     "name": "filesystem",
+    "streaming_server": false,
+    "url": ""
+  },
+  "new_server_11": {
+    "args": [
+      "--from",
+      "git+https://github.com/ast-grep/ast-grep-mcp",
+      "ast-grep-server"
+    ],
+    "command": "uvx",
+    "enabledForAgents": [
+      "Engineer",
+      "PulumiEngineer",
+      "GoEngineer"
+    ],
+    "env": {},
+    "headers": {},
+    "name": "ast-grep",
     "streaming_server": false,
     "url": ""
   }
