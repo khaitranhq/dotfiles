@@ -138,7 +138,7 @@ function ai_bash -d "Generate and execute bash commands using AI"
     end
 
     # Strip surrounding quotes from JSON output
-    set generated_command (echo $generated_command | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
+    set generated_command (echo "$generated_command" | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
 
     # Display the generated command with syntax highlighting
     echo "📝 Generated command:"

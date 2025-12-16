@@ -18,6 +18,7 @@ set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 set -Ux VISUAL "nvim"
 set -Ux EDITOR "nvim"
 
+set -Ux MANPAGER "nvim +Man!"
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
@@ -56,3 +57,8 @@ alias kx='kubectx'
 alias p='pulumi'
 alias zj='zellij_session'
 alias ac='agentcrew chat --console'
+alias acg='agentcrew chat'
+alias ppd='pulumi preview --diff'
+alias pp='pulumi preview'
+alias pup='pulumi up --yes --skip-preview'
+alias dbc='db_connect'
