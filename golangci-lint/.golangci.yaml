@@ -6,8 +6,9 @@ linters:
     - testpackage
     - depguard
     - godot
-    # - exhaustruct
+    - exhaustruct
     - wsl
+    - wsl_v5
     - funlen
     - noinlineerr
     - forbidigo
@@ -28,3 +29,6 @@ linters:
       - linters:
           - revive
         text: exported (.+) should have comment( \(or a comment on this block\))? or be unexported
+      - linters:
+          - varnamelen
+        text: variable name (.+) is too short for the scope of its usage

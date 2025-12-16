@@ -74,7 +74,7 @@ keybinds clear-defaults=true {
         bind "Alt l" { MoveFocus "right"; }
         bind "Alt L" { GoToNextTab; SwitchToMode "normal"; }
         bind "Alt H" { GoToPreviousTab; SwitchToMode "normal"; }
-        bind "Alt c" {
+        bind "Alt m" {
           Run "fish" "-c" "source $HOME/.config/fish/utils/session.fish && ai_commit" {
             floating true
             close_on_exit true
