@@ -45,10 +45,8 @@
     ],
     "command": "uvx",
     "enabledForAgents": [
-      "Engineer",
-      "SerenaEngineerAgent",
-      "SerenaRequirementsAnalysisSpecialist",
-      "PulumiEngineer"
+      "PulumiEngineer",
+      "GoEngineer"
     ],
     "env": {},
     "headers": {},
@@ -92,11 +90,9 @@
     "command": "uvx",
     "enabledForAgents": [
       "Engineer",
-      "RepoAnalyzer",
-      "BashAgent",
       "DevOpsEngineer",
-      "SerenaEngineerAgent",
-      "PulumiEngineer"
+      "PulumiEngineer",
+      "GoEngineer"
     ],
     "env": {},
     "headers": {},
@@ -111,11 +107,12 @@
     "command": "gopls",
     "enabledForAgents": [
       "Engineer",
-      "PulumiEngineer"
+      "PulumiEngineer",
+      "GoEngineer"
     ],
     "env": {},
     "headers": {},
-    "name": "go",
+    "name": "gopls",
     "streaming_server": false,
     "url": ""
   },
@@ -127,12 +124,36 @@
     ],
     "command": "docker",
     "enabledForAgents": [
-      "Engineer"
+      "Engineer",
+      "DevOpsEngineer",
+      "GoEngineer"
     ],
     "env": {},
     "headers": {},
-    "name": "mermiad",
+    "name": "mermaid",
     "streaming_server": true,
     "url": "https://mcp.mermaidchart.com/mcp"
+  },
+  "new_server_10": {
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "/home/lewis"
+    ],
+    "command": "npx",
+    "enabledForAgents": [
+      "PromptMaker",
+      "Engineer",
+      "DocumentationAgent",
+      "DevOpsEngineer",
+      "PulumiEngineer",
+      "GoEngineer",
+      "StrategicPlanner"
+    ],
+    "env": {},
+    "headers": {},
+    "name": "filesystem",
+    "streaming_server": false,
+    "url": ""
   }
 }
