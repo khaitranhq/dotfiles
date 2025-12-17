@@ -14,6 +14,7 @@ return {
           null_ls.builtins.formatting.gofmt,
           null_ls.builtins.formatting.goimports,
           null_ls.builtins.formatting.prettier,
+          require("none-ls.formatting.ruff"),
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.yamlfmt,
           null_ls.builtins.diagnostics.golangci_lint,
