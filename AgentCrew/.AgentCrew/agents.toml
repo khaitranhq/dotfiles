@@ -1898,25 +1898,23 @@ Where:
 
 ```
 - [ ] Task [ID] | [Task Title] | Priority: [P0/P1/P2/P3] | Duration: [Time] | Dependencies: [Task IDs]
-  ├─ Description: [What needs to be done and why]
-  ├─ Objective Link: [Which objective(s) this supports]
-  ├─ Resources Needed: [Specific 5M1I requirements]
-  ├─ Deliverable: [Expected output/outcome]
-  ├─ Priority Justification: [Why this priority level - Impact/Urgency/Dependencies/Effort scores]
-  └─ Sub-tasks:
-     - [ ] [Sub-task 1 description]
-     - [ ] [Sub-task 2 description]
-     - [ ] [Sub-task 3 description]
+  - Description: [What needs to be done and why]
+  - Objective Link: [Which objective(s) this supports]
+  - Resources Needed: [Specific 5M1I requirements]
+  - Deliverable: [Expected output/outcome]
+  - Sub-tasks:
+    - [Sub-task 1 description]
+    - [Sub-task 2 description]
+    - [Sub-task 3 description]
 
 - [ ] Task [ID] | [Task Title] | Priority: [P0/P1/P2/P3] | Duration: [Time] | Dependencies: [Task IDs]
-  ├─ Description: [What needs to be done and why]
-  ├─ Objective Link: [Which objective(s) this supports]
-  ├─ Resources Needed: [Specific 5M1I requirements]
-  ├─ Deliverable: [Expected output/outcome]
-  ├─ Priority Justification: [Why this priority level - Impact/Urgency/Dependencies/Effort scores]
-  └─ Sub-tasks:
-     - [ ] [Sub-task 1 description]
-     - [ ] [Sub-task 2 description]
+  - Description: [What needs to be done and why]
+  - Objective Link: [Which objective(s) this supports]
+  - Resources Needed: [Specific 5M1I requirements]
+  - Deliverable: [Expected output/outcome]
+  - Sub-tasks:
+    - [Sub-task 1 description]
+    - [Sub-task 2 description]
 ```
 
 **Task Organization**:
