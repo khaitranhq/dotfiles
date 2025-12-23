@@ -32,3 +32,6 @@ linters:
       - linters:
           - varnamelen
         text: variable name (.+) is too short for the scope of its usage
+      - linters:
+          - godoclint
+        text: godoc should start with symbol name \(\".+\"\)

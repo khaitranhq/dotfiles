@@ -1953,14 +1953,38 @@ Where:
 - Risk Score: 1-8=Low | 9-15=Medium | 16-25=High
 ```
 
-#### Risk & Backup Plan Output Format (Table)
+#### Risk & Backup Plan Output Format (Summary List)
 
 ```
-| Risk ID | Risk Description | Category | Probability | Impact | Score | Triggers/Indicators | Affected Tasks | Backup Plan Actions |
-|---------|------------------|----------|-------------|--------|-------|---------------------|----------------|---------------------|
-| R01 | [Risk description] | [Category] | [1-5] | [1-5] | [Score] | [Early warning signs] | [Task IDs] | **Prevention:** [Proactive actions to reduce probability]<br>**Contingency:** [Actions if risk occurs]<br>**Recovery:** [Steps to get back on track] |
-| R02 | [Risk description] | [Category] | [1-5] | [1-5] | [Score] | [Early warning signs] | [Task IDs] | **Prevention:** [Proactive actions]<br>**Contingency:** [Response actions]<br>**Recovery:** [Recovery steps] |
-| R03 | [Risk description] | [Category] | [1-5] | [1-5] | [Score] | [Early warning signs] | [Task IDs] | **Prevention:** [Proactive actions]<br>**Contingency:** [Response actions]<br>**Recovery:** [Recovery steps] |
+**Risk 1: [Risk Description]**
+- Category: [Category]
+- Probability: [1-5] | Impact: [1-5] | Score: [Score]
+- Triggers: [Early warning signs]
+- Affected Tasks: [Task IDs]
+- Backup Plan:
+  * Prevention: [Proactive actions to reduce probability]
+  * Contingency: [Actions if risk occurs]
+  * Recovery: [Steps to get back on track]
+
+**Risk 2: [Risk Description]**
+- Category: [Category]
+- Probability: [1-5] | Impact: [1-5] | Score: [Score]
+- Triggers: [Early warning signs]
+- Affected Tasks: [Task IDs]
+- Backup Plan:
+  * Prevention: [Proactive actions to reduce probability]
+  * Contingency: [Actions if risk occurs]
+  * Recovery: [Steps to get back on track]
+
+**Risk 3: [Risk Description]**
+- Category: [Category]
+- Probability: [1-5] | Impact: [1-5] | Score: [Score]
+- Triggers: [Early warning signs]
+- Affected Tasks: [Task IDs]
+- Backup Plan:
+  * Prevention: [Proactive actions to reduce probability]
+  * Contingency: [Actions if risk occurs]
+  * Recovery: [Steps to get back on track]
 ```
 
 **Backup Plan Action Structure**:
@@ -1996,14 +2020,47 @@ Define key performance indicators and monitoring processes to track plan executi
 - **Resource KPIs**: Budget variance, resource utilization, capacity
 - **Outcome KPIs**: Business value delivered, user satisfaction, goal achievement
 
-#### Monitoring & KPI Output Format (Single Unified Table)
+#### Monitoring & KPI Output Format (Summary List)
 
 ```
-| KPI Name | Definition | Formula/Measurement | Target | Baseline | Data Source | Collection Method | Frequency | Green Threshold | Yellow Threshold | Red Threshold | Linked Objective |
-|----------|------------|---------------------|--------|----------|-------------|-------------------|-----------|-----------------|------------------|---------------|------------------|
-| [KPI 1] | [What is measured and why] | [How to calculate] | [Success target] | [Starting value] | [Where data comes from] | [Auto/Manual/Hybrid] | [Daily/Weekly/Monthly] | [On-track range] | [Warning range] | [Critical range] | [Objective #] |
-| [KPI 2] | [What is measured and why] | [How to calculate] | [Success target] | [Starting value] | [Where data comes from] | [Auto/Manual/Hybrid] | [Daily/Weekly/Monthly] | [On-track range] | [Warning range] | [Critical range] | [Objective #] |
-| [KPI 3] | [What is measured and why] | [How to calculate] | [Success target] | [Starting value] | [Where data comes from] | [Auto/Manual/Hybrid] | [Daily/Weekly/Monthly] | [On-track range] | [Warning range] | [Critical range] | [Objective #] |
+**KPI 1: [KPI Name]**
+- Definition: [What is measured and why]
+- Formula/Measurement: [How to calculate]
+- Target: [Success target] | Baseline: [Starting value]
+- Data Source: [Where data comes from]
+- Collection Method: [Auto/Manual/Hybrid]
+- Frequency: [Daily/Weekly/Monthly]
+- Thresholds:
+  * Green (On Track): [On-track range]
+  * Yellow (Warning): [Warning range]
+  * Red (Critical): [Critical range]
+- Linked Objective: [Objective #]
+
+**KPI 2: [KPI Name]**
+- Definition: [What is measured and why]
+- Formula/Measurement: [How to calculate]
+- Target: [Success target] | Baseline: [Starting value]
+- Data Source: [Where data comes from]
+- Collection Method: [Auto/Manual/Hybrid]
+- Frequency: [Daily/Weekly/Monthly]
+- Thresholds:
+  * Green (On Track): [On-track range]
+  * Yellow (Warning): [Warning range]
+  * Red (Critical): [Critical range]
+- Linked Objective: [Objective #]
+
+**KPI 3: [KPI Name]**
+- Definition: [What is measured and why]
+- Formula/Measurement: [How to calculate]
+- Target: [Success target] | Baseline: [Starting value]
+- Data Source: [Where data comes from]
+- Collection Method: [Auto/Manual/Hybrid]
+- Frequency: [Daily/Weekly/Monthly]
+- Thresholds:
+  * Green (On Track): [On-track range]
+  * Yellow (Warning): [Warning range]
+  * Red (Critical): [Critical range]
+- Linked Objective: [Objective #]
 ```
 
 ## Output Structure Template
@@ -2059,7 +2116,7 @@ Organize the complete plan using this structure:
 
 ## 5. RISK MANAGEMENT & BACKUP PLANS
 
-[Risk table with backup plan actions for prevention, contingency, and recovery]
+[Risk summary list with backup plan actions for prevention, contingency, and recovery]
 
 **Risk Summary**:
 
@@ -2069,7 +2126,7 @@ Organize the complete plan using this structure:
 
 ## 6. PLAN MONITORING & KPI FRAMEWORK
 
-[Single unified table with KPI specifications and monitoring details]
+[KPI summary list with specifications and monitoring details]
 
 **Monitoring Implementation**:
 
@@ -2145,6 +2202,7 @@ Before finalizing any plan, verify:
 - [ ] Backup plans include Prevention, Contingency, and Recovery actions
 - [ ] Trigger conditions clearly defined
 - [ ] Affected tasks identified for each risk
+- [ ] Risks presented in summary list format, not tables
 
 **Monitoring & KPIs**:
 
@@ -2154,7 +2212,7 @@ Before finalizing any plan, verify:
 - [ ] Measurement frequency appropriate for project pace
 - [ ] Green/Yellow/Red thresholds defined for decision-making
 - [ ] Monitoring task added to task list if criteria met
-- [ ] All KPI details captured in single unified table
+- [ ] All KPI details captured in summary list format, not tables
 
 ## Edge Cases & Special Scenarios
 
