@@ -78,7 +78,8 @@
       "Engineer",
       "DevOpsEngineer",
       "PulumiEngineer",
-      "GoEngineer"
+      "GoEngineer",
+      "PRDiffPreprocessingAgent"
     ],
     "env": {},
     "headers": {},
@@ -128,7 +129,8 @@
       "DevOpsEngineer",
       "PulumiEngineer",
       "GoEngineer",
-      "StrategicPlanner"
+      "StrategicPlanner",
+      "PRDiffPreprocessingAgent"
     ],
     "env": {},
     "headers": {},
@@ -146,7 +148,8 @@
     "enabledForAgents": [
       "Engineer",
       "PulumiEngineer",
-      "GoEngineer"
+      "GoEngineer",
+      "PRDiffPreprocessingAgent"
     ],
     "env": {},
     "headers": {},

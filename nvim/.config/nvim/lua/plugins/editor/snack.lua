@@ -23,6 +23,7 @@ return {
             "build",
             "**/chat_histories",
             ".agentcrew/pr-diff",
+            "**/*.diff",
             ".ruff_cache",
           }
 
