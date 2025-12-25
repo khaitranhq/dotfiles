@@ -1414,6 +1414,7 @@ temperature = 0.5
 tools = [
     "memory",
     "web_search",
+    "command_execution",
 ]
 voice_enabled = "disabled"
 voice_id = ""

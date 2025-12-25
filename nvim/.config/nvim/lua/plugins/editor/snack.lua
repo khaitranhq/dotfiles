@@ -83,24 +83,22 @@ return {
                   local is_file = vim.fn.isdirectory(filepath) == 0
 
                   local values = {
-                    filepath,
                     modify(filepath, ":."),
-                    modify(filepath, ":~"),
+                    filepath,
                     filename,
                     is_file and modify(filename, ":r") or nil,
                     is_file and modify(filename, ":e") or nil,
                   }
 
                   local items = {
-                    "Absolute path: " .. values[1],
-                    "Path relative to CWD: " .. values[2],
-                    "Path relative to HOME: " .. values[3],
-                    "Filename: " .. values[4],
+                    "Path relative to CWD: " .. values[1],
+                    "Absolute path: " .. values[2],
+                    "Filename: " .. values[3],
                   }
 
                   if is_file then
-                    table.insert(items, "Filename without extension: " .. values[5])
-                    table.insert(items, "Extension of the filename: " .. values[6])
+                    table.insert(items, "Filename without extension: " .. values[4])
+                    table.insert(items, "Extension of the filename: " .. values[5])
                   end
 
                   vim.ui.select(
