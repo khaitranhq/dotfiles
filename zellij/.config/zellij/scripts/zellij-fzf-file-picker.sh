@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+
 # Zellij FZF File Picker
-# Opens an interactive file picker using fd and fzf, then writes the selected
+# Opens an interactive file picker using rg and fzf, then writes the selected
 # file path to the Zellij pane that invoked this script
 
 set -euo pipefail
@@ -9,23 +10,24 @@ set -euo pipefail
 INVOKING_PANE="${ZELLIJ_PANE_ID:-}"
 
 list_files=$(
-	fd \
-		--type f \
+	rg \
+		--files \
 		--hidden \
 		--follow \
-		--exclude .git \
-		--exclude node_modules \
-		--exclude dist \
-		--exclude build \
+		--glob '!.git/**' \
+		--glob '!node_modules/**' \
+		--glob '!dist/**' \
+		--glob '!build/**' \
 		--no-ignore
 )
 
-# Use fd to find files and fzf for selection
-# fd options:
-#   --type f: only files (not directories)
+# Use rg to find files and fzf for selection
+# rg options:
+#   --files: list files (not directories)
 #   --hidden: include hidden files
 #   --follow: follow symbolic links
-#   --exclude .git: exclude .git directories
+#   --glob '!pattern': exclude matching patterns
+#   --no-ignore: don't respect .gitignore
 selected_file=$(
 	echo "$list_files" |
 		fzf --height=100% \
