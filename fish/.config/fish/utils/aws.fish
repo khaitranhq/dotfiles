@@ -9,57 +9,116 @@ function aws_auth
 
     echo "🔐 Authenticating AWS with profile: $profile"
 
-    # Step 1: AWS Login
-    if not aws login --profile $profile
-        echo "❌ AWS login failed"
-        return 1
+    # Step 1: Get AWS Account ID from config file
+    echo "🔍 Reading AWS Account ID from config..."
+    set -l config_file "$HOME/.aws/config"
+    set -l account_id ""
+
+    if test -f "$config_file"
+        # Extract account ID from login_session ARN in config
+        # Format: login_session = arn:aws:iam::757085376176:user/leoaslan
+        set -l login_session (awk -v profile="$profile" '
+            /^\[profile / {
+                in_section = 0
+                if ($0 ~ "\\[profile " profile "\\]") in_section = 1
+            }
+            in_section && /^login_session/ {
+                # Extract account ID using gsub and regex
+                line = $0
+                if (match(line, /arn:aws:iam::[0-9]+:/)) {
+                    sub(/.*arn:aws:iam::/, "", line)
+                    sub(/:.*/, "", line)
+                    print line
+                    exit
+                }
+            }
+        ' "$config_file")
+
+        if test -n "$login_session"
+            set account_id "$login_session"
+            echo "📋 Account ID from config: $account_id"
+        end
     end
 
-    echo "✅ AWS login successful"
-
-    # Step 2: Get AWS Account ID
-    echo "🔍 Retrieving AWS Account ID..."
-    set -l account_id (aws sts get-caller-identity --query Account --output text --profile $profile 2>/dev/null)
-
-    if test -z "$account_id"
-        echo "❌ Failed to retrieve AWS Account ID"
-        return 1
-    end
-
-    echo "📋 Account ID: $account_id"
-
-    # Step 3: Find matching cache file
-    echo "🔎 Searching for cache file..."
+    # Step 2: Check if cache file with this account ID already exists
     set -l cache_dir "$HOME/.aws/login/cache"
-
-    if not test -d "$cache_dir"
-        echo "⚠️  Cache directory not found: $cache_dir"
-        return 1
-    end
-
     set -l matching_file ""
 
-    for cache_file in $cache_dir/*.json
-        if test -f "$cache_file"
-            # Extract accountId from JSON file
-            set -l file_account_id (jq -r '.accessToken.accountId // empty' "$cache_file" 2>/dev/null)
+    if test -n "$account_id" -a -d "$cache_dir"
+        echo "🔎 Checking for existing cache file with Account ID: $account_id..."
 
-            if test "$file_account_id" = "$account_id"
-                set matching_file "$cache_file"
-                break
+        for cache_file in $cache_dir/*.json
+            if test -f "$cache_file"
+                # Extract accountId from JSON file
+                set -l file_account_id (jq -r '.accessToken.accountId // empty' "$cache_file" 2>/dev/null)
+
+                if test "$file_account_id" = "$account_id"
+                    set matching_file "$cache_file"
+                    echo "✅ Found existing cache file: "(basename $matching_file)
+                    break
+                end
             end
         end
     end
 
+    # Step 3: AWS Login (only if no valid cache found or we need to refresh)
     if test -z "$matching_file"
-        echo "⚠️  No matching cache file found for Account ID: $account_id"
-        echo "ℹ️  Authentication is still valid, but cache file verification failed"
-        return 0
+        echo "🔑 No valid cache found. Performing AWS login..."
+
+        if not aws login --profile $profile
+            echo "❌ AWS login failed"
+            return 1
+        end
+
+        echo "✅ AWS login successful"
+
+        # If we didn't get account_id from config, get it from STS
+        if test -z "$account_id"
+            echo "🔍 Retrieving AWS Account ID from STS..."
+            set account_id (aws sts get-caller-identity --query Account --output text --profile $profile 2>/dev/null)
+
+            if test -z "$account_id"
+                echo "❌ Failed to retrieve AWS Account ID"
+                return 1
+            end
+
+            echo "📋 Account ID: $account_id"
+        end
+    else
+        echo "♻️  Using existing authentication cache"
     end
 
-    echo "✅ Found matching cache file: "(basename $matching_file)
+    # Step 4: Find/verify matching cache file
+    if test -z "$matching_file"
+        echo "🔎 Searching for cache file..."
 
-    # Step 4: Extract and export AWS credentials
+        if not test -d "$cache_dir"
+            echo "⚠️  Cache directory not found: $cache_dir"
+            return 1
+        end
+
+        for cache_file in $cache_dir/*.json
+            if test -f "$cache_file"
+                # Extract accountId from JSON file
+                set -l file_account_id (jq -r '.accessToken.accountId // empty' "$cache_file" 2>/dev/null)
+
+                if test "$file_account_id" = "$account_id"
+                    set matching_file "$cache_file"
+                    break
+                end
+            end
+        end
+
+        if test -z "$matching_file"
+            echo "⚠️  No matching cache file found for Account ID: $account_id"
+            echo "ℹ️  Authentication is still valid, but cache file verification failed"
+            return 0
+        end
+
+        echo "✅ Found matching cache file: "(basename $matching_file)
+    end
+
+    # Step 5: Extract and export AWS credentials
     echo "🔑 Extracting credentials from cache..."
 
     # Parse credentials from JSON
@@ -77,8 +136,11 @@ function aws_auth
 
     # Check if token is expired
     if test -n "$expires_at"
-        set -l current_time (date -u +%Y-%m-%dT%H:%M:%SZ)
-        if test "$expires_at" \< "$current_time"
+        # Convert ISO 8601 timestamps to Unix epoch for comparison
+        set -l expires_epoch (date -d "$expires_at" +%s 2>/dev/null)
+        set -l current_epoch (date +%s)
+
+        if test -n "$expires_epoch" -a "$expires_epoch" -lt "$current_epoch"
             echo "⚠️  Token has expired at: $expires_at"
             echo "ℹ️  Please re-authenticate"
             return 1
