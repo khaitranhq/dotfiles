@@ -2,11 +2,11 @@
   helper = store
 
 [include]
-  path = ~/.config/git/workspaces.config
+  path = ~/.config/git/workspaces.conf
 
 [core]
   excludesFile = ~/.config/git/ignore
-  ; hooksPath = ~/.config/git/hooks
+  hooksPath = ~/.config/git/hooks
 [status]
   showUntrackedFiles = all
 [gpg]
