@@ -1,12 +1,8 @@
 {
   "aws-api": {
-    "args": [
-      "awslabs.aws-api-mcp-server@latest"
-    ],
+    "args": ["awslabs.aws-api-mcp-server@latest"],
     "command": "uvx",
-    "enabledForAgents": [
-      "DevOpsEngineer"
-    ],
+    "enabledForAgents": ["DevOpsEngineer"],
     "env": {},
     "headers": {},
     "name": "aws-api",
@@ -14,13 +10,9 @@
     "url": ""
   },
   "aws-document": {
-    "args": [
-      "awslabs.aws-documentation-mcp-server@latest"
-    ],
+    "args": ["awslabs.aws-documentation-mcp-server@latest"],
     "command": "uvx",
-    "enabledForAgents": [
-      "DevOpsEngineer"
-    ],
+    "enabledForAgents": ["DevOpsEngineer"],
     "env": {},
     "headers": {},
     "name": "aws-document",
@@ -28,41 +20,24 @@
     "url": ""
   },
   "aws-cost": {
-    "args": [
-      "awslabs.aws-pricing-mcp-server@latest"
-    ],
+    "args": ["awslabs.aws-pricing-mcp-server@latest"],
     "command": "uvx",
-    "enabledForAgents": [
-      "DevOpsEngineer"
-    ],
+    "enabledForAgents": ["DevOpsEngineer"],
     "env": {
       "AWS_PROFILE": "default"
     },
     "name": "aws-cost"
   },
   "pulumi": {
-    "args": [
-      "@pulumi/mcp-server",
-      "stdio"
-    ],
+    "args": ["@pulumi/mcp-server", "stdio"],
     "command": "npx",
-    "enabledForAgents": [
-      "SerenaEngineerAgent",
-      "PulumiEngineer"
-    ],
+    "enabledForAgents": ["SerenaEngineerAgent", "PulumiEngineer"],
     "name": "pulumi"
   },
   "new_server_5": {
-    "args": [
-      "-y",
-      "@azure/mcp@latest",
-      "server",
-      "start"
-    ],
+    "args": ["-y", "@azure/mcp@latest", "server", "start"],
     "command": "npx",
-    "enabledForAgents": [
-      "DevOpsEngineer"
-    ],
+    "enabledForAgents": ["DevOpsEngineer"],
     "env": {},
     "headers": {},
     "name": "azure",
@@ -70,16 +45,15 @@
     "url": ""
   },
   "new_server_7": {
-    "args": [
-      "mcp-server-git"
-    ],
+    "args": ["mcp-server-git"],
     "command": "uvx",
     "enabledForAgents": [
       "Engineer",
       "DevOpsEngineer",
       "PulumiEngineer",
       "GoEngineer",
-      "PRDiffPreprocessingAgent"
+      "PRDiffPreprocessingAgent",
+      "CDKEngineer"
     ],
     "env": {},
     "headers": {},
@@ -88,13 +62,9 @@
     "url": ""
   },
   "new_server_8": {
-    "args": [
-      "mcp"
-    ],
+    "args": ["mcp"],
     "command": "gopls",
-    "enabledForAgents": [
-      "GoEngineer"
-    ],
+    "enabledForAgents": ["GoEngineer"],
     "env": {},
     "headers": {},
     "name": "gopls",
@@ -102,11 +72,7 @@
     "url": ""
   },
   "new_server_9": {
-    "args": [
-      "run",
-      "-i",
-      "--rm"
-    ],
+    "args": ["run", "-i", "--rm"],
     "command": "docker",
     "enabledForAgents": [],
     "env": {},
@@ -116,11 +82,7 @@
     "url": "https://mcp.mermaidchart.com/mcp"
   },
   "new_server_10": {
-    "args": [
-      "-y",
-      "@modelcontextprotocol/server-filesystem",
-      "/home/lewis"
-    ],
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/lewis"],
     "command": "npx",
     "enabledForAgents": [
       "PromptMaker",
@@ -130,7 +92,8 @@
       "PulumiEngineer",
       "GoEngineer",
       "StrategicPlanner",
-      "PRDiffPreprocessingAgent"
+      "PRDiffPreprocessingAgent",
+      "CDKEngineer"
     ],
     "env": {},
     "headers": {},
