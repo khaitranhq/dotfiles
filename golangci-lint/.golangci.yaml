@@ -14,6 +14,7 @@ linters:
     - forbidigo
     - revive
     - nilnil
+    - ireturn
 
   settings:
     perfsprint:
@@ -24,12 +25,6 @@ linters:
 
   exclusions:
     rules:
-      - linters:
-          - revive
-        text: "package-comments.*"
-      - linters:
-          - revive
-        text: exported (.+) should have comment( \(or a comment on this block\))? or be unexported
       - linters:
           - varnamelen
         text: variable name (.+) is too short for the scope of its usage
