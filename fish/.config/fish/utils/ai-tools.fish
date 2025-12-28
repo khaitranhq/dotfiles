@@ -152,8 +152,9 @@ function ai_bash -d "Generate and execute bash commands using AI"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
         # Execute the command and capture its exit code
-        # Use fish -c to properly parse the command with redirects and pipes
-        fish -c "$generated_command"
+        # Use eval to properly expand environment variables and handle shell syntax
+        eval "echo \$AWS_ACCOUNT_ID"
+        eval "$generated_command"
         set cmd_exit_code $status
 
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

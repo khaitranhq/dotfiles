@@ -1,9 +1,10 @@
 function aws_auth
     set -l profile $argv[1]
+    set -l region $argv[2]
 
     if test -z "$profile"
         echo "❌ Error: Profile name is required"
-        echo "Usage: aws_auth <profile-name>"
+        echo "Usage: aws_auth <profile-name> [region]"
         return 1
     end
 
@@ -119,17 +120,70 @@ function aws_auth
         echo "⏰ Token expires at: $expires_at"
     end
 
+    # Step 6: Determine AWS region
+    if test -z "$region"
+        echo "🌍 No region specified, reading from ~/.aws/config..."
+        set -l config_file "$HOME/.aws/config"
+
+        if test -f "$config_file"
+            # Parse region from config file for the specified profile
+            set -l in_profile_section 0
+
+            while read -l line
+                # Check if we're entering the target profile section
+                if string match -qr "^\[profile $profile\]\s*\$" "$line"
+                    set in_profile_section 1
+                    continue
+                end
+
+                # Check if we've entered a different profile section
+                if test $in_profile_section -eq 1; and string match -qr '^\[profile ' "$line"
+                    # We've moved to another profile, stop searching
+                    break
+                end
+
+                # Extract region if we're in the target profile section
+                if test $in_profile_section -eq 1
+                    if string match -qr '^region\s*=\s*(.+)$' "$line"
+                        set region (string match -r '^region\s*=\s*(.+)$' "$line" | string trim)[2]
+                        break
+                    end
+                end
+            end < "$config_file"
+
+            if test -z "$region"
+                echo "⚠️  No region found for profile '$profile' in config file"
+                echo "ℹ️  Proceeding without setting AWS_REGION"
+            else
+                echo "✅ Region found: $region"
+            end
+        else
+            echo "⚠️  Config file not found: $config_file"
+            echo "ℹ️  Proceeding without setting AWS_REGION"
+        end
+    else
+        echo "🌍 Using specified region: $region"
+    end
+
     # Export credentials as environment variables
     set -gx AWS_ACCESS_KEY_ID "$access_key_id"
     set -gx AWS_SECRET_ACCESS_KEY "$secret_access_key"
     set -gx AWS_SESSION_TOKEN "$session_token"
     set -gx AWS_ACCOUNT_ID "$account_id"
 
+    # Export region if available
+    if test -n "$region"
+        set -gx AWS_REGION "$region"
+    end
+
     echo "✅ Credentials exported to environment:"
     echo "   • AWS_ACCESS_KEY_ID: "(string sub -l 20 "$access_key_id")"..."
     echo "   • AWS_SECRET_ACCESS_KEY: [HIDDEN]"
     echo "   • AWS_SESSION_TOKEN: [HIDDEN]"
     echo "   • AWS_ACCOUNT_ID: $account_id"
+    if test -n "$region"
+        echo "   • AWS_REGION: $region"
+    end
 
     echo "🎉 AWS authentication complete!"
     return 0
