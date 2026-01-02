@@ -155,6 +155,8 @@ temperature = 1.2
 tools = [
     "memory",
     "web_search",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -394,6 +396,8 @@ tools = [
     "memory",
     "web_search",
     "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -579,6 +583,8 @@ temperature = 1.2
 tools = [
     "memory",
     "web_search",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -1215,6 +1221,8 @@ tools = [
     "memory",
     "web_search",
     "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -1415,6 +1423,8 @@ tools = [
     "memory",
     "web_search",
     "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -1694,6 +1704,8 @@ tools = [
     "memory",
     "web_search",
     "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -2265,6 +2277,8 @@ temperature = 0.5
 tools = [
     "clipboard",
     "web_search",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -3495,6 +3509,8 @@ You are designed to be an **intelligent intermediary** that transforms overwhelm
 temperature = 0.5
 tools = [
     "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""
@@ -4425,7 +4441,9 @@ temperature = 0.5
 tools = [
     "memory",
     "web_search",
-    "command_execution"
+    "command_execution",
+    "code_analysis",
+    "file_editing"
 ]
 voice_enabled = "disabled"
 voice_id = ""

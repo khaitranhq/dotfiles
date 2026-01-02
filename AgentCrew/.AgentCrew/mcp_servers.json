@@ -81,26 +81,6 @@
     "streaming_server": true,
     "url": "https://mcp.mermaidchart.com/mcp"
   },
-  "new_server_10": {
-    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/lewis"],
-    "command": "npx",
-    "enabledForAgents": [
-      "PromptMaker",
-      "Engineer",
-      "DocumentationAgent",
-      "DevOpsEngineer",
-      "PulumiEngineer",
-      "GoEngineer",
-      "StrategicPlanner",
-      "PRDiffPreprocessingAgent",
-      "CDKEngineer"
-    ],
-    "env": {},
-    "headers": {},
-    "name": "filesystem",
-    "streaming_server": false,
-    "url": ""
-  },
   "new_server_11": {
     "args": [
       "--from",
