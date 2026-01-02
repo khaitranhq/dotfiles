@@ -52,6 +52,7 @@ end
 --- Uses vim.ui.select for UI, copies result to system clipboard.
 --- - Absolute: Full path to file.
 --- - Relative: Path from current working directory.
+--- - Filename: Just the filename without path.
 function M.copy_buffer_path()
   local buf_path = vim.api.nvim_buf_get_name(0)
   if buf_path == "" then
@@ -61,9 +62,11 @@ function M.copy_buffer_path()
 
   local abs_path = buf_path
   local rel_path = vim.fn.fnamemodify(buf_path, ":.") -- relative to cwd
+  local filename = vim.fn.fnamemodify(buf_path, ":t") -- filename only
   local choices = {
     { label = "Relative path (cwd)", value = rel_path },
     { label = "Absolute path",       value = abs_path },
+    { label = "Filename only",       value = filename },
   }
 
   vim.ui.select(choices, {

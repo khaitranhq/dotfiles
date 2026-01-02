@@ -270,6 +270,18 @@ M.git = {
       gitsigns.stage_hunk,
       "Stage hunk",
     },
+    ["<leader>ghr"] = {
+      function()
+        gitsigns.nav_hunk("prev")
+      end,
+      "Previous hunk",
+    },
+    ["<leader>ghn"] = {
+      function()
+        gitsigns.nav_hunk("next")
+      end,
+      "Next hunk",
+    },
   },
 }
 
