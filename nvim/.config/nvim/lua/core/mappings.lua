@@ -1,5 +1,5 @@
--- Neovim Key Mappings Configuration
 -- This module defines all custom key mappings organized by functionality.
+--
 -- Mappings are loaded by core.utils.load_mappings() during Neovim startup.
 --
 -- Mode abbreviations: n = normal, v = visual, i = insert, t = terminal
@@ -46,19 +46,6 @@ M.general = {
 
     -- System clipboard integration
     ["p"] = { '"+p', "Paste from system clipboard" },
-
-    -- Whitespace management
-    ["<leader>rw"] = {
-      function()
-        local utils_ok, utils = pcall(require, "core.utils")
-        if utils_ok and utils.remove_trailing_whitespace then
-          utils.remove_trailing_whitespace()
-        else
-          vim.notify("Whitespace remover not available", vim.log.levels.WARN)
-        end
-      end,
-      "Remove trailing whitespace",
-    },
   },
 
   v = {
@@ -66,9 +53,7 @@ M.general = {
     ["//"] = { "y/\\V<C-R>=escape(@\",'/')<CR><CR>", "Search with selected text" },
     ["y"] = { '"+y', "Yank to system clipboard" },
     ["d"] = { '"+d', "Cut to system clipboard" },
-    ["<leader>d"] = { '"_d', "Delete but not write to clipboard" },
     ["x"] = { '"+x', "Cut character to system clipboard" },
-    ["<leader>x"] = { '"_x', "Delete but not write to clipboard" },
   },
 }
 
@@ -80,30 +65,7 @@ M.notify = {
   },
 }
 
--- TAB MANAGEMENT
-
-M.tabs = {
-  n = {
-    ["<leader>tt"] = { "<cmd>tabnew<CR>", "Create new tab" },
-    ["<leader>tx"] = { "<cmd>tabclose<CR>", "Close current tab" },
-    ["<leader>tn"] = { "<cmd>tabnext<CR>", "Go to next tab" },
-    ["<leader>tp"] = { "<cmd>tabprevious<CR>", "Go to previous tab" },
-    ["<leader>tf"] = {
-      function()
-        local utils_ok, utils = pcall(require, "core.utils")
-        if utils_ok and utils.select_tab then
-          utils.select_tab()
-        else
-          vim.notify("Tab selector not available", vim.log.levels.WARN)
-        end
-      end,
-      "Interactive tab picker",
-    },
-  },
-}
-
 -- FILE EXPLORATION & NAVIGATION
-
 M.file_explorer = {
   n = {
     ["<leader>b"] = {
@@ -138,7 +100,6 @@ M.fuzzy = {
 }
 
 -- ADVANCED NAVIGATION
-
 M.navigate = {
   n = {
     ["s"] = { "<Plug>(leap)", "Leap navigation" },
@@ -146,13 +107,11 @@ M.navigate = {
       SelectWindow,
       "Interactive window picker",
     },
-    ["<leader>tf"] = { require("core.utils").select_tab, "Pick window" },
     ["<leader>s"] = { require("custom.reach").open, "Select buffers" },
   },
 }
 
 -- LSP & DIAGNOSTICS
-
 M.lsp = {
   n = {
     -- Diagnostics navigation
@@ -191,56 +150,7 @@ M.lsp = {
   },
 }
 
--- CODE FORMATTING
-
-M.format = {
-  n = {
-    ["<leader>fm"] = {
-      function()
-        -- Fallback to basic LSP formatting
-        local clients = vim.lsp.get_clients({ bufnr = 0 })
-        if #clients > 0 then
-          vim.lsp.buf.format({ async = true })
-          vim.notify("Formatted with LSP", vim.log.levels.INFO)
-        else
-          vim.notify("No formatter available", vim.log.levels.WARN)
-        end
-      end,
-      "Format current buffer",
-    },
-  },
-}
-
--- DROPBAR NAVIGATION
-
-M.dropbar = {
-  n = {
-    ["<Leader>;"] = {
-      function()
-        local dropbar_api = require("dropbar.api")
-        dropbar_api.pick()
-      end,
-      "Pick symbols in winbar",
-    },
-    ["[;"] = {
-      function()
-        local dropbar_api = require("dropbar.api")
-        dropbar_api.goto_context_start()
-      end,
-      "Go to start of current context",
-    },
-    ["];"] = {
-      function()
-        local dropbar_api = require("dropbar.api")
-        dropbar_api.select_next_context()
-      end,
-      "Select next context",
-    },
-  },
-}
-
 -- GIT INTEGRATION
-
 local gitsigns = require("gitsigns")
 M.git = {
   n = {
@@ -250,14 +160,6 @@ M.git = {
       end,
       "Toggle lazygit",
     },
-
-    ["<leader>gp"] = {
-      function()
-        Snacks.picker.gh_pr()
-      end,
-      "GitHub Pull Requests (open)",
-    },
-
     ["<leader>ghp"] = {
       gitsigns.preview_hunk,
       "Preview hunk",
