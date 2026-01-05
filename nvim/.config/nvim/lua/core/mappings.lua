@@ -132,7 +132,8 @@ M.lsp = {
     -- LSP navigation
     ["<leader>dd"] = { vim.lsp.buf.definition, "Go to definition" },
     ["<leader>di"] = { vim.lsp.buf.implementation, "Go to implementation" },
-    ["<leader>dfd"] = { vim.lsp.buf.hover, "Show hover documentation" },
+    ["<leader>dh"] = { vim.lsp.buf.hover, "Show hover documentation" },
+    ["<leader>df"] = { Snacks.picker.lsp_references, "Show references" },
 
     -- LSP actions
     ["<leader>dr"] = { vim.lsp.buf.rename, "Rename symbol" },
