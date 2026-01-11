@@ -8,6 +8,9 @@ return {
       input = {},
       lazygit = {},
       picker = {
+        matcher = {
+          frecency = true,
+        },
         sources = (function()
           local common_exclude = {
             ".git",
