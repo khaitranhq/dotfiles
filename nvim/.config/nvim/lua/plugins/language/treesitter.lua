@@ -1,41 +1,13 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    event = { "BufReadPost", "BufNewFile" }, -- Lazy load for better startup
-    dependencies = {
-      "windwp/nvim-ts-autotag",
-    },
-    init = function()
-      vim.filetype.add({
-        extension = {
-          gotmpl = "gotmpl",
-        },
-        pattern = {
-          [".*/templates/.*%.tpl"] = "helm",
-          [".*/templates/.*%.ya?ml"] = "helm",
-          ["helmfile.*%.ya?ml"] = "helm",
-        },
-      })
-    end,
+    lazy = false,
+    build = ":TSUpdate",
     config = function()
-      require("nvim-treesitter.config").setup({
-        modules = {},
-        ensure_installed = {},
-        ignore_install = {},
-        -- Install parsers synchronously (only applied to `ensure_installed`)
-        sync_install = false, -- Async install for better performance
-        -- Automatically install missing parsers when entering buffer
-        auto_install = true,
-
-        highlight = {
-          -- `false` will disable the whole extension
-          enable = true,
-          disable = { "dockerfile" },
-          additional_vim_regex_highlighting = false,
-        },
-        autotag = {
-          enable = true,
-        },
+      vim.api.nvim_create_autocmd("BufReadPost", {
+        callback = function()
+          vim.treesitter.start()
+        end,
       })
     end,
   },
