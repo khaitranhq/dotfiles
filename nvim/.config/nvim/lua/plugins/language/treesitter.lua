@@ -5,7 +5,7 @@ return {
     build = ":TSUpdate",
     config = function()
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "markdown", "lua", "go", "yaml", "python", "rust", "typescript" },
+        pattern = { "markdown", "lua", "go", "yaml", "python", "rust", "typescript", "gomod", "gosum", "toml" },
         callback = function()
           vim.treesitter.start()
         end,
