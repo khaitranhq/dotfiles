@@ -60,6 +60,7 @@ alias pup='pulumi up --yes --skip-preview'
 alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
+alias oc='opencode'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer

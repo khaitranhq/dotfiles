@@ -127,6 +127,7 @@ return {
         bashls = {},
         csharp_ls = {},
         jsonls = {},
+        ty = {},
         terraformls = {
           filetypes = { "tf", "tfvars", "terraform", "terragrunt" },
         },
