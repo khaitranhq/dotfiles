@@ -14,7 +14,7 @@ function init() {
   readonly script_path="${BASH_SOURCE[0]:-$0}"
   readonly script_dir="$(dirname "$(readlink -f "$script_path")")"
   readonly script_name="$(basename "$script_path")"
-  
+
   # Get the names of all the workspaces
   ws_names=()
   while read -r name; do
