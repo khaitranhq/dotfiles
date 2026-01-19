@@ -1,13 +1,35 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "theme": "tokyonight",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "ls *": "allow",
+      "find *": "allow",
+      "grep *": "allow"
+    }
+  },
   "agent": {
     "Architect": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}",
-      "tools": {
-        "write": true,
-        "edit": true
-      }
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}"
+    },
+    "Engineer": {
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-4.5",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}"
+    },
+    "Planner": {
+      "mode": "primary",
+      "model": "github-copilot/claude-sonnet-4.5",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Planner.md}"
+    },
+    "DevOps": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/DevOps.md}"
+    },
+    "plan": {
+      "disable": true
     }
   }
 }
