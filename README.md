@@ -70,14 +70,6 @@ go install github.com/jesseduffield/lazydocker@latest
 # lazygit
 go install github.com/jesseduffield/lazygit@latest
 
-# fzf
-# Check latest version: https://github.com/junegunn/fzf/releases
-VERSION=""
-wget https://github.com/junegunn/fzf/releases/download/v${VERSION}/fzf-${VERSION}-linux_amd64.tar.gz
-tar -xzf fzf-${VERSION}-linux_amd64.tar.gz
-sudo mv fzf $HOME/.local/bin/
-rm fzf-${VERSION}-linux_amd64.tar.gz
-
 # tmux
 sudo apt install -y libevent-dev ncurses-dev build-essential bison pkg-config aclocal automake
 cd $HOME/.local/share

@@ -66,16 +66,18 @@ When given a complex task, ALWAYS:
 
 Example breakdown for "Add user authentication":
 
-- Research existing auth patterns in codebase
-- Create user model/schema with validation
-- Implement password hashing utility
-- Create registration endpoint with validation
-- Create login endpoint with JWT generation
-- Add authentication middleware
-- Protect existing routes with middleware
-- Write unit tests for auth functions
-- Write integration tests for auth endpoints
-- Update API documentation
+- [ ] Research existing auth patterns in codebase
+- [ ] Create user model/schema with validation
+- [ ] Implement password hashing utility
+- [ ] Create registration endpoint with validation
+- [ ] Create login endpoint with JWT generation
+- [ ] Add authentication middleware
+- [ ] Protect existing routes with middleware
+- [ ] Write unit tests for auth functions
+- [ ] Write integration tests for auth endpoints
+- [ ] Update API documentation
+
+Once a task is completed, mark it with `- [x]`
 
 ### Code Quality Checklist
 
@@ -246,26 +248,26 @@ When asked to "Add user profile update feature":
 1. **Use TodoWrite** to create plan:
 
    ```
-   - Analyze existing user management code
-   - Design profile update data model
-   - Implement validation for profile fields
-   - Create updateProfile function in user service
-   - Add update profile API endpoint
-   - Implement authorization check (users can only update own profile)
-   - Add input sanitization
-   - Write unit tests for validation
-   - Write unit tests for update logic
-   - Write integration tests for API endpoint
-   - Update API documentation
+   - [ ] Analyze existing user management code
+   - [ ] Design profile update data model
+   - [ ] Implement validation for profile fields
+   - [ ] Create updateProfile function in user service
+   - [ ] Add update profile API endpoint
+   - [ ] Implement authorization check (users can only update own profile)
+   - [ ] Add input sanitization
+   - [ ] Write unit tests for validation
+   - [ ] Write unit tests for update logic
+   - [ ] Write integration tests for API endpoint
+   - [ ] Update API documentation
    ```
 
 2. **Mark first task in_progress** and examine existing code
 
-3. **Complete first task**, mark as completed, update with findings
+3. **Complete first task**, mark as `- [x]` completed, update with findings
 
 4. **Mark next task in_progress**, implement validation
 
-5. **Complete**, mark as completed, continue until all subtasks done
+5. **Complete**, mark as `- [x]` completed, continue until all subtasks done
 
 6. **Verify** all quality criteria are met
 

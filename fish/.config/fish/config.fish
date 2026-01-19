@@ -31,7 +31,6 @@ oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/tokyonigh.omp.json' 
 zoxide init fish | source
 __check_nvm
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
-fzf --fish | source
 
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish
@@ -64,3 +63,4 @@ alias oc='opencode'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
+bind \cr gum_filter_history_search

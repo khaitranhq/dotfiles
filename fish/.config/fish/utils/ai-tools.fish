@@ -1,9 +1,9 @@
 # AI-powered git commit message generator
 function ai_commit -d "Generate AI-powered commit messages from staged changes"
     # Validate required dependencies
-    if not command -v agentcrew >/dev/null 2>&1
-        echo "❌ Error: agentcrew command not found" >&2
-        echo "   Please install agentcrew first" >&2
+    if not command -v opencode >/dev/null 2>&1
+        echo "❌ Error: opencode command not found" >&2
+        echo "   Please install opencode first" >&2
         return 1
     end
 
@@ -28,23 +28,17 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
         return 1
     end
 
-    echo "🤖 Generating commit message from staged changes..."
-    echo ""
+    set generated_message "$(gum spin \
+        --title "🤖 Generating commit message from staged changes..." -- \
+        opencode run \
+        --agent="GitGenerator" \
+        "$diff_content")"
 
-    # Generate commit message using agentcrew
-    set generated_message "$(agentcrew job \
-        --agent="CommitMessageGenerator" \
-        --agent-config='https://raw.githubusercontent.com/saigontechnology/AgentCrew/refs/heads/main/examples/agents/jobs/commit-message-generator.toml' \
-        --provider='openai' \
-        --model-id="gpt-4.1-mini" \
-        "$diff_content" 2>&1)"
+    set generate_message_exit_code $status
 
-    set agentcrew_exit_code $status
-
-    # Handle agentcrew execution errors
-    if test $agentcrew_exit_code -ne 0
+    if test $generate_message_exit_code -ne 0
         echo "❌ Error: Failed to generate commit message" >&2
-        echo "   Exit code: $agentcrew_exit_code" >&2
+        echo "   Exit code: $generate_message_exit_code" >&2
         echo "   Output: $generated_message" >&2
         return 1
     end

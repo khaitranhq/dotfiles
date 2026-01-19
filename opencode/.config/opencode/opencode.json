@@ -6,7 +6,15 @@
       "*": "ask",
       "ls *": "allow",
       "find *": "allow",
-      "grep *": "allow"
+      "grep *": "allow",
+      "go build *": "allow",
+      "which *": "allow",
+      "wc *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "echo *": "allow",
+      "pwd": "allow"
     }
   },
   "agent": {
@@ -27,6 +35,11 @@
     "DevOps": {
       "mode": "primary",
       "prompt": "{file:/home/lewis/.config/opencode/agents/DevOps.md}"
+    },
+    "GitGenerator": {
+      "mode": "primary",
+      "model": "openai/gpt-5-mini",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
     },
     "plan": {
       "disable": true

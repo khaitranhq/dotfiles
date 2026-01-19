@@ -75,14 +75,14 @@ keybinds clear-defaults=true {
         bind "Alt L" { GoToNextTab; SwitchToMode "normal"; }
         bind "Alt H" { GoToPreviousTab; SwitchToMode "normal"; }
         bind "Alt m" {
-          Run "fish" "-c" "source $HOME/.config/fish/utils/session.fish && ai_commit" {
+          Run "fish" "-c" "source $HOME/.config/fish/utils/ai-tools.fish && ai_commit" {
             floating true
             close_on_exit true
           };
           SwitchToMode "normal";
         }
         bind "Alt e" {
-          Run "bash" "-c" "$HOME/.config/zellij/scripts/zellij-fzf-file-picker.sh" {
+          Run "bash" "-c" "$HOME/.config/zellij/scripts/zellij-file-picker.sh" {
             close_on_exit true
           };
           SwitchToMode "normal";

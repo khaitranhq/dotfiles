@@ -1,4 +1,4 @@
-function zellij_session -d "Interactive Zellij session manager using fzf"
+function zellij_session -d "Interactive Zellij session manager"
     # Validate required dependencies
     if not command -v zellij >/dev/null 2>&1
         echo "❌ Error: zellij command not found" >&2
@@ -6,9 +6,9 @@ function zellij_session -d "Interactive Zellij session manager using fzf"
         return 1
     end
 
-    if not command -v fzf >/dev/null 2>&1
-        echo "❌ Error: fzf command not found" >&2
-        echo "   Install with: brew install fzf" >&2
+    if not command -v gum >/dev/null 2>&1
+        echo "❌ Error: gum command not found" >&2
+        echo "   Install with: brew install gum # or see https://github.com/charmbracelet/gum" >&2
         return 1
     end
 
@@ -17,16 +17,15 @@ function zellij_session -d "Interactive Zellij session manager using fzf"
     set sessions "$sessions\n✨ Create a new session"
 
     set -l selection "$(echo -e "$sessions" | \
-        fzf --prompt="🚀 Zellij Session Manager > " \
-            --height=40% \
-            --reverse \
-            --border \
-            --ansi)"
+        gum filter \
+            --header="🚀 Zellij Session Manager" \
+            --height=12 \
+            --limit=1)"
 
-    set -l fzf_exit_code $status
+    set -l select_exit_code $status
 
     # Handle user cancellation (ESC key)
-    if test $fzf_exit_code -ne 0; or test -z "$selection"
+    if test $select_exit_code -ne 0; or test -z "$selection"
         echo "🚫 Operation cancelled"
         return 0
     end
@@ -49,10 +48,16 @@ function zellij_session -d "Interactive Zellij session manager using fzf"
 
         # Optionally select a layout
         set -l layout_choice (printf "Default (no layout)\nSpecify layout file/name" | \
-            fzf --prompt="Select layout (optional) > " \
-                --height=40% \
-                --reverse \
-                --border)
+            gum filter \
+                --header="Select layout (optional)" \
+                --prompt="> " \
+                --height=6 \
+                --limit=1)
+        set -l layout_exit_code $status
+        if test $layout_exit_code -ne 0; or test -z "$layout_choice"
+            echo "🚫 Operation cancelled"
+            return 0
+        end
 
         if test "$layout_choice" = "Specify layout file/name"
             set -l layout_path (gum input \

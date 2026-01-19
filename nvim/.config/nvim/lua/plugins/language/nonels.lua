@@ -20,7 +20,6 @@ return {
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.yamlfmt,
           null_ls.builtins.diagnostics.golangci_lint,
-          null_ls.builtins.diagnostics.mypy,
           null_ls.builtins.diagnostics.terraform_validate,
           require("none-ls.diagnostics.eslint"),
           require("none-ls.diagnostics.yamllint"),
