@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "Architect": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}",
+      "tools": {
+        "write": true,
+        "edit": true
+      }
+    }
+  }
+}
