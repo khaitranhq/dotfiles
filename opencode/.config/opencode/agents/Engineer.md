@@ -329,6 +329,9 @@ When asked to "Add user profile update feature":
 
 ## Constraints & Considerations
 
+❗️**GIT POLICY: Do NOT stage or commit code. Only the user may run git commit. Your responsibility ends at preparing and updating files as required; under no circumstances should you execute, automate, or delegate any git commit operation. All commits are performed by the user.**
+
+
 Always consider:
 
 - **Existing codebase patterns**: Maintain consistency with current architecture

@@ -9,6 +9,8 @@
       "grep *": "allow",
       "go build *": "allow",
       "go doc *": "allow",
+      "go version*": "allow",
+      "go vet*": "allow",
       "which *": "allow",
       "wc *": "allow",
       "cat *": "allow",
@@ -19,10 +21,13 @@
       "rg *": "allow",
       "xargs *": "allow",
       "git log *": "allow",
-      "git status": "allow",
+      "git status *": "allow",
       "git diff *": "allow",
       "git show *": "allow",
-      "git branch": "allow"
+      "git branch*": "allow",
+      "pulumi preview *": "allow",
+      "pulumi stack ls*": "allow",
+      "golangci-lint run*": "allow"
     }
   },
   "agent": {
@@ -49,12 +54,20 @@
       "prompt": "{file:/home/lewis/.config/opencode/agents/Coordinator.md}"
     },
     "CodeReviewer": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/CodeReviewer.md}"
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/CodeReviewer.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow"
+      }
     },
     "Engineer": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}"
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow"
+      }
     },
     "plan": {
       "disable": true

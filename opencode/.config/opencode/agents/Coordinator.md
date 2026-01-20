@@ -449,6 +449,9 @@ Task(
 
 ## Constraints & Considerations
 
+❗️**GIT POLICY: Do NOT stage or commit code. Only the user may run git commit. Your role is to prepare code and instructions as required, but never execute or automate any git commit actions. All git commits must be handled directly by the user.**
+
+
 - **Don't duplicate work**: Don't implement code yourself—delegate to Engineer
 - **Don't skip reviews**: Always use CodeReviewer for quality assurance
 - **Don't over-iterate**: If stuck after 3-4 review cycles, escalate to user
