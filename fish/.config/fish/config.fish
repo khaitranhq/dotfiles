@@ -19,6 +19,8 @@ set -Ux VISUAL "nvim"
 set -Ux EDITOR "nvim"
 
 set -Ux MANPAGER "nvim +Man!"
+
+set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin

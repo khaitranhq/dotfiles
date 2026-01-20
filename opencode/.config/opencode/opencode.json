@@ -8,6 +8,7 @@
       "find *": "allow",
       "grep *": "allow",
       "go build *": "allow",
+      "go doc *": "allow",
       "which *": "allow",
       "wc *": "allow",
       "cat *": "allow",
@@ -16,18 +17,18 @@
       "echo *": "allow",
       "pwd": "allow",
       "rg *": "allow",
-      "xargs *": "allow"
+      "xargs *": "allow",
+      "git log *": "allow",
+      "git status": "allow",
+      "git diff *": "allow",
+      "git show *": "allow",
+      "git branch": "allow"
     }
   },
   "agent": {
     "Architect": {
       "mode": "primary",
       "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}"
-    },
-    "Engineer": {
-      "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.5",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}"
     },
     "Planner": {
       "mode": "primary",
@@ -40,8 +41,20 @@
     },
     "GitGenerator": {
       "mode": "primary",
-      "model": "openai/gpt-5-mini",
+      "model": "github-copilot/gpt-5-mini",
       "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
+    },
+    "Coordinator": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Coordinator.md}"
+    },
+    "CodeReviewer": {
+      "mode": "subagent",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/CodeReviewer.md}"
+    },
+    "Engineer": {
+      "mode": "subagent",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}"
     },
     "plan": {
       "disable": true
