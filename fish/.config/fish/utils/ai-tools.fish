@@ -67,15 +67,8 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     end
 
     echo ""
-    echo "Press q to exit"
 
-    # Wait for user to press 'q'
-    while true
-        read -n 1 -s key
-        if test "$key" = "q"
-            break
-        end
-    end
+    gum input --placeholder="Press Enter to continue..." --prompt="" --no-show-help > /dev/null
 
     return $commit_exit_code
 end
