@@ -49,9 +49,9 @@
       "model": "github-copilot/gpt-5-mini",
       "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
     },
-    "Coordinator": {
+    "DevelopmentCoordinator": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Coordinator.md}"
+      "prompt": "{file:/home/lewis/.config/opencode/agents/DevelopmentCoordinator.md}"
     },
     "CodeReviewer": {
       "mode": "primary",
