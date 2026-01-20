@@ -14,7 +14,9 @@
       "head *": "allow",
       "tail *": "allow",
       "echo *": "allow",
-      "pwd": "allow"
+      "pwd": "allow",
+      "rg *": "allow",
+      "xargs *": "allow"
     }
   },
   "agent": {
