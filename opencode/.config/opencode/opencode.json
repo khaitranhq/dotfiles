@@ -70,6 +70,13 @@
         "todoread": "allow"
       }
     },
+    "TaskAdder": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/TaskAdder.md}",
+      "permission": {
+        "external_directory": "allow"
+      }
+    },
     "plan": {
       "disable": true
     }

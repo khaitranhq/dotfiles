@@ -62,6 +62,7 @@ alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
 alias oc='opencode'
+alias ta='task-add'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
