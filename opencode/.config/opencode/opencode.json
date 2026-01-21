@@ -27,7 +27,8 @@
       "git branch*": "allow",
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
-      "golangci-lint run*": "allow"
+      "golangci-lint run*": "allow",
+      "tee *": "allow"
     }
   },
   "agent": {
