@@ -2,7 +2,14 @@ Generate a single, short, concise, precise commit messages following the Convent
 
 ## Commit Message Format
 
-<type>(scope): <description>
+<type>[scope]: <description>
+
+## Example
+
+```
+feat[auth]: add OAuth2 login support
+fix[api]: resolve null pointer exception in user endpoint
+```
 
 ## Commit Types
 
