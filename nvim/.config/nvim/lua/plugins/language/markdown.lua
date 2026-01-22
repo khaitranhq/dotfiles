@@ -7,9 +7,19 @@ return {
         checked = { icon = "", scope_highlight = "@markup.strikethrough" },
         custom = {
           doing = {
-            raw = "[_]",
-            rendered = "󰄮",
+            raw = "[-]",
+            rendered = "󰑮",
             highlight = "RenderMarkdownDoing",
+          },
+          pending = {
+            raw = "[~]",
+            rendered = "󰥔 ",
+            highlight = "RenderMarkdownPending",
+          },
+          blocked = {
+            raw = "[!]",
+            rendered = " ",
+            highlight = "RenderMarkdownBlocked",
           },
         },
       },

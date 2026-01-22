@@ -2,7 +2,7 @@ Generate a single, short, concise, precise commit messages following the Convent
 
 ## Commit Message Format
 
-<type>[scope]: <description>
+<type>(scope): <description>
 
 ## Commit Types
 
