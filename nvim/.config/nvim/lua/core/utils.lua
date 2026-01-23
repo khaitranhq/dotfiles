@@ -299,4 +299,35 @@ function M.run_shell_in_float(command, opts)
   }
 end
 
+--- Sets the markdown task checkbox state on the current line.
+--- Supports: todo [ ], done [x], doing [=], blocked [!], pending [~]
+--- @param state string The task state: "todo", "done", "doing", "blocked", or "pending"
+function M.set_markdown_task_state(state)
+  local state_map = {
+    todo = " ",
+    done = "x",
+    doing = "=",
+    blocked = "!",
+    pending = "~",
+  }
+
+  local checkbox = state_map[state]
+  if not checkbox then
+    vim.notify("Invalid state: " .. state, vim.log.levels.ERROR)
+    return
+  end
+
+  local line = vim.api.nvim_get_current_line()
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+
+  -- Match any markdown checkbox: - [ ], - [x], - [=], - [!], - [~]
+  local new_line = line:gsub("- %[.%]", "- [" .. checkbox .. "]", 1)
+
+  if new_line ~= line then
+    vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
+  else
+    vim.notify("Not on a markdown task line", vim.log.levels.WARN)
+  end
+end
+
 return M

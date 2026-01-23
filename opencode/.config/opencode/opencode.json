@@ -30,7 +30,8 @@
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
-      "aws *": "allow"
+      "aws *": "allow",
+      "mkdir *": "allow"
     }
   },
   "agent": {
@@ -65,7 +66,7 @@
       }
     },
     "Engineer": {
-      "mode": "subagent",
+      "mode": "primary",
       "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}",
       "permission": {
         "todowrite": "allow",
@@ -73,11 +74,15 @@
       }
     },
     "TaskAdder": {
-      "mode": "subagent",
+      "mode": "primary",
       "prompt": "{file:/home/lewis/.config/opencode/agents/TaskAdder.md}",
       "permission": {
         "external_directory": "allow"
       }
+    },
+    "Documentor": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Documentor.md}"
     },
     "plan": {
       "disable": true

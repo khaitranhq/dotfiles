@@ -87,7 +87,6 @@ keybinds clear-defaults=true {
           };
           SwitchToMode "normal";
         }
-        bind "Alt q" { Quit; }
     }
     shared_except "session" {
         bind "Alt o" { SwitchToMode "session"; }

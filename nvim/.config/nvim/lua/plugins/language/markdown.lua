@@ -5,10 +5,10 @@ return {
       checkbox = {
         unchecked = { icon = "" },
         checked = { icon = "", scope_highlight = "@markup.strikethrough" },
+        bullet = true,
         custom = {
-          todo = {},
           doing = {
-            raw = "[-]",
+            raw = "[=]",
             rendered = "󰑮",
             highlight = "RenderMarkdownDoing",
           },

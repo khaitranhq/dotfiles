@@ -151,6 +151,42 @@ M.lsp = {
   },
 }
 
+-- MARKDOWN TASK MANAGEMENT
+M.markdown = {
+  n = {
+    ["<leader>mt"] = {
+      function()
+        require("core.utils").set_markdown_task_state("todo")
+      end,
+      "Mark task as todo",
+    },
+    ["<leader>md"] = {
+      function()
+        require("core.utils").set_markdown_task_state("done")
+      end,
+      "Mark task as done",
+    },
+    ["<leader>mg"] = {
+      function()
+        require("core.utils").set_markdown_task_state("doing")
+      end,
+      "Mark task as doing",
+    },
+    ["<leader>mb"] = {
+      function()
+        require("core.utils").set_markdown_task_state("blocked")
+      end,
+      "Mark task as blocked",
+    },
+    ["<leader>mp"] = {
+      function()
+        require("core.utils").set_markdown_task_state("pending")
+      end,
+      "Mark task as pending",
+    },
+  },
+}
+
 -- GIT INTEGRATION
 local gitsigns = require("gitsigns")
 M.git = {
