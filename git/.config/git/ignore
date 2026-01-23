@@ -8,3 +8,4 @@
 .pre-commit-config.yaml
 .rgignore
 _tasks
+.ignore
