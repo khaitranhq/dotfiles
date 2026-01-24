@@ -35,10 +35,16 @@
       "mmdc *": "allow"
     }
   },
+  "tools": {
+    "aws-pricing*": false
+  },
   "agent": {
     "Architect": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}"
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}",
+      "tools": {
+        "aws-pricing*": true
+      }
     },
     "Planner": {
       "mode": "primary",
@@ -87,6 +93,17 @@
     },
     "plan": {
       "disable": true
+    }
+  },
+  "mcp": {
+    "aws-pricing": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/khaitranhq/mcp@fix/pricing-add-botocore-crt#subdirectory=src/aws-pricing-mcp-server",
+        "awslabs.aws-pricing-mcp-server"
+      ]
     }
   }
 }
