@@ -1,3 +1,21 @@
+---
+name: Pulumi Infrastructure as Code
+description: Expert in Pulumi infrastructure as code using TypeScript, Python, Go, and C#. Specializes in multi-cloud deployments, component resources, and IaC best practices.
+triggers:
+  - Pulumi
+  - infrastructure as code
+  - IaC
+  - cloud infrastructure
+  - Pulumi stack
+  - component resource
+  - Pulumi config
+  - CrossGuard
+  - stack reference
+role: specialist
+scope: implementation
+output-format: code
+---
+
 # Pulumi Infrastructure as Code Skill
 
 This skill provides guidance for working with Pulumi infrastructure as code projects.

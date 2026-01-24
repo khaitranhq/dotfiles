@@ -31,7 +31,8 @@
       "pulumi stack ls*": "allow",
       "tee *": "allow",
       "aws *": "allow",
-      "mkdir *": "allow"
+      "mkdir *": "allow",
+      "mmdc *": "allow"
     }
   },
   "agent": {

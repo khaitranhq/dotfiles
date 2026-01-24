@@ -18,6 +18,7 @@ return {
           "toml",
           "rust",
           "csharp",
+          "mermaid",
         },
         callback = function()
           vim.treesitter.start()
