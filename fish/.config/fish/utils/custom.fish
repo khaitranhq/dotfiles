@@ -11,8 +11,11 @@ function gum_filter_history_search -d "Interactive history search using gum filt
         return 0
     end
 
+    # Get current command line text as initial filter value
+    set -l current_buffer (commandline)
+
     # Use gum filter for interactive selection
-    set -l selected_command (printf '%s\n' $history_commands | gum filter --header="🔍 Search Command History" --height=12 --limit=1)
+    set -l selected_command (printf '%s\n' $history_commands | gum filter --header="🔍 Search Command History" --height=12 --limit=1 --value="$current_buffer")
     set -l select_exit_code $status
     if test $select_exit_code -ne 0; or test -z "$selected_command"
         commandline -f repaint

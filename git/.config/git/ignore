@@ -5,7 +5,6 @@
 .terry
 .spec
 .tasks
-.pre-commit-config.yaml
 .rgignore
 _tasks
 .ignore

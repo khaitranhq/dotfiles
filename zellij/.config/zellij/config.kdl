@@ -132,7 +132,7 @@ load_plugins {}
 web_client {
     font "monospace"
 }
-
+pane_frames false
 theme "tokyo-night"
 default_layout "_custom"
 layout_dir "/home/lewis/.config/zellij/layouts"

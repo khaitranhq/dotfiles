@@ -133,6 +133,13 @@ return {
         },
         docker_language_server = {},
         docker_compose_language_service = {},
+        groovyls = {
+          cmd = {
+            "java",
+            "-jar",
+            "/home/lewis/.local/share/groovy-language-server/build/libs/groovy-language-server-all.jar",
+          },
+        },
         rust_analyzer = {
           settings = {
             ["rust-analyzer"] = {
