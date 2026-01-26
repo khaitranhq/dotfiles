@@ -15,7 +15,8 @@ function gum_filter_history_search -d "Interactive history search using gum filt
     set -l current_buffer (commandline)
 
     # Use gum filter for interactive selection
-    set -l selected_command (printf '%s\n' $history_commands | gum filter --header="🔍 Search Command History" --height=12 --limit=1 --value="$current_buffer")
+    # Disable fuzzy-sort so items keep their input order while filtering
+    set -l selected_command (printf '%s\n' $history_commands | gum filter --header="🔍 Search Command History" --height=12 --limit=1 --no-fuzzy-sort --value="$current_buffer")
     set -l select_exit_code $status
     if test $select_exit_code -ne 0; or test -z "$selected_command"
         commandline -f repaint
