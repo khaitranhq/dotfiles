@@ -13,7 +13,7 @@ end
 
 # It is invoked by the fish shell automatically using its event system.
 function __postexec_notify_on_long_running_commands --on-event fish_postexec
-   set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn'
+   set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn' 'zj' 'zellij' 'oc' 'opencode'
    for cmd in $interactive_commands
        if string match -q "$cmd*" $argv[1]
            # We quit interactive commands manually,
@@ -25,6 +25,19 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
    set --local exit_status $status
 
    if test $CMD_DURATION -gt 5000
-     printf \\a
+     powershell.exe -NoProfile -Command "
+       [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
+       [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
+       \$lineBreak = [Environment]::NewLine
+
+       \$template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+       \$textNodes = \$template.GetElementsByTagName('text')
+       \$textNodes.Item(0).AppendChild(\$template.CreateTextNode('Fish Shell Notification')) > \$null
+       \$textNodes.Item(1).AppendChild(\$template.CreateTextNode('Command: $argv[1]' + \$lineBreak + 'Duration: ' + ($CMD_DURATION / 1000) + ' seconds' + \$lineBreak + 'Exit Status: $exit_status')) > \$null
+
+       \$toast = [Windows.UI.Notifications.ToastNotification]::new(\$template)
+       \$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Fish Shell')
+       \$notifier.Show(\$toast)
+      "
    end
 end

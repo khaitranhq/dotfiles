@@ -301,6 +301,7 @@ end
 
 --- Sets the markdown task checkbox state on the current line.
 --- Supports: todo [ ], done [x], doing [=], blocked [!], pending [~]
+--- If state is "done", moves the task line to the end of the file.
 --- @param state string The task state: "todo", "done", "doing", "blocked", or "pending"
 function M.set_markdown_task_state(state)
   local state_map = {
@@ -325,6 +326,23 @@ function M.set_markdown_task_state(state)
 
   if new_line ~= line then
     vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
+
+    -- If marking as done, move the line to the end of the file
+    if state == "done" then
+      -- Get the updated line
+      local line_to_move = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
+      -- Delete the current line
+      vim.api.nvim_buf_set_lines(0, row - 1, row, false, {})
+      -- Get the last line number
+      local last_line = vim.api.nvim_buf_line_count(0)
+      -- Append the line at the end
+      vim.api.nvim_buf_set_lines(0, last_line, last_line, false, { line_to_move })
+      -- Move cursor to the moved line
+      vim.api.nvim_win_set_cursor(0, { last_line + 1, 0 })
+    end
+
+    -- Save the buffer
+    vim.cmd("silent write")
   else
     vim.notify("Not on a markdown task line", vim.log.levels.WARN)
   end
