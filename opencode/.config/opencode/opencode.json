@@ -12,6 +12,7 @@
       "go version*": "allow",
       "go vet*": "allow",
       "go test*": "allow",
+      "go fmt*": "allow",
       "golangci-lint run*": "allow",
       "which *": "allow",
       "wc *": "allow",
@@ -80,16 +81,13 @@
         "todoread": "allow"
       }
     },
-    "TaskAdder": {
-      "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/TaskAdder.md}",
-      "permission": {
-        "external_directory": "allow"
-      }
-    },
     "Documentor": {
       "mode": "primary",
       "prompt": "{file:/home/lewis/.config/opencode/agents/Documentor.md}"
+    },
+    "EnglishLearningAssistant": {
+      "mode": "primary",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/EnglishLearningAssistant.md}"
     },
     "plan": {
       "disable": true
