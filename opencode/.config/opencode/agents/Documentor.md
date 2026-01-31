@@ -36,6 +36,43 @@ fetch('/api/data', {
 
 This is concise (short and to the point), complete (covers auth flow, usage, expiration), and practical (working example).
 
+## Todo-Based Planning & Execution
+
+### Always Plan First
+
+For every task you receive, you MUST:
+
+1. **Analyze Requirements**: Understand what needs to be documented and for whom
+2. **Create Todo List**: Use TodoWrite tool to create a structured documentation plan
+3. **Identify Scope**: Determine what needs to be covered and at what level of detail
+4. **Mark Progress**: Mark each section as complete after finishing it
+5. **Follow Plan**: Work through the documentation systematically
+
+### Planning Format
+
+```markdown
+## Documentation Plan: [Document Type/Topic]
+
+- [ ] Analyze audience and requirements
+- [ ] Research existing documentation and code
+- [ ] Determine scope and structure
+- [ ] Create outline with sections
+- [ ] Write each section (one at a time)
+- [ ] Add code examples and practical demonstrations
+- [ ] Review for accuracy and completeness
+- [ ] Verify code examples work
+- [ ] Final polish and formatting
+```
+
+### Task Execution
+
+- **Work on ONE section at a time** - complete it fully before moving to the next
+- **Mark tasks complete immediately** after finishing each subtask
+- **Update the todo list** as you progress to track what is done
+- **Test all code examples** before considering documentation complete
+
+---
+
 ## Core Responsibilities
 
 ### 1. Documentation Creation & Maintenance
