@@ -316,11 +316,12 @@ sequenceDiagram
 
 ## Troubleshooting
 
-| Issue                       | Solution                                      |
-| --------------------------- | --------------------------------------------- |
-| "end" breaks diagram        | Use `(end)`, `"end"`, or `{end}`              |
-| Special characters          | Use entity codes or escape                    |
-| Creation/destruction errors | Requires v10.3.0+, use v10.7.0+ for bug fixes |
+| Issue                                     | Solution                                                                                                                                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "end" breaks diagram                      | Use `(end)`, `"end"`, or `{end}`                                                                                                                                                                                                                  |
+| Special characters                        | Use entity codes or escape                                                                                                                                                                                                                        |
+| Creation/destruction errors               | Requires v10.3.0+, use v10.7.0+ for bug fixes                                                                                                                                                                                                     |
+| Using control keywords as participant IDs | Avoid using identifiers that match Mermaid control keywords (e.g. `loop`, `alt`, `par`, `end`, `opt`, `critical`). Use a different ID (e.g. `ForEachLoop`) or give a quoted label and a distinct short id (`participant FL as "Loop container"`). |
 
 ## Quick Reference
 

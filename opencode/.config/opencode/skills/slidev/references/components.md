@@ -57,10 +57,10 @@ Slide <SlideCurrentNo /> of <SlidesTotal />
 **VClicks** - Click animations wrapper
 
 ```markdown
-<VClicks>
+<v-clicks>
 - Item 1
 - Item 2
-</VClicks>
+</v-clicks>
 ```
 
 **YouTube** - Embed videos

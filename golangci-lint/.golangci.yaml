@@ -22,6 +22,9 @@ linters:
     gosec:
       excludes:
         - G204 #  Subprocess launched with variable
+    cyclop:
+      # The maximal code complexity to report.
+      max-complexity: 15
 
   exclusions:
     rules:

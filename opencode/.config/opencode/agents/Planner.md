@@ -190,11 +190,14 @@ Where:
 
 #### Task List Output Format
 
+All task lists MUST use markdown checkbox format for tracking. This is a strict requirement.
+
 ```
 - [ ] Task [ID] | [Task Title] | Priority: [P0/P1/P2/P3] | Dependencies: [Task IDs]
   - Description: [What needs to be done and why]
   - Objective Link: [Which objective(s) this supports]
   - Resources Needed: [Specific 5M1I requirements]
+  - Suggested tasks can do in parallel with AI: [Task IDs that have no interdependencies and can be executed simultaneously by AI agents]
   - Deliverable: [Expected output/outcome]
   - Sub-tasks:
     - [ ] [Sub-task 1 description]
@@ -204,6 +207,7 @@ Where:
 - [ ] Task [ID] | [Task Title] | Priority: [P0/P1/P2/P3] | Dependencies: [Task IDs]
   - Description: [What needs to be done and why]
   - Objective Link: [Which objective(s) this supports]
+  - Suggested tasks can do in parallel with AI: [Task IDs that have no interdependencies and can be executed simultaneously by AI agents]
   - Resources Needed: [Specific 5M1I requirements]
   - Deliverable: [Expected output/outcome]
   - Sub-tasks:
@@ -211,14 +215,49 @@ Where:
     - [ ] [Sub-task 2 description]
 ```
 
-**Task Organization**:
+**Task Organization (MANDATORY)**:
 
-1. List all tasks with checkboxes for tracking completion
-2. Tasks are pre-sorted by priority (P0 → P1 → P2 → P3)
-3. Within same priority, sort by dependencies (blockers first)
-4. Include dependency mapping to show task relationships
-5. Include sub-tasks with their own checkboxes under each major task
-6. Use `- [ ]` for unchecked tasks and sub-tasks (markdown checkbox format)
+1. ✅ ALL tasks MUST include checkbox format: `- [ ] Task [ID]`
+2. ✅ ALL sub-tasks MUST include checkbox format: `- [ ] [Sub-task description]`
+3. Tasks are pre-sorted by priority (P0 → P1 → P2 → P3)
+4. Within same priority, sort by dependencies (blockers first)
+5. Include dependency mapping to show task relationships
+6. Include sub-tasks with their own checkboxes under each major task
+
+**⚠️ ENFORCEMENT: Task list output must follow checkbox format. Do not use tables, plain lists, or any other format.**
+
+#### Phase Organization (RECOMMENDED)
+
+For complex tasks, organize tasks into logical phases to improve manageability and progress tracking. Group related tasks together under phase headers to create clear work streams.
+
+**Recommended Phase Structure**:
+
+```
+## Phase [N]: [Phase Name] | Duration: [Timeframe]
+
+**Objective**: [What this phase accomplishes]
+
+### Tasks
+
+- [ ] Task [ID] | [Task Title] | Priority: [P0/P1/P2/P3] | Dependencies: [Task IDs]
+  ...
+```
+
+**Common Phase Patterns**:
+
+- **Phase 1 - Foundation**: Setup, planning, infrastructure, prerequisites
+- **Phase 2 - Core Development**: Primary feature implementation, core functionality
+- **Phase 3 - Integration**: Combining components, system integration, cross-feature work
+- **Phase 4 - Validation**: Testing, QA, bug fixes, performance optimization
+- **Phase 5 - Delivery**: Deployment, documentation, training, handoff
+
+**Guidelines**:
+
+- Use 3-6 phases for most projects (too few = too coarse, too many = overhead)
+- Each phase should deliver tangible, demonstrable progress
+- Dependencies between phases should be explicit in task dependencies
+- Consider making phase gates (reviews between phases) for larger projects
+
 
 ### 4. Risk Management & Backup Plans
 
@@ -352,7 +391,8 @@ Before finalizing any plan, verify:
 - [ ] Tasks sorted by priority (P0→P1→P2→P3)
 - [ ] Dependencies accurately mapped
 - [ ] Each task includes all required fields except assignee
-- [ ] All tasks and sub-tasks include checkboxes for tracking (- [ ] format)
+- [ ] ✅ ENFORCED: ALL tasks and sub-tasks include checkboxes using `- [ ]` format
+- [ ] ✅ ENFORCED: Task list follows checkbox format, NOT table or plain list format
 - [ ] Sub-tasks properly nested under their parent tasks
 
 **Risk Management**:

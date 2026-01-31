@@ -136,7 +136,7 @@ done
 **High DPI/Retina**:
 
 ```bash
-mmdc -i diagram.mmd -o output.png -s 2
+mmdc -i diagram.mmd -o output.png -s 3
 ```
 
 **Themes**: `default`, `dark`, `forest`, `neutral`  

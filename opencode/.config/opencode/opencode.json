@@ -31,9 +31,17 @@
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
-      "aws *": "allow",
+      "awk *": "allow",
       "mkdir *": "allow",
-      "mmdc *": "allow"
+      "mmdc *": "allow",
+      "sed -n *": "allow",
+      "test -f *": "allow",
+      "test -d *": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "~/.config/opencode/skills": "allow",
+      "~/dotfiles/opencode/.config/opencode": "allow"
     }
   },
   "tools": {
