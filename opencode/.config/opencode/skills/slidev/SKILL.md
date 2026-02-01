@@ -1,95 +1,183 @@
 ---
-name: Slidev Pro
-description: Expert presentation developer using Slidev for developer-focused slides with Markdown, Vue components, and interactive demos. Invoke for technical presentations, code-centric talks, live coding demos. Keywords: Slidev, slides, presentation, Markdown slides.
-triggers:
-  - Slidev
-  - sli.dev
-  - presentation
-  - slides
-  - Markdown slides
-  - technical presentation
-  - code presentation
-  - speaker notes
-role: specialist
-scope: implementation
-output-format: code
+name: slidev
+description: Create and present web-based slides for developers using Markdown, Vue components, code highlighting, animations, and interactive features. Use when building technical presentations, conference talks, or teaching materials.
 ---
 
-# Slidev Pro
+# Slidev - Presentation Slides for Developers
 
-Expert presentation developer specializing in Slidev for creating beautiful, developer-focused presentations using Markdown, Vue components, and interactive code blocks.
+Web-based slides maker built on Vite, Vue, and Markdown.
 
-## Role Definition
+## When to Use
 
-You are a presentation specialist with deep expertise in Slidev (sli.dev). You create technical presentations using Markdown syntax, custom layouts, Vue components, and interactive elements. You build engaging slides optimized for developer audiences with live code demos and animations.
+- Technical presentations with live code examples
+- Syntax-highlighted code snippets with animations
+- Interactive demos (Monaco editor, runnable code)
+- Mathematical equations (LaTeX) or diagrams (Mermaid, PlantUML)
+- Record presentations with presenter notes
+- Export to PDF, PPTX, or host as SPA
 
-## When to Use This Skill
+## Quick Start
 
-- Creating technical presentations with code snippets
-- Building interactive slides with live coding demos
-- Designing developer conference talks and workshops
-- Setting up presentations with custom themes and layouts
-- Adding animations and transitions to Markdown slides
-- Integrating Vue components for interactive demos
-- Exporting presentations to PDF, PPTX, or SPA
+```bash
+pnpm create slidev    # Create project
+pnpm run dev          # Start dev server
+pnpm run export       # Export to PDF
+```
 
-## Core Workflow
+## Basic Syntax
 
-1. **Plan structure** - Outline slides, identify code demos, define speaker notes
-2. **Setup project** - Initialize Slidev, configure theme, install dependencies
-3. **Create slides** - Write Markdown content with frontmatter, layouts, and components
-4. **Add interactivity** - Integrate Vue components, Monaco editor, interactive elements
-5. **Style & polish** - Apply custom CSS, animations, transitions, and theme customization
-6. **Export & present** - Generate PDF/PPTX, deploy SPA, or use presenter mode
+```md
+---
+theme: default
+title: My Presentation
+---
 
-## Reference Guide
+# First Slide
 
-Load detailed guidance based on context:
+Content here
 
-| Topic             | Reference                      | Load When                                    |
-| ----------------- | ------------------------------ | -------------------------------------------- |
-| Layouts & Themes  | `references/layouts-themes.md` | Custom layouts, theme configuration          |
-| Code Highlighting | `references/code-features.md`  | Shiki integration, line highlighting, Monaco |
-| Components        | `references/components.md`     | Built-in components, custom Vue components   |
-| Animations        | `references/animations.md`     | Click animations, slide transitions          |
+---
 
-## Constraints
+# Second Slide
 
-### MUST DO
+More content
 
-- Use frontmatter for slide configuration (layout, theme, transition)
-- Include speaker notes with `<!-- ... -->` or notes sections
-- Configure proper syntax highlighting with Shiki
-- Structure slides with clear hierarchy using `#`, `##`
-- Use `v-click` for progressive content reveal
-- Test presenter mode before delivery
-- Export slides for offline access (PDF/PPTX)
+<!--
+Presenter notes go here
+-->
+```
 
-### MUST NOT DO
+- `---` separates slides
+- First frontmatter = headmatter (deck config)
+- HTML comments = presenter notes
 
-- Overcrowd slides with excessive text
-- Skip accessibility considerations (alt text, contrast)
-- Hardcode content that should be in frontmatter config
-- Ignore responsive design for different screen sizes
-- Use low-contrast color schemes for code blocks
-- Deploy without testing exported formats
+## Core References
 
-## Output Templates
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Markdown Syntax | Slide separators, frontmatter, notes, code blocks | [core-syntax](references/core-syntax.md) |
+| Animations | v-click, v-clicks, motion, transitions | [core-animations](references/core-animations.md) |
+| Headmatter | Deck-wide configuration options | [core-headmatter](references/core-headmatter.md) |
+| Frontmatter | Per-slide configuration options | [core-frontmatter](references/core-frontmatter.md) |
+| CLI Commands | Dev, build, export, theme commands | [core-cli](references/core-cli.md) |
+| Components | Built-in Vue components | [core-components](references/core-components.md) |
+| Layouts | Built-in slide layouts | [core-layouts](references/core-layouts.md) |
+| Exporting | PDF, PPTX, PNG export options | [core-exporting](references/core-exporting.md) |
+| Hosting | Build and deploy to various platforms | [core-hosting](references/core-hosting.md) |
+| Global Context | $nav, $slidev, composables API | [core-global-context](references/core-global-context.md) |
 
-When creating Slidev presentations, provide:
+## Feature Reference
 
-1. `slides.md` with structured content and frontmatter
-2. Custom Vue components (if needed) in `components/`
-3. Theme configuration in `setup/` or `theme/`
-4. Brief README with setup and presentation instructions
+### Code & Editor
 
-## Knowledge Reference
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Line highlighting | `` ```ts {2,3} `` | [code-line-highlighting](references/code-line-highlighting.md) |
+| Click-based highlighting | `` ```ts {1\|2-3\|all} `` | [code-line-highlighting](references/code-line-highlighting.md) |
+| Line numbers | `lineNumbers: true` or `{lines:true}` | [code-line-numbers](references/code-line-numbers.md) |
+| Scrollable code | `{maxHeight:'100px'}` | [code-max-height](references/code-max-height.md) |
+| Code tabs | `::code-group` (requires `mdc: true`) | [code-groups](references/code-groups.md) |
+| Monaco editor | `` ```ts {monaco} `` | [editor-monaco](references/editor-monaco.md) |
+| Run code | `` ```ts {monaco-run} `` | [editor-monaco-run](references/editor-monaco-run.md) |
+| Edit files | `<<< ./file.ts {monaco-write}` | [editor-monaco-write](references/editor-monaco-write.md) |
+| Code animations | `` ````md magic-move `` | [code-magic-move](references/code-magic-move.md) |
+| TypeScript types | `` ```ts twoslash `` | [code-twoslash](references/code-twoslash.md) |
+| Import code | `<<< @/snippets/file.js` | [code-import-snippet](references/code-import-snippet.md) |
 
-Slidev CLI, Markdown syntax, frontmatter configuration, layouts (cover, intro, section, default, image-right), Shiki syntax highlighting, Monaco editor integration, UnoCSS/Windi CSS, Vue 3 components, click animations (`v-click`, `v-after`), slide transitions, presenter mode, recording, PDF export, SPA deployment
+### Diagrams & Math
 
-## Related Skills
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Mermaid diagrams | `` ```mermaid `` | [diagram-mermaid](references/diagram-mermaid.md) |
+| PlantUML diagrams | `` ```plantuml `` | [diagram-plantuml](references/diagram-plantuml.md) |
+| LaTeX math | `$inline$` or `$$block$$` | [diagram-latex](references/diagram-latex.md) |
 
-- **Vue Developer** - Custom component creation
-- **Frontend Developer** - Styling and interactivity
-- **Technical Writer** - Content structure and clarity
-- **DevOps Engineer** - CI/CD deployment automation
+### Layout & Styling
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Canvas size | `canvasWidth`, `aspectRatio` | [layout-canvas-size](references/layout-canvas-size.md) |
+| Zoom slide | `zoom: 0.8` | [layout-zoom](references/layout-zoom.md) |
+| Scale elements | `<Transform :scale="0.5">` | [layout-transform](references/layout-transform.md) |
+| Layout slots | `::right::`, `::default::` | [layout-slots](references/layout-slots.md) |
+| Scoped CSS | `<style>` in slide | [style-scoped](references/style-scoped.md) |
+| Global layers | `global-top.vue`, `global-bottom.vue` | [layout-global-layers](references/layout-global-layers.md) |
+| Draggable elements | `v-drag`, `<v-drag>` | [layout-draggable](references/layout-draggable.md) |
+| Icons | `<mdi-icon-name />` | [style-icons](references/style-icons.md) |
+
+### Animation & Interaction
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Click animations | `v-click`, `<v-clicks>` | [core-animations](references/core-animations.md) |
+| Rough markers | `v-mark.underline`, `v-mark.circle` | [animation-rough-marker](references/animation-rough-marker.md) |
+| Drawing mode | Press `C` or config `drawings:` | [animation-drawing](references/animation-drawing.md) |
+| Direction styles | `forward:delay-300` | [style-direction](references/style-direction.md) |
+| Note highlighting | `[click]` in notes | [animation-click-marker](references/animation-click-marker.md) |
+
+### Syntax Extensions
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| MDC syntax | `mdc: true` + `{style="color:red"}` | [syntax-mdc](references/syntax-mdc.md) |
+| Block frontmatter | `` ```yaml `` instead of `---` | [syntax-block-frontmatter](references/syntax-block-frontmatter.md) |
+| Import slides | `src: ./other.md` | [syntax-importing-slides](references/syntax-importing-slides.md) |
+| Merge frontmatter | Main entry wins | [syntax-frontmatter-merging](references/syntax-frontmatter-merging.md) |
+
+### Presenter & Recording
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Recording | Press `G` for camera | [presenter-recording](references/presenter-recording.md) |
+| Timer | `duration: 30min`, `timer: countdown` | [presenter-timer](references/presenter-timer.md) |
+| Remote control | `slidev --remote` | [presenter-remote](references/presenter-remote.md) |
+| Ruby text | `notesAutoRuby:` | [presenter-notes-ruby](references/presenter-notes-ruby.md) |
+
+### Export & Build
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Export options | `slidev export` | [core-exporting](references/core-exporting.md) |
+| Build & deploy | `slidev build` | [core-hosting](references/core-hosting.md) |
+| Build with PDF | `download: true` | [build-pdf](references/build-pdf.md) |
+| Cache images | Automatic for remote URLs | [build-remote-assets](references/build-remote-assets.md) |
+| OG image | `seoMeta.ogImage` or `og-image.png` | [build-og-image](references/build-og-image.md) |
+| SEO tags | `seoMeta:` | [build-seo-meta](references/build-seo-meta.md) |
+
+### Editor & Tools
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Side editor | Click edit icon | [editor-side](references/editor-side.md) |
+| VS Code extension | Install `antfu.slidev` | [editor-vscode](references/editor-vscode.md) |
+| Prettier | `prettier-plugin-slidev` | [editor-prettier](references/editor-prettier.md) |
+| Eject theme | `slidev theme eject` | [tool-eject-theme](references/tool-eject-theme.md) |
+
+### Lifecycle & API
+
+| Feature | Usage | Reference |
+|---------|-------|-----------|
+| Slide hooks | `onSlideEnter()`, `onSlideLeave()` | [api-slide-hooks](references/api-slide-hooks.md) |
+| Navigation API | `$nav`, `useNav()` | [core-global-context](references/core-global-context.md) |
+
+## Common Layouts
+
+| Layout | Purpose |
+|--------|---------|
+| `cover` | Title/cover slide |
+| `center` | Centered content |
+| `default` | Standard slide |
+| `two-cols` | Two columns (use `::right::`) |
+| `two-cols-header` | Header + two columns |
+| `image` / `image-left` / `image-right` | Image layouts |
+| `iframe` / `iframe-left` / `iframe-right` | Embed URLs |
+| `quote` | Quotation |
+| `section` | Section divider |
+| `fact` / `statement` | Data/statement display |
+| `intro` / `end` | Intro/end slides |
+
+## Resources
+
+- Documentation: https://sli.dev
+- Theme Gallery: https://sli.dev/resources/theme-gallery
+- Showcases: https://sli.dev/resources/showcases
