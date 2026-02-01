@@ -46,7 +46,9 @@ return {
             else
               vim.b.format_on_save = not vim.b.format_on_save
             end
-            vim.notify(string.format("Format on save: %s", vim.b.format_on_save and "enabled" or "disabled"))
+            vim.notify(
+              string.format("Format on save: %s", vim.b.format_on_save and "enabled" or "disabled")
+            )
           end, {})
         end,
       })

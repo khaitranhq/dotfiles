@@ -199,12 +199,6 @@ local gitsigns = require("gitsigns")
 local diffview = require("diffview")
 M.git = {
   n = {
-    ["<leader>lg"] = {
-      function()
-        Snacks.lazygit()
-      end,
-      "Toggle lazygit",
-    },
     ["<leader>ghp"] = {
       gitsigns.preview_hunk,
       "Preview hunk",
@@ -236,6 +230,10 @@ M.git = {
     ["<leader>gD"] = {
       diffview.close,
       "Close Diffview",
+    },
+    ["<leader>gs"] = {
+      "<cmd>Neogit<cr>",
+      "Show Neogit UI",
     },
   },
 }
