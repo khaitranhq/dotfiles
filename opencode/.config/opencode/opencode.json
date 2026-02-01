@@ -48,21 +48,21 @@
     "aws-pricing*": false
   },
   "agent": {
-    "Architect": {
-      "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}",
-      "tools": {
-        "aws-pricing*": true
-      }
-    },
     "Planner": {
       "mode": "primary",
       "model": "github-copilot/claude-sonnet-4.5",
       "prompt": "{file:/home/lewis/.config/opencode/agents/Planner.md}"
     },
-    "DevOps": {
-      "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/DevOps.md}"
+    "Architect": {
+      "mode": "subagent",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}"
+    },
+    "DevOpsReviewer": {
+      "mode": "subagent",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/DevOpsReviewer.md}",
+      "tools": {
+        "aws-pricing*": true
+      }
     },
     "GitGenerator": {
       "mode": "primary",
@@ -74,7 +74,7 @@
       "prompt": "{file:/home/lewis/.config/opencode/agents/DevelopmentCoordinator.md}"
     },
     "CodeReviewer": {
-      "mode": "primary",
+      "mode": "subagent",
       "prompt": "{file:/home/lewis/.config/opencode/agents/CodeReviewer.md}",
       "permission": {
         "todowrite": "allow",
@@ -82,7 +82,7 @@
       }
     },
     "Engineer": {
-      "mode": "primary",
+      "mode": "subagent",
       "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}",
       "permission": {
         "todowrite": "allow",
