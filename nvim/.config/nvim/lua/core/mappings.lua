@@ -228,6 +228,18 @@ M.git = {
       end,
       "Next hunk",
     },
+    ["<leader>gd"] = {
+      function()
+        require("diffview").open()
+      end,
+      "Open Diffview",
+    },
+    ["<leader>gD"] = {
+      function()
+        require("diffview").close()
+      end,
+      "Close Diffview",
+    },
   },
 }
 

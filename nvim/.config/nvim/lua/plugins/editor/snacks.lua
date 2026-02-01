@@ -15,38 +15,14 @@ return {
           frecency = true,
         },
         sources = (function()
-          local common_exclude = {
-            ".git",
-            ".serena",
-            "node_modules",
-            "dist",
-            ".venv",
-            "venv",
-            ".mypy_cache",
-            ".aider*",
-            "cdk.out",
-            ".vagrant",
-            "build",
-            "**/chat_histories",
-            ".agentcrew/pr-diff",
-            "**/*.diff",
-            ".ruff_cache",
-          }
-
-          -- Common configuration shared between files and grep
-          local common_picker_config = {
-            ignored = true,
-            hidden = true,
-            exclude = common_exclude,
-            args = { "--ignore-file=.rgignore", "--follow" },
-          }
-
           return {
             gh = {},
-            files = vim.tbl_extend("force", common_picker_config, {
+            files = {
               cmd = "rg",
-            }),
-            grep = vim.tbl_extend("force", common_picker_config, {}),
+            },
+            grep = {
+              cmd = "rg",
+            },
             explorer = {
               hidden = true,
               ignored = true,

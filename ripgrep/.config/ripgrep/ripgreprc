@@ -1,0 +1,25 @@
+# Search hidden files / directories (e.g. dotfiles) by default
+--hidden
+
+# Follow symlinks by default
+--follow
+
+# Exclude common noisy paths
+--glob=!.git/*
+--glob=!.serena
+--glob=!node_modules
+--glob=!dist
+--glob=!.venv
+--glob=!venv
+--glob=!.mypy_cache
+--glob=!.aider*
+--glob=!cdk.out
+--glob=!.vagrant
+--glob=!build
+--glob=!**/chat_histories
+--glob=!.agentcrew/pr-diff
+--glob=!**/*.diff
+--glob=!.ruff_cache
+
+# Do not respect .gitignore files by default
+--no-ignore
