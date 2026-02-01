@@ -33,10 +33,21 @@ return {
               group = augroup,
               buffer = bufnr,
               callback = function()
-                vim.lsp.buf.format({ async = false })
+                if vim.b.format_on_save ~= false then
+                  vim.lsp.buf.format({ async = false })
+                end
               end,
             })
           end
+
+          vim.api.nvim_buf_create_user_command(bufnr, "ToggleFormatOnSave", function()
+            if vim.b.format_on_save == nil then
+              vim.b.format_on_save = false
+            else
+              vim.b.format_on_save = not vim.b.format_on_save
+            end
+            vim.notify(string.format("Format on save: %s", vim.b.format_on_save and "enabled" or "disabled"))
+          end, {})
         end,
       })
     end,

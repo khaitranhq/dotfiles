@@ -138,6 +138,13 @@ M.lsp = {
     -- LSP actions
     ["<leader>dr"] = { vim.lsp.buf.rename, "Rename symbol" },
     ["<leader>dca"] = { vim.lsp.buf.code_action, "Show code actions" },
+    ["<leader>ds"] = {
+      function()
+        vim.lsp.buf.format({ async = false })
+        vim.cmd("write")
+      end,
+      "Format and save buffer",
+    },
   },
   i = {
     ["<C-o>"] = {
