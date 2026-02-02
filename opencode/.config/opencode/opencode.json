@@ -81,9 +81,9 @@
         "todoread": "allow"
       }
     },
-    "Engineer": {
+    "Developer": {
       "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Engineer.md}",
+      "prompt": "{file:/home/lewis/.config/opencode/agents/Developer.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow"
