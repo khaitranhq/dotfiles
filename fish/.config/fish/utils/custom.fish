@@ -1,22 +1,31 @@
-function gum_filter_history_search -d "Interactive history search using gum filter"
-    # Validate required dependencies
-    if not command -v gum >/dev/null 2>&1
-        echo "❌ Error: gum command not found" >&2
+function history_search -d "Interactive history search using fzf"
+    # Ensure fzf is available
+    if not command -v fzf >/dev/null 2>&1
+        echo "❌ Error: fzf command not found" >&2
+        return 1
     end
 
-    # Get command history
+    # Collect history and bail out if empty
     set -l history_commands (history)
     if test -z "$history_commands"
         echo "No command history found."
         return 0
     end
 
-    # Get current command line text as initial filter value
+    # Use current commandline as initial query
     set -l current_buffer (commandline)
 
-    # Use gum filter for interactive selection
-    # Disable fuzzy-sort so items keep their input order while filtering
-    set -l selected_command (printf '%s\n' $history_commands | gum filter --header="🔍 Search Command History" --height=12 --limit=1 --no-fuzzy-sort --value="$current_buffer")
+    # Use fzf for interactive selection
+    # --layout=reverse places the prompt on top, +s disables sorting so input order is preserved
+    set -l selected_command (\
+      printf '%s\n' $history_commands | \
+      fzf \
+        --header="🔍 Search Command History" \
+        --layout=reverse \
+        --border \
+        --height=12 \
+        --query="$current_buffer" +s \
+    )
     set -l select_exit_code $status
     if test $select_exit_code -ne 0; or test -z "$selected_command"
         commandline -f repaint

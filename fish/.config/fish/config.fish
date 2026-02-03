@@ -36,9 +36,53 @@ zoxide init fish | source
 __check_nvm
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
 
+#=========================SSH Agent=========================
+# Reuse a running ssh-agent when possible. If none is available,
+# start one and write fish-friendly env exports to ~/.ssh/ssh-agent.fish
+set agent_ok 0
+
+if set -q SSH_AUTH_SOCK
+    if test -S $SSH_AUTH_SOCK
+        if set -q SSH_AGENT_PID
+            if ps -p $SSH_AGENT_PID > /dev/null 2>&1
+                set agent_ok 1
+            end
+        end
+    end
+end
+
+if test $agent_ok -ne 1
+    if test -f $HOME/.ssh/ssh-agent.fish
+        source $HOME/.ssh/ssh-agent.fish
+        if set -q SSH_AGENT_PID
+            if ps -p $SSH_AGENT_PID > /dev/null 2>&1
+                set agent_ok 1
+            else
+                rm -f $HOME/.ssh/ssh-agent.fish
+            end
+        end
+    end
+end
+
+if test $agent_ok -ne 1
+    mkdir -p $HOME/.ssh
+    # produce fish "set -x VAR 'value'" lines from sh output
+    # Use awk to avoid quoting issues in fish
+    ssh-agent -s | awk -F'[=;]' '/=/{print "set -x " $1 " \047" $2 "\047"}' > $HOME/.ssh/ssh-agent.fish
+    source $HOME/.ssh/ssh-agent.fish
+end
+
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish
   source $HOME/.config/fish/ai.fish
+end
+
+# Add SSH keys from Bitwarden if the agent has no identities yet.
+# This avoids re-running the add-keys function when keys are already loaded.
+if not ssh-add -l >/dev/null 2>&1
+    if functions -q add-keys-ssh-agent
+        add-keys-ssh-agent
+    end
 end
 
 #=========================Aliases=========================
@@ -68,4 +112,4 @@ alias ta='task-add'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
-bind \cr gum_filter_history_search
+bind \cr history_search
