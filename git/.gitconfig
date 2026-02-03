@@ -12,8 +12,6 @@
   showUntrackedFiles = all
 [gpg]
   format = ssh
-[gpg "ssh"]
-  program = "/mnt/c/Windows/System32/OpenSSH/ssh-keygen.exe"
 
 [delta]
   minus-style                   = syntax "#4a272f"
