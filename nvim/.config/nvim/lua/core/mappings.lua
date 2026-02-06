@@ -191,6 +191,12 @@ M.markdown = {
 			end,
 			"Mark task as pending",
 		},
+		["<leader>mi"] = {
+			function()
+				require("core.utils").fix_markdown_task_ids()
+			end,
+			"Fix markdown task IDs",
+		},
 	},
 }
 

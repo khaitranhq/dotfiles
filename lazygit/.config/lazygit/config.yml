@@ -30,7 +30,12 @@ git:
   pagers:
     - colorArg: always
       pager: delta --dark --paging=never
-
 os:
   editPreset: nvim-remote
 promptToReturnFromSubprocess: false
+customCommands:
+  - key: "<c-a>" # Keybinding (Ctrl + a)
+    description: "AI Commit"
+    command: "ai_commit" # Ensure this command is in your system PATH
+    context: "global"
+    output: terminal

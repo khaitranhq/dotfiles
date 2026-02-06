@@ -30,7 +30,7 @@ list_files=$(
 selected_file=$(
 	echo "$list_files" | fzf \
 		--prompt "Select file: " \
-		--layout=reverse-list
+		--layout=reverse
 ) || exit 0
 
 # If a file was selected and we have the invoking pane ID, write it to that pane
