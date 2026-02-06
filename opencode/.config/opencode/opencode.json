@@ -41,61 +41,48 @@
     "external_directory": {
       "*": "ask",
       "~/.config/opencode/skills": "allow",
-      "~/dotfiles/opencode/.config/opencode": "allow"
+      "~/dotfiles/opencode/.config/opencode": "allow",
+      "~/go/pkg/mod": "allow"
     }
   },
   "tools": {
     "aws-pricing*": false
   },
   "agent": {
-    "Planner": {
-      "mode": "primary",
-      "model": "github-copilot/claude-sonnet-4.5",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Planner.md}"
-    },
-    "Architect": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Architect.md}"
-    },
-    "DevOpsReviewer": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/DevOpsReviewer.md}",
-      "tools": {
-        "aws-pricing*": true
-      }
-    },
     "GitGenerator": {
       "mode": "primary",
       "model": "github-copilot/gpt-5-mini",
       "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
     },
-    "DevelopmentCoordinator": {
+    "RequirementsAgent": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/DevelopmentCoordinator.md}"
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/RequirementsAgent.md}"
     },
-    "CodeReviewer": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/CodeReviewer.md}",
-      "permission": {
-        "todowrite": "allow",
-        "todoread": "allow"
-      }
-    },
-    "Developer": {
-      "mode": "subagent",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Developer.md}",
-      "permission": {
-        "todowrite": "allow",
-        "todoread": "allow"
-      }
-    },
-    "Documentor": {
+    "ArchitectAgent": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/Documentor.md}"
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/ArchitectAgent.md}"
     },
-    "EnglishLearningAssistant": {
+    "PlanningAgent": {
       "mode": "primary",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/EnglishLearningAssistant.md}"
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/PlanningAgent.md}"
+    },
+    "ImplementationAgent": {
+      "mode": "primary",
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/ImplementationAgent.md}"
+    },
+    "ReviewAgent": {
+      "mode": "primary",
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/ReviewAgent.md}"
+    },
+    "SupervisorAgent": {
+      "mode": "primary",
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:agents/SupervisorAgent.md}"
     },
     "plan": {
       "disable": true
