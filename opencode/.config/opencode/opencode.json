@@ -55,33 +55,27 @@
       "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
     },
     "RequirementsAgent": {
-      "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
+      "mode": "subagent",
       "prompt": "{file:agents/RequirementsAgent.md}"
     },
     "ArchitectAgent": {
-      "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
+      "mode": "subagent",
       "prompt": "{file:agents/ArchitectAgent.md}"
     },
     "PlanningAgent": {
-      "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
+      "mode": "subagent",
       "prompt": "{file:agents/PlanningAgent.md}"
     },
     "ImplementationAgent": {
-      "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
+      "mode": "subagent",
       "prompt": "{file:agents/ImplementationAgent.md}"
     },
-    "ReviewAgent": {
-      "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
-      "prompt": "{file:agents/ReviewAgent.md}"
+    "CodeReviewAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/CodeReviewAgent.md}"
     },
     "SupervisorAgent": {
       "mode": "primary",
-      "model": "github-copilot/gpt-5-mini",
       "prompt": "{file:agents/SupervisorAgent.md}"
     },
     "plan": {
