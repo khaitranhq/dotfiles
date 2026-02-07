@@ -40,8 +40,7 @@
     },
     "external_directory": {
       "*": "ask",
-      "~/.config/opencode/skills": "allow",
-      "~/dotfiles/opencode/.config/opencode": "allow",
+      "~/dotfiles/opencode/.config/opencode/**/*": "allow",
       "~/go/pkg/mod": "allow"
     }
   },
@@ -56,27 +55,57 @@
     },
     "RequirementsAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/RequirementsAgent.md}"
+      "prompt": "{file:agents/RequirementsAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "ArchitectAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/ArchitectAgent.md}"
+      "prompt": "{file:agents/ArchitectAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "PlanningAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/PlanningAgent.md}"
+      "prompt": "{file:agents/PlanningAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "ImplementationAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/ImplementationAgent.md}"
+      "prompt": "{file:agents/ImplementationAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "CodeReviewAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/CodeReviewAgent.md}"
+      "prompt": "{file:agents/CodeReviewAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "SupervisorAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/SupervisorAgent.md}"
+      "prompt": "{file:agents/SupervisorAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     },
     "plan": {
       "disable": true

@@ -13,6 +13,7 @@ Reviews changes for correctness, alignment, and release readiness.
 1. Review changes for correctness, security, maintainability.
 2. Check alignment with requirements and design.
 3. Identify risks and propose fixes.
+4. **User input/selection required**: whenever you need the user to approve options, pick from a list, or make a selection, you MUST call the `question` tool. Do not ask for input as plain text in these cases.
 
 ## Output
 
