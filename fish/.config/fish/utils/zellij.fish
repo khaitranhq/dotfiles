@@ -1,47 +1,33 @@
 function zellij_session -d "Interactive Zellij session manager"
-    # Validate required dependencies
     if not command -v zellij >/dev/null 2>&1
         echo "❌ Error: zellij command not found" >&2
         echo "   Install with: cargo install zellij" >&2
         return 1
     end
 
-    if not command -v fzf >/dev/null 2>&1
-        echo "❌ Error: fzf command not found" >&2
-        echo "   Install with: brew install fzf # or see https://github.com/junegunn/fzf" >&2
+    if not command -v gum >/dev/null 2>&1
+        echo "❌ Error: gum command not found" >&2
+        echo "   Install with: brew install gum # or see https://github.com/charmbracelet/gum" >&2
         return 1
     end
 
-    # Get list of active sessions
     set -l sessions "$(zellij list-sessions --short 2>/dev/null)"
-    set sessions "$sessions\n✨ Create a new session"
+    set sessions "$sessions
+✨ Create a new session"
 
-    set -l selection "$(echo -e "$sessions" | \
-        fzf \
-            --header="🚀 Zellij Session Manager" \
-            --prompt="> " \
-            --height=24)"
+    set -l selection (echo -e "$sessions" | gum filter --header="🚀 Zellij Session Manager" --prompt="> " --height=24)
 
     set -l select_exit_code $status
 
-    # Handle user cancellation (ESC key)
     if test $select_exit_code -ne 0; or test -z "$selection"
         echo "🚫 Operation cancelled"
         return 0
     end
 
-    # Check if user selected create new session
     if test "$selection" = "✨ Create a new session"
-        # Prompt for session name
-        # Prompt for session name using fzf's --print-query to capture typed input
-        set -l session_name "$(printf "" | fzf --print-query --prompt="📝 New Session Name: " --height=10)"
+        set -l session_name (gum input --prompt="📝 New Session Name: " --placeholder="Leave empty for default")
 
-        # Optionally select a layout
-        set -l layout_choice "$(printf "Default (no layout)\nSpecify layout file/name" | \
-            fzf \
-                --header="Select layout (optional)" \
-                --prompt="> " \
-                --height=6)"
+        set -l layout_choice (printf "Default (no layout)\nSpecify layout file/name" | gum filter --header="Select layout (optional)" --prompt="> " --height=6)
         set -l layout_exit_code $status
         if test $layout_exit_code -ne 0; or test -z "$layout_choice"
             echo "🚫 Operation cancelled"
@@ -49,7 +35,7 @@ function zellij_session -d "Interactive Zellij session manager"
         end
 
         if test "$layout_choice" = "Specify layout file/name"
-            set -l layout_path "$(printf "" | fzf --print-query --prompt="📐 Layout Name/Path: " --height=10)"
+            set -l layout_path (gum input --prompt="📐 Layout Name/Path: " --placeholder="Leave empty to skip")
 
             if test -n "$layout_path"
                 if test -n "$session_name"
@@ -63,7 +49,6 @@ function zellij_session -d "Interactive Zellij session manager"
             end
         end
 
-        # Create session without layout
         if test -n "$session_name"
             echo "🚀 Creating session: $session_name"
             zellij attach --create "$session_name"
@@ -73,7 +58,6 @@ function zellij_session -d "Interactive Zellij session manager"
         end
         exit
     else
-        # User selected an existing session - attach to it
         echo "🔗 Attaching to session: $selection"
         zellij attach "$selection"
         exit
@@ -81,47 +65,36 @@ function zellij_session -d "Interactive Zellij session manager"
 end
 
 function zellij_delete_session -d "Delete Zellij sessions interactively"
-    # Validate required dependencies
     if not command -v zellij >/dev/null 2>&1
         echo "❌ Error: zellij command not found" >&2
         echo "   Install with: cargo install zellij" >&2
         return 1
     end
 
-    if not command -v fzf >/dev/null 2>&1
-        echo "❌ Error: fzf command not found" >&2
-        echo "   Install with: brew install fzf # or see https://github.com/junegunn/fzf" >&2
+    if not command -v gum >/dev/null 2>&1
+        echo "❌ Error: gum command not found" >&2
+        echo "   Install with: brew install gum # or see https://github.com/charmbracelet/gum" >&2
         return 1
     end
 
-    # Get list of active sessions
     set -l sessions "$(zellij list-sessions --short 2>/dev/null)"
 
-    # Check if there are any sessions
     if test -z "$sessions"
         echo "ℹ️  No Zellij sessions found"
         return 0
     end
 
-    set -l selection "$(echo -e "$sessions" | \
-        fzf \
-            --header="🗑️  Select Zellij Session(s) to Delete" \
-            --prompt="Filter sessions... " \
-            --height=24 \
-            --multi)"
+    set -l selection (echo -e "$sessions" | gum filter --header="🗑️  Select Zellij Session(s) to Delete" --prompt="Filter sessions... " --height=24 --no-limit)
 
     set -l select_exit_code $status
 
-    # Handle user cancellation (ESC key)
     if test $select_exit_code -ne 0; or test -z "$selection"
         echo "🚫 Operation cancelled"
         return 0
     end
 
-    # Convert selection to array
     set -l sessions_to_delete (string split \n "$selection")
 
-    # Display what will be deleted and confirm
     echo ""
     echo "📋 Sessions to delete:"
     for session in $sessions_to_delete
@@ -129,16 +102,12 @@ function zellij_delete_session -d "Delete Zellij sessions interactively"
     end
     echo ""
 
-    # Confirm deletion
-    # Confirm deletion
-    printf "Delete %d session(s)? [y/N] " (count $sessions_to_delete)
-    read -l _confirm
+    set -l _confirm (gum input --prompt=(printf "Delete %d session(s)? [y/N] " (count $sessions_to_delete)))
     if test "$_confirm" != "y" -a "$_confirm" != "Y"
         echo "🚫 Deletion cancelled"
         return 0
     end
 
-    # Delete each session
     set -l deleted_count 0
     set -l failed_count 0
 

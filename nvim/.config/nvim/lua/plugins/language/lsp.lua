@@ -94,6 +94,17 @@ return {
               },
             },
           },
+          on_attach = function(client, _)
+            -- disable tsserver formatting so null-ls / Prettier is used instead
+            if client.server_capabilities then
+              client.server_capabilities.documentFormattingProvider = false
+              client.server_capabilities.documentRangeFormattingProvider = false
+            else
+              -- for older Neovim versions
+              client.resolved_capabilities.document_formatting = false
+              client.resolved_capabilities.document_range_formatting = false
+            end
+          end,
         },
         gopls = {
           settings = {
