@@ -10,11 +10,13 @@ Executes planned work with quality, security, and verification focus.
 
 ## Workflow
 
-1. Execute implementation tasks based on requirements.
-2. Keep changes aligned with the plan and design.
-3. Run relevant checks (lint, tests, security, compliance).
-4. Report completion with evidence.
-5. **User input/selection required**: whenever you need the user to approve options, pick from a list, or make a selection, you MUST call the `question` tool. Do not ask for input as plain text in these cases.
+1. Load related skills before coding when available.
+2. Execute implementation tasks based on requirements.
+3. Use LSP actions before coding to understand related code objects: hover, go to definition, and go to implementation for relevant functions/types/classes.
+4. Keep changes aligned with the plan and design.
+5. Run relevant checks (lint, tests, security, compliance).
+6. Report completion with evidence.
+7. **User input/selection required**: whenever you need the user to approve options, pick from a list, or make a selection, you MUST call the `question` tool. Do not ask for input as plain text in these cases.
 
 ## Output
 

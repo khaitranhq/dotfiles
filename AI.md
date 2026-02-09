@@ -28,10 +28,18 @@
 
 ### Coding/devops tasks:
 
+#### Master agents
+
+- Architect master agent
+  - Delegates to RequirementsAgent, ArchitectAgent, PlanningAgent
+- Implementation master agent
+  - Delegates to ImplementationAgent, ReviewAgent
+
 ```mermaid
 sequenceDiagram
   participant User
-  participant SupervisorAgent
+  participant ArchitectMasterAgent
+  participant ImplementationMasterAgent
   participant RequirementsAgent
   participant ArchitectAgent
   participant PlanningAgent
@@ -40,39 +48,40 @@ sequenceDiagram
   participant AI_Folder as Folder
 
   Note over User,AI_Folder: Requirements gathering and clarification
-  User->>SupervisorAgent: Provide high-level requirements and hard constraints
-  SupervisorAgent->>RequirementsAgent: Trigger/coordinate requirements gathering
+  User->>ArchitectMasterAgent: Provide high-level requirements and hard constraints
+  ArchitectMasterAgent->>RequirementsAgent: Trigger/coordinate requirements gathering
   RequirementsAgent-->>User: Ask user to clarify ambiguities and request details
   User->>RequirementsAgent: Provide answers / sign off requirements
   RequirementsAgent->>AI_Folder: Clear existing requirements and write `requirements.md`
-  RequirementsAgent-->>SupervisorAgent: Report requirements written
+  RequirementsAgent-->>ArchitectMasterAgent: Report requirements written
 
   Note over User,AI_Folder: Design
-  SupervisorAgent-->>ArchitectAgent: Deliver clarified requirements (from `requirements.md`)
+  ArchitectMasterAgent-->>ArchitectAgent: Deliver clarified requirements (from `requirements.md`)
   ArchitectAgent-->>User: Present design aligned with principles and Well-Architected Framework
   User->>ArchitectAgent: Review and sign off design
   ArchitectAgent->>AI_Folder: Write `design.md` with final design
-  ArchitectAgent-->>SupervisorAgent: Report design written
+  ArchitectAgent-->>ArchitectMasterAgent: Report design written
 
   Note over User,AI_Folder: Planning
-  SupervisorAgent-->>PlanningAgent: Produce task plan and milestones (based on `design.md`)
+  ArchitectMasterAgent-->>PlanningAgent: Produce task plan and milestones (based on `design.md`)
   PlanningAgent-->>User: Present plan for review
   User->>PlanningAgent: Review and sign off plan
   PlanningAgent->>AI_Folder: Write `plan.md` with tasks and milestones
-  PlanningAgent-->>SupervisorAgent: Report plan written
+  PlanningAgent-->>ArchitectMasterAgent: Report plan written
 
   Note over User,AI_Folder: Implementation
   loop For each implementation task
-    SupervisorAgent->>ImplementationAgent: Coordinate start of implementation tasks
+    ArchitectMasterAgent->>ImplementationMasterAgent: Handoff implementation plan
+    ImplementationMasterAgent->>ImplementationAgent: Coordinate start of implementation tasks
     ImplementationAgent-->>ImplementationAgent: Execute implementation tasks (based on requirements from supervisor)
-    ImplementationAgent-->>SupervisorAgent: Report implementation task completed
-    SupervisorAgent-->>ReviewAgent: Submit changes for review
-    ReviewAgent-->>SupervisorAgent: Present review results and compliance checks
-    SupervisorAgent->>ImplementationAgent: Request rework if needed
+    ImplementationAgent-->>ImplementationMasterAgent: Report implementation task completed
+    ImplementationMasterAgent-->>ReviewAgent: Submit changes for review
+    ReviewAgent-->>ImplementationMasterAgent: Present review results and compliance checks
+    ImplementationMasterAgent->>ImplementationAgent: Request rework if needed
   end
-  SupervisorAgent-->>SupervisorAgent: Review changes again to ensure requirements met
-  SupervisorAgent->>AI_Folder: Write implementation summary and documentation
-  SupervisorAgent-->>User: Present final aggregated status and process log
+  ImplementationMasterAgent-->>ImplementationMasterAgent: Review changes again to ensure requirements met
+  ImplementationMasterAgent->>AI_Folder: Write implementation summary and documentation
+  ImplementationMasterAgent-->>User: Present final aggregated status and process log
 ```
 
 #### Requirements for each agent
@@ -98,10 +107,14 @@ sequenceDiagram
   - Perform thorough code reviews, checking for adherence to requirements, design, and coding standards.
   - Provide constructive feedback and suggest improvements.
   - Ensure all acceptance criteria are met before approving changes.
-- SupervisorAgent:
-  - Coordinate the workflow, ensuring smooth transitions between phases.
-  - Monitor progress, handle issues, and ensure deadlines are met.
-  - Aggregate reports from all agents and present a comprehensive status to the user.
+- ArchitectMasterAgent:
+  - Coordinate requirements, design, and planning phases.
+  - Aggregate reports from RequirementsAgent, ArchitectAgent, and PlanningAgent.
+  - Stop immediately if negative impact/guardrail issues are detected
+- ImplementationMasterAgent:
+  - Coordinate implementation and review phases.
+  - Aggregate reports from ImplementationAgent and ReviewAgent.
+  - Present final aggregated status and process log to the user.
   - Stop immediately if negative impact/guardrail issues are detected
 
 ### English learning system

@@ -14,6 +14,9 @@
       "go test*": "allow",
       "go fmt*": "allow",
       "golangci-lint run*": "allow",
+      "go mod *": "allow",
+      "staticcheck *": "allow",
+      "gosec *": "allow",
       "which *": "allow",
       "wc *": "allow",
       "cat *": "allow",
@@ -98,14 +101,13 @@
         "question": "allow"
       }
     },
-    "SupervisorAgent": {
+    "ArchitectMasterAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/SupervisorAgent.md}",
-      "permission": {
-        "todowrite": "allow",
-        "todoread": "allow",
-        "question": "allow"
-      }
+      "prompt": "{file:agents/ArchitectMasterAgent.md}"
+    },
+    "ImplementationMasterAgent": {
+      "mode": "primary",
+      "prompt": "{file:agents/ImplementationMasterAgent.md}"
     },
     "plan": {
       "disable": true
