@@ -7,3 +7,7 @@ When validating Go code (checking for compilation errors, type errors, etc.), al
 ## Git Operations
 
 Never perform write Git operations (like `git push`, `git commit`, `git add` ...)
+
+## Yaml validation
+
+When validating YAML files, always use `yamllint` to ensure proper formatting and syntax. Stop execution if this tool isn't available.

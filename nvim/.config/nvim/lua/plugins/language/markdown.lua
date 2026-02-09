@@ -25,6 +25,17 @@ return {
         },
       },
     },
+    -- set highlight colors for the custom checkbox icons
+    config = function(_, opts)
+      -- warm yellow for "doing"
+      vim.api.nvim_set_hl(0, "RenderMarkdownDoing", { fg = "#f6c177", bg = "NONE" })
+      -- pale blue for "pending"
+      vim.api.nvim_set_hl(0, "RenderMarkdownPending", { fg = "#7cc7ff", bg = "NONE" })
+      -- soft red for "blocked"
+      vim.api.nvim_set_hl(0, "RenderMarkdownBlocked", { fg = "#ff6b6b", bg = "NONE", bold = true })
+
+      require("render-markdown").setup(opts)
+    end,
     dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
   },
   {
