@@ -25,6 +25,7 @@ return {
           null_ls.builtins.diagnostics.terraform_validate,
           require("none-ls.diagnostics.eslint"),
           require("none-ls.diagnostics.yamllint"),
+          require("none-ls.formatting.rustfmt"),
         },
         on_attach = function(client, bufnr)
           if client.supports_method("textDocument/formatting") then

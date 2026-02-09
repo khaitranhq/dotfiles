@@ -20,6 +20,7 @@
 --glob=!.agentcrew/pr-diff
 --glob=!**/*.diff
 --glob=!.ruff_cache
+--glob=!target
 
 # Do not respect .gitignore files by default
 --no-ignore

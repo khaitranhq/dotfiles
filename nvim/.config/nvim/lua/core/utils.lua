@@ -141,20 +141,6 @@ function M.set_markdown_task_state(state)
   if new_line ~= line then
     vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
 
-    -- If marking as done, move the line to the end of the file
-    if state == "done" then
-      -- Get the updated line
-      local line_to_move = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
-      -- Delete the current line
-      vim.api.nvim_buf_set_lines(0, row - 1, row, false, {})
-      -- Get the last line number
-      local last_line = vim.api.nvim_buf_line_count(0)
-      -- Append the line at the end
-      vim.api.nvim_buf_set_lines(0, last_line, last_line, false, { line_to_move })
-      -- Move cursor to the moved line
-      vim.api.nvim_win_set_cursor(0, { last_line + 1, 0 })
-    end
-
     -- Save the buffer
     vim.cmd("silent write")
   else
@@ -176,35 +162,35 @@ function M.fix_markdown_task_ids()
 
   for i, line in ipairs(lines) do
     -- Match a markdown task prefix like: optional space, "- [ ]" or "- [x]", capture prefix and trailing spacing
-    local prefix = line:match('^(%s*%- %[.%]%s*)')
+    local prefix = line:match("^(%s*%- %[.%]%s*)")
     if prefix then
       task_index = task_index + 1
-      local new_id = string.format('%02d', task_index)
+      local new_id = string.format("%02d", task_index)
 
       -- remainder after the prefix
       local rest = line:sub(#prefix + 1)
 
       -- Check for existing ID and capture its number and the remainder after it
-      local existing_num, after = rest:match('^%[ID:%s*(%d+)%]%s*(.*)$')
+      local existing_num, after = rest:match("^%[ID:%s*(%d+)%]%s*(.*)$")
       if existing_num then
         -- If the numeric value differs, replace with the new zero-padded id
         if tonumber(existing_num) ~= tonumber(new_id) then
           -- rebuild the line with the corrected id; preserve spacing between id and remainder
-          if after == '' then
-            lines[i] = prefix .. '[ID: ' .. new_id .. ']'
+          if after == "" then
+            lines[i] = prefix .. "[ID: " .. new_id .. "]"
           else
-            lines[i] = prefix .. '[ID: ' .. new_id .. '] ' .. after
+            lines[i] = prefix .. "[ID: " .. new_id .. "] " .. after
           end
           changed = changed + 1
         end
       else
         -- No existing ID: insert one. If rest is empty or starts with space, don't add extra space.
-        if rest == '' then
-          lines[i] = prefix .. '[ID: ' .. new_id .. ']'
-        elseif rest:match('^%s') then
-          lines[i] = prefix .. '[ID: ' .. new_id .. ']' .. rest
+        if rest == "" then
+          lines[i] = prefix .. "[ID: " .. new_id .. "]"
+        elseif rest:match("^%s") then
+          lines[i] = prefix .. "[ID: " .. new_id .. "]" .. rest
         else
-          lines[i] = prefix .. '[ID: ' .. new_id .. '] ' .. rest
+          lines[i] = prefix .. "[ID: " .. new_id .. "] " .. rest
         end
         changed = changed + 1
       end
@@ -214,10 +200,10 @@ function M.fix_markdown_task_ids()
   if changed > 0 then
     vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
     pcall(vim.api.nvim_win_set_cursor, 0, cursor)
-    vim.cmd('silent write')
-    vim.notify(string.format('Updated %d task id(s)', changed), vim.log.levels.INFO)
+    vim.cmd("silent write")
+    vim.notify(string.format("Updated %d task id(s)", changed), vim.log.levels.INFO)
   else
-    vim.notify('No markdown tasks found or no changes needed', vim.log.levels.INFO)
+    vim.notify("No markdown tasks found or no changes needed", vim.log.levels.INFO)
   end
 end
 
