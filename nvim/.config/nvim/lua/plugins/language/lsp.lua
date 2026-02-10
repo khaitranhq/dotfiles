@@ -29,6 +29,9 @@ return {
               analysis = {
                 -- Ignore all files for analysis to exclusively use Ruff for linting
                 ignore = { "*" },
+                autoSearchPaths = false,
+                useLibraryCodeForTypes = false,
+                typeCheckingMode = "off", -- Since you're using Ruff
               },
             },
           },
@@ -71,24 +74,24 @@ return {
           settings = {
             typescript = {
               inlayHints = {
-                includeInlayParameterNameHints = "all",
-                includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-                includeInlayFunctionParameterTypeHints = true,
-                includeInlayVariableTypeHints = true,
+                includeInlayParameterNameHints = "literals",
                 includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = false,
+                includeInlayVariableTypeHints = false,
+                includeInlayPropertyDeclarationTypeHints = false,
                 includeInlayFunctionLikeReturnTypeHints = true,
                 includeInlayEnumMemberValueHints = true,
               },
             },
             javascript = {
               inlayHints = {
-                includeInlayParameterNameHints = "all",
-                includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-                includeInlayFunctionParameterTypeHints = true,
-                includeInlayVariableTypeHints = true,
+                includeInlayParameterNameHints = "literals",
                 includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-                includeInlayPropertyDeclarationTypeHints = true,
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = false,
+                includeInlayVariableTypeHints = false,
+                includeInlayPropertyDeclarationTypeHints = false,
                 includeInlayFunctionLikeReturnTypeHints = true,
                 includeInlayEnumMemberValueHints = true,
               },
@@ -96,14 +99,8 @@ return {
           },
           on_attach = function(client, _)
             -- disable tsserver formatting so null-ls / Prettier is used instead
-            if client.server_capabilities then
-              client.server_capabilities.documentFormattingProvider = false
-              client.server_capabilities.documentRangeFormattingProvider = false
-            else
-              -- for older Neovim versions
-              client.resolved_capabilities.document_formatting = false
-              client.resolved_capabilities.document_range_formatting = false
-            end
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
           end,
         },
         gopls = {
@@ -130,6 +127,15 @@ return {
                 functionTypeParameters = true,
                 parameterNames = true,
                 rangeVariableTypes = true,
+              },
+              codelenses = {
+                gc_details = false,
+                generate = false,
+                regenerate_cgo = false,
+                test = false,
+                tidy = false,
+                upgrade_dependency = false,
+                vendor = false,
               },
             },
           },
@@ -205,7 +211,9 @@ return {
       local servers = vim.tbl_keys(opts.servers)
       vim.lsp.enable(servers)
 
-      vim.lsp.inlay_hint.enable()
+      vim.defer_fn(function()
+        vim.lsp.inlay_hint.enable()
+      end, 100)
     end,
   },
   {
@@ -217,7 +225,7 @@ return {
         preset = "default",
       },
       completion = {
-        documentation = { auto_show = true, auto_show_delay_ms = 200 },
+        documentation = { auto_show = true, auto_show_delay_ms = 500 },
       },
 
       appearance = {
@@ -228,6 +236,10 @@ return {
       sources = {
         default = { "lazydev", "lsp", "path", "snippets", "buffer" },
         providers = {
+          buffer = {
+            max_items = 4,    -- Limit buffer completion items
+            min_keyword_length = 3, -- Require 3 chars before buffer completion
+          },
           lazydev = {
             name = "LazyDev",
             module = "lazydev.integrations.blink",

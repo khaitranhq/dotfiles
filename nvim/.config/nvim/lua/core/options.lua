@@ -5,6 +5,8 @@
 local opt = vim.opt
 local g = vim.g
 
+vim.o.winborder = "rounded"
+
 -- EDITOR BEHAVIOR
 
 -- Indentation and formatting
@@ -120,6 +122,13 @@ opt.redrawtime = 1500 -- Time limit for 'hlsearch' and :match highlighting
 
 -- Memory and processing
 opt.maxmempattern = 20000 -- Maximum memory for pattern matching
+opt.shada = {
+  "!",                    -- Save and restore global variables
+  "'100",                 -- Save marks for last 100 files
+  "<50",                  -- Max lines saved for each register (default 50)
+  "s10",                  -- Max KB for each item (10KB instead of default 100KB)
+  "h",                    -- Disable hlsearch on startup
+}
 
 -- SPELL CHECKING
 
@@ -225,8 +234,10 @@ opt.wildignore:append({
   "*.pyc",
   "*.pyo",
   "*.class",
+  "*.class",
   "*.cache",
 })
 
 -- Diff options
+opt.diffopt:append({ "iwhite", "algorithm:patience", "indent-heuristic" })
 opt.diffopt:append({ "iwhite", "algorithm:patience", "indent-heuristic" })
