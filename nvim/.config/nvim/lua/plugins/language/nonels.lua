@@ -1,6 +1,7 @@
 return {
   {
     "nvimtools/none-ls.nvim",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       "nvimtools/none-ls-extras.nvim",
     },
@@ -19,9 +20,9 @@ return {
           null_ls.builtins.formatting.black,
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.yamlfmt,
-          null_ls.builtins.diagnostics.golangci_lint.with({
-            timeout = 60000,
-          }),
+          -- null_ls.builtins.diagnostics.golangci_lint.with({
+          --   timeout = 60000,
+          -- }),
           null_ls.builtins.diagnostics.terraform_validate,
           require("none-ls.diagnostics.eslint"),
           require("none-ls.diagnostics.yamllint"),

@@ -50,7 +50,7 @@ function aws_auth
 
     # Step 3: Extract account ID from caller identity
     echo "📋 Extracting account ID..."
-    set -l account_id (echo "$caller_identity_output" | jq -r '.Account // empty' 2>/dev/null)
+    set -l account_id (echo "$caller_identity_output" | yq -r '.Account // "empty"' 2>/dev/null)
 
     if test -z "$account_id"
         echo "❌ Failed to extract account ID from caller identity"
@@ -74,7 +74,7 @@ function aws_auth
     for cache_file in $cache_dir/*.json
         if test -f "$cache_file"
             # Extract accountId from JSON file
-            set -l file_account_id (jq -r '.accessToken.accountId // empty' "$cache_file" 2>/dev/null)
+            set -l file_account_id (yq -r '.accessToken.accountId // "empty"' "$cache_file" 2>/dev/null)
 
             if test "$file_account_id" = "$account_id"
                 set matching_file "$cache_file"
@@ -94,10 +94,10 @@ function aws_auth
     echo "🔑 Extracting credentials from cache..."
 
     # Parse credentials from JSON
-    set -l access_key_id (jq -r '.accessToken.accessKeyId // empty' "$matching_file" 2>/dev/null)
-    set -l secret_access_key (jq -r '.accessToken.secretAccessKey // empty' "$matching_file" 2>/dev/null)
-    set -l session_token (jq -r '.accessToken.sessionToken // empty' "$matching_file" 2>/dev/null)
-    set -l expires_at (jq -r '.accessToken.expiresAt // empty' "$matching_file" 2>/dev/null)
+    set -l access_key_id (yq -r '.accessToken.accessKeyId // "empty"' "$matching_file" 2>/dev/null)
+    set -l secret_access_key (yq -r '.accessToken.secretAccessKey // "empty"' "$matching_file" 2>/dev/null)
+    set -l session_token (yq -r '.accessToken.sessionToken // "empty"' "$matching_file" 2>/dev/null)
+    set -l expires_at (yq -r '.accessToken.expiresAt // "empty"' "$matching_file" 2>/dev/null)
 
     # Validate credentials exist
     if test -z "$access_key_id" -o -z "$secret_access_key" -o -z "$session_token"

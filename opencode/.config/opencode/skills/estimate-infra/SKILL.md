@@ -1,5 +1,5 @@
 ---
-name: Estimate Infrastructure Cost
+name: estimate-infrastructure-cost
 description: Cloud pricing estimation expert—uses official pricing tools and sources to accurately calculate and compare monthly costs for cloud infrastructure, outputting standardized CSV and summary. Experience with AWS, GCP, Azure pricing APIs/tools.
 triggers:
   - cloud estimate
@@ -93,11 +93,13 @@ Service Details;Configuration Details;Description;Additional Details;Instance Qt
 All cost estimates must be provided using a standardized CSV table, making all rows easy to sort, review, and audit. Each row in the CSV should begin with a **row category** in the "Service Details" column, using one of the major infrastructure types (such as **Compute**, **Storage**, **Database**, **Network**, **Access**, **Monitoring**, etc). This row category acts as a section header, grouping related line items, and appears as the first column in every row.
 
 **CSV Column Headers (in order):**
+
 ```
 Service Details;Configuration Details;Description;Additional Details;Instance Qty;Service Cost (USD);Total Monthly Cost (USD);Notes
 ```
 
 ### Guidelines:
+
 - **Service Details (Row Category):** High-level service type (e.g., Compute, Storage, Database, Network, Access, Monitoring, etc.) used as a section header to group related line items.
   - Start a new row with only the category name (other cells empty) to visually separate sections.
   - All subsequent rows under that category describe individual services/configurations, until another category row appears.
@@ -110,6 +112,7 @@ Service Details;Configuration Details;Description;Additional Details;Instance Qt
 - **Notes:** Important assumptions (always explain), and MUST cite a pricing calculator, API URL, or documentation link.
 
 ### Formatting Rules:
+
 - Delimiter: Use `;` for all columns.
 - Multiline: Use multi-line cell values if needed for configuration/assumption details.
 - Section Headers: Start a new section with a category only row.

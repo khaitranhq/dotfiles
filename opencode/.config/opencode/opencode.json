@@ -10,9 +10,9 @@
       "go build *": "allow",
       "go doc *": "allow",
       "go version*": "allow",
-      "go vet*": "allow",
-      "go test*": "allow",
-      "go fmt*": "allow",
+      "go vet *": "allow",
+      "go test *": "allow",
+      "go fmt *": "allow",
       "golangci-lint run*": "allow",
       "go mod *": "allow",
       "staticcheck *": "allow",
@@ -72,6 +72,9 @@
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
+      },
+      "tools": {
+        "aws-pricing*": true
       }
     },
     "PlanningAgent": {
@@ -83,9 +86,18 @@
         "question": "allow"
       }
     },
+    "CoderAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/CoderAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
     "ImplementationAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/ImplementationAgent.md}",
+      "prompt": "{file:agents/CoderAgent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -121,7 +133,10 @@
         "--from",
         "git+https://github.com/khaitranhq/mcp@fix/pricing-add-botocore-crt#subdirectory=src/aws-pricing-mcp-server",
         "awslabs.aws-pricing-mcp-server"
-      ]
+      ],
+      "environment": {
+        "AWS_PROFILE": "default"
+      }
     }
   }
 }

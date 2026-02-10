@@ -11,7 +11,7 @@ Coordinates implementation and review phases and consolidates final status.
 ## Workflow
 
 1. Implementation phase
-   - Delegate to ImplementationAgent for requested changes.
+   - Delegate to CoderAgent for coding tasks.
 2. Review phase
    - Delegate to CodeReviewAgent to review changes.
    - If CodeReviewAgent requests changes, instruct ImplementationAgent to fix issues and repeat review.

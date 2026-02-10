@@ -51,6 +51,7 @@ return {
 	},
 	{
 		"lukas-reineke/indent-blankline.nvim",
+		event = { "BufReadPre", "BufNewFile" },
 		main = "ibl",
 		---@module "ibl"
 		---@type ibl.config
@@ -58,6 +59,7 @@ return {
 	},
 	{
 		"ya2s/nvim-cursorline",
+		event = { "BufReadPre", "BufNewFile" },
 		config = function()
 			require("nvim-cursorline").setup({
 				cursorline = {
@@ -75,5 +77,6 @@ return {
 	},
 	{
 		"Bekaboo/dropbar.nvim",
+		event = { "BufReadPre", "BufNewFile" },
 	},
 }

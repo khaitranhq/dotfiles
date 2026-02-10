@@ -1,7 +1,7 @@
 return {
   {
     "neovim/nvim-lspconfig",
-    -- event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
+    event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
     dependencies = {
       { "saghen/blink.cmp" },
     },
@@ -210,6 +210,7 @@ return {
   },
   {
     "saghen/blink.cmp",
+    event = "InsertEnter",
     version = "*",
     opts = {
       keymap = {
