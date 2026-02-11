@@ -31,7 +31,7 @@ fish_add_path $HOME/.cargo/bin
 
 #=========================Init apps=========================
 # oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/jandedobbeleer.omp.json' | source
-oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/tokyonigh.omp.json' | source
+oh-my-posh init fish --config "$HOME/.config/ohmyposh/tokyonigh.omp.json" | source
 zoxide init fish | source
 __check_nvm
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'

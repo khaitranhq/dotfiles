@@ -54,7 +54,7 @@
     "GitGenerator": {
       "mode": "primary",
       "model": "github-copilot/gpt-5-mini",
-      "prompt": "{file:/home/lewis/.config/opencode/agents/GitGenerator.md}"
+      "prompt": "{file:agents/GitGenerator.md}"
     },
     "RequirementsAgent": {
       "mode": "subagent",

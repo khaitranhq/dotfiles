@@ -1,0 +1,75 @@
+# Global Pre-commit Configuration
+# Applied to all repositories via core.hooksPath
+
+# Fail fast: stop on first failure
+fail_fast: true
+
+# Default stages - run on commit and manual
+default_stages:
+  - pre-commit
+  - manual
+
+repos:
+  # =============================================================================
+  # 🔒 SECURITY - Secret Scanning
+  # =============================================================================
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: ed65b65095eb699c614aa5ac058f6724539fb03f
+    hooks:
+      - id: gitleaks
+        name: "🔒 Detect hardcoded secrets"
+        entry: gitleaks protect --verbose --redact --staged
+        language: golang
+
+  # =============================================================================
+  # 🧹 GENERAL FILE QUALITY - Pre-commit Standard Hooks
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3fed74c572621f74eaffba6603801d153ffe5ce0
+    hooks:
+      # File hygiene
+      - id: trailing-whitespace
+        name: "🧹 Trim trailing whitespace"
+        args:
+          - --markdown-linebreak-ext=md
+
+      # Git-specific checks
+      - id: check-merge-conflict
+        name: "🔀 Check for merge conflict markers"
+      - id: check-added-large-files
+        name: "🚫 Block large files (>5MB)"
+        args:
+          - --maxkb=5000
+      - id: forbid-submodules
+        name: "🚫 Forbid git submodules"
+
+      # Cross-platform compatibility
+      - id: check-case-conflict
+        name: "📁 Check for case conflicts"
+      - id: check-illegal-windows-names
+        name: "🪟 Check for illegal Windows filenames"
+
+      # Shell scripts
+      - id: check-executables-have-shebangs
+        name: "🔧 Executables have shebangs"
+      - id: check-shebang-scripts-are-executable
+        name: "🔧 Shebang scripts are executable"
+
+      # Yaml validation
+      - id: check-yaml
+        name: "✅ Validate YAML syntax"
+        args:
+          - --allow-multiple-documents
+        exclude: |
+          (?x)^(
+            .*\.sops\.ya?ml$|
+            .*k8s.*\.ya?ml$|
+            .*kubernetes.*\.ya?ml$
+          )
+      # JSON validation
+      - id: check-json
+        name: "✅ Validate JSON syntax"
+
+      # TOML validation
+      - id: check-toml
+        name: "✅ Validate TOML syntax"

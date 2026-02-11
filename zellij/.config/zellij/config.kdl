@@ -80,6 +80,7 @@ keybinds clear-defaults=true {
           };
           SwitchToMode "normal";
         }
+        bind "Ctrl Enter" { Write 10; }
     }
     shared_except "session" {
         bind "Alt o" { SwitchToMode "session"; }
@@ -128,5 +129,5 @@ web_client {
 pane_frames false
 theme "tokyo-night"
 default_layout "_custom"
-layout_dir "/home/lewis/.config/zellij/layouts"
+layout_dir "/home/khaitran/.config/zellij/layouts"
 show_startup_tips false

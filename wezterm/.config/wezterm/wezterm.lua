@@ -14,15 +14,15 @@ config.automatically_reload_config = true
 
 -- Font
 config.font = wezterm.font_with_fallback({
-  {
-    family="FiraCode Nerd Font",
-    weight="Medium",
-  }
+	{
+		family = "FiraCode Nerd Font",
+		weight = "Medium",
+	},
 })
 config.font_size = 11
 
 -- Appearance
-config.color_scheme = "Catppuccin Macchiato"
+config.color_scheme = "tokyonight_night"
 config.inactive_pane_hsb = {
 	saturation = 0.24,
 	brightness = 0.7,
@@ -31,7 +31,7 @@ config.window_padding = {
 	left = 5,
 	right = 5,
 	top = 5,
-	bottom = 5,
+	bottom = 0,
 }
 config.initial_cols = 150
 config.initial_rows = 40
@@ -42,14 +42,7 @@ config.hide_tab_bar_if_only_one_tab = true
 config.tab_bar_at_bottom = true
 config.tab_max_width = 100
 config.show_new_tab_button_in_tab_bar = false
-
-config.colors = {
-	tab_bar = {
-		-- The color of the strip that goes along the top of the window
-		-- (does not apply when fancy tab bar is in use)
-		background = "#24273a",
-	},
-}
+config.use_resize_increments = false
 
 -- The filled in variant of the < symbol
 -- local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
@@ -74,11 +67,11 @@ wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
 	local foreground = "#cad3f5"
 
 	if tab.is_active then
-		background = "#c6a0f6"
-		foreground = "#181926"
+		background = "#b7c1e3"
+		foreground = "#3760bf"
 	elseif hover then
-		background = "#3b3052"
-		foreground = "#909090"
+		background = "#3760bf"
+		foreground = "#e1e2e7"
 	end
 
 	local edge_foreground = background
@@ -105,7 +98,7 @@ wezterm.on("format-tab-title", function(tab, _, _, _, hover, max_width)
 end)
 
 -- Window
-config.window_decorations = "NONE"
+config.window_decorations = "RESIZE"
 config.window_close_confirmation = "AlwaysPrompt"
 
 -- Keybinding
@@ -121,14 +114,14 @@ config.keys = {
 	{ key = "9", mods = "ALT", action = wezterm.action({ ActivateTab = 8 }) },
 	{ key = "v", mods = "SHIFT|CTRL", action = wezterm.action.PasteFrom("Clipboard") },
 	{ key = "c", mods = "SHIFT|CTRL", action = wezterm.action.CopyTo("Clipboard") },
-	{ key = "H", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Left", 5 } }) },
-	{ key = "J", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Down", 5 } }) },
-	{ key = "K", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Up", 5 } }) },
-	{ key = "L", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Right", 5 } }) },
-	{ key = "h", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Left" }) },
-	{ key = "j", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Down" }) },
-	{ key = "k", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Up" }) },
-	{ key = "l", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Right" }) },
+	-- { key = "H", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Left", 5 } }) },
+	-- { key = "J", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Down", 5 } }) },
+	-- { key = "K", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Up", 5 } }) },
+	-- { key = "L", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Right", 5 } }) },
+	-- { key = "h", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Left" }) },
+	-- { key = "j", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Down" }) },
+	-- { key = "k", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Up" }) },
+	-- { key = "l", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Right" }) },
 	{ key = "t", mods = "ALT", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
 	{ key = "-", mods = "ALT", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
 	{ key = "|", mods = "ALT|SHIFT", action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }) },
@@ -136,6 +129,11 @@ config.keys = {
 		key = "Enter",
 		mods = "ALT",
 		action = wezterm.action.DisableDefaultAssignment,
+	},
+	{
+		key = "Enter",
+		mods = "CTRL",
+		action = wezterm.action.SendString("\n"),
 	},
 }
 
