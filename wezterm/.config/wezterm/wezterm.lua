@@ -9,6 +9,12 @@ end
 
 config.automatically_reload_config = true
 
+local mux = wezterm.mux
+wezterm.on("gui-startup", function(cmd)
+	local tab, pane, window = mux.spawn_window(cmd or {})
+	window:gui_window():maximize()
+end)
+
 -- For WSL
 -- config.default_domain = 'WSL:Ubuntu-24.04'
 
@@ -39,8 +45,8 @@ config.initial_rows = 40
 config.use_fancy_tab_bar = false
 config.show_tab_index_in_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
-config.tab_bar_at_bottom = true
-config.tab_max_width = 100
+config.tab_bar_at_bottom = false
+config.tab_max_width = 30
 config.show_new_tab_button_in_tab_bar = false
 config.use_resize_increments = false
 

@@ -113,3 +113,10 @@ alias ta='task-add'
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
 bind \cr history_search
+
+# pnpm
+set -gx PNPM_HOME "/home/khaitran/.local/share/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
