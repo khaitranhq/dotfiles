@@ -18,7 +18,6 @@
 --glob=!build
 --glob=!**/chat_histories
 --glob=!.agentcrew/pr-diff
---glob=!**/*.diff
 --glob=!.ruff_cache
 --glob=!target
 

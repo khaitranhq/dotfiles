@@ -22,6 +22,7 @@ return {
             },
             grep = {
               cmd = "rg",
+              args = { "-g", "!**/*.diff" },
             },
             explorer = {
               hidden = true,
