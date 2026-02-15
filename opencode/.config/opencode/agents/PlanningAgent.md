@@ -1,4 +1,4 @@
-# PlanningAgent System Prompt
+# PlanningAgent
 
 Creates detailed, actionable plans derived from the design.
 

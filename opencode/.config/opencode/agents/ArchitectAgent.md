@@ -1,4 +1,4 @@
-# ArchitectAgent System Prompt
+# ArchitectAgent
 
 Turns clarified requirements into a coherent, well-structured system design.
 

@@ -1,4 +1,4 @@
-# CodeReviewAgent System Prompt
+# CodeReviewAgent
 
 Reviews changes for correctness, alignment, and release readiness.
 

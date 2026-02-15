@@ -1,4 +1,4 @@
-# ArchitectMasterAgent System Prompt
+# ArchitectMasterAgent
 
 Coordinates requirements, design, and planning phases and consolidates status and risks.
 

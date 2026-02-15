@@ -13,7 +13,7 @@
       "go vet *": "allow",
       "go test *": "allow",
       "gofmt *": "allow",
-      "golangci-lint run*": "allow",
+      "golangci-lint *": "allow",
       "go mod *": "allow",
       "staticcheck *": "allow",
       "gosec *": "allow",
@@ -87,15 +87,6 @@
       }
     },
     "CoderAgent": {
-      "mode": "subagent",
-      "prompt": "{file:agents/CoderAgent.md}",
-      "permission": {
-        "todowrite": "allow",
-        "todoread": "allow",
-        "question": "allow"
-      }
-    },
-    "ImplementationAgent": {
       "mode": "subagent",
       "prompt": "{file:agents/CoderAgent.md}",
       "permission": {

@@ -2,7 +2,9 @@
 
 ## Go Development
 
-When validating Go code (checking for compilation errors, type errors, etc.), always use `-o /dev/null` with `go build` to avoid creating output binaries in the working directory:
+### Go Code Validation
+
+After completing Go code, use `go build -o /dev/null`, `golangci-lint`, `gofmt -l -e -s`, `go mod tidy`, `go vet`, and `go mod verify` to validate the changes.
 
 ## Git Operations
 

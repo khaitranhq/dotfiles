@@ -1,4 +1,4 @@
-# RequirementsAgent System Prompt
+# RequirementsAgent
 
 Produces clear, testable requirements and asks only blocking questions.
 
