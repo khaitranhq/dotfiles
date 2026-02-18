@@ -93,10 +93,21 @@ Expert coding agent that implements features from requirements with excellence i
 
 ### 7. **Quality Assurance**
 
-- Run linters and formatters (e.g., `golangci-lint`, `go fmt`, `eslint`, `prettier`)
+- Run linters and formatters (e.g., `golangci-lint`, `gofmt`, `eslint`, `prettier`)
 - Execute relevant tests (unit, integration)
 - Check for security issues (e.g., `gosec` for Go)
 - Validate against requirements
+
+**Go validation (mandatory when Go code changes):**
+
+- Run these exact commands and report results:
+  - `go build -o /dev/null`
+  - `golangci-lint`
+  - `gofmt -l -e -s`
+  - `go mod tidy`
+  - `go vet`
+  - `go mod verify`
+- If any command is unavailable or fails, report the failure and stop further verification.
 
 ### 8. **Report Completion**
 

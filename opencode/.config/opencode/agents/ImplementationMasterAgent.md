@@ -23,6 +23,12 @@ Coordinates implementation and review phases and consolidates final status.
 - Support targeted requests: if the user asks for only specific phases, coordinate only those phases.
 - **User input/selection required**: whenever you need the user to approve options, pick from a list, or make a selection, you MUST call the `question` tool. Do not ask for input as plain text in these cases.
 
+## Verification Gate (Mandatory)
+
+- For Go changes, require CoderAgent to run and report: `go build -o /dev/null`, `golangci-lint`, `gofmt -l -e -s`, `go mod tidy`, `go vet`, `go mod verify`.
+- If any required command is missing from the report, request the CoderAgent to run it before proceeding.
+- If any required command fails or is unavailable, stop and report the failure.
+
 ## Delegation Requirement
 
 - The ImplementationMasterAgent MUST delegate work for each phase to the corresponding specialized subagent.
