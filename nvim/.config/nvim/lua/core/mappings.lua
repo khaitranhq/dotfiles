@@ -55,6 +55,10 @@ M.general = {
 		["d"] = { '"+d', "Cut to system clipboard" },
 		["x"] = { '"+x', "Cut character to system clipboard" },
 	},
+
+	t = {
+		["<Esc>"] = { [[<C-\><C-n>]], "Exit terminal mode", opts = { noremap = true } },
+	},
 }
 
 -- NOTIFICATION MANAGEMENT
