@@ -150,4 +150,38 @@ function M.fix_markdown_task_ids()
 	end
 end
 
+--- Adds a priority icon after a markdown checkbox `- [ ]`.
+--- Priority levels: critical (🔴), high (🟠), medium (🟡), low (🟢)
+--- @param priority string The priority level: "critical", "high", "medium", or "low"
+function M.set_markdown_priority(priority)
+	local priority_map = {
+		critical = "🔴",
+		high = "🟠",
+		medium = "🟡",
+		low = "🟢",
+	}
+
+	local icon = priority_map[priority]
+	if not icon then
+		vim.notify("Invalid priority: " .. priority, vim.log.levels.ERROR)
+		return
+	end
+
+	local line = vim.api.nvim_get_current_line()
+	local row = vim.api.nvim_win_get_cursor(0)[1]
+
+	-- Match markdown checkbox pattern: optional whitespace, "- [any char]", optional icon
+	-- Capture: leading whitespace, checkbox content, and rest of line
+	local leading_space, checkbox, rest = line:match("^(%s*)- (%[.%])%s*[🔴🟠🟡🟢]?%s*(.*)")
+
+	if checkbox then
+		-- Reconstruct with priority icon
+		local new_line = leading_space .. "- " .. checkbox .. " " .. icon .. " " .. rest
+		vim.api.nvim_buf_set_lines(0, row - 1, row, false, { new_line })
+		vim.cmd("silent write")
+	else
+		vim.notify("Not on a markdown task line", vim.log.levels.WARN)
+	end
+end
+
 return M

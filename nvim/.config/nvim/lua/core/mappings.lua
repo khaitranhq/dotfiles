@@ -201,6 +201,32 @@ M.markdown = {
 			end,
 			"Fix markdown task IDs",
 		},
+
+		-- Priority icons for tasks
+		["<leader>mp1"] = {
+			function()
+				require("core.utils").set_markdown_priority("critical")
+			end,
+			"Add critical priority (🔴)",
+		},
+		["<leader>mp2"] = {
+			function()
+				require("core.utils").set_markdown_priority("high")
+			end,
+			"Add high priority (🟠)",
+		},
+		["<leader>mp3"] = {
+			function()
+				require("core.utils").set_markdown_priority("medium")
+			end,
+			"Add medium priority (🟡)",
+		},
+		["<leader>mp4"] = {
+			function()
+				require("core.utils").set_markdown_priority("low")
+			end,
+			"Add low priority (🟢)",
+		},
 	},
 }
 
