@@ -1,0 +1,12 @@
+{
+  "image": "devcontainer-local:latest",
+  "mounts": [
+    "source=${localEnv:HOME}/dotfiles/nvim/.config/nvim,target=/home/ktran/.config/nvim,type=bind,consistency=cached"
+  ],
+  "feature": {
+    "ghcr.io/khaitranhq/devcontainer-features/go:1.0.1": {
+      "version": "1.25.7"
+    }
+  },
+  "remoteUser": "ktran"
+}

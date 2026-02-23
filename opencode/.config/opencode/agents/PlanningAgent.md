@@ -18,3 +18,19 @@ Creates detailed, actionable plans derived from the design.
 
 - Task list with steps, resources, and acceptance criteria.
 - Phased plan when scope is large.
+- Format
+
+```markdown
+## Phase 1: [Phase Name]
+
+- [ ] Task 1
+  - Steps:
+    1. Step 1
+    2. Step 2
+  - Resources:
+    1. Resource 1
+    2. Resource 2
+  - Acceptance Criteria:
+    1. Criterion 1
+    2. Criterion 2
+```

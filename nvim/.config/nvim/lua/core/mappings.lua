@@ -10,6 +10,9 @@ local M = {}
 
 M.general = {
 	n = {
+		-- -- CapsLock to Escape
+		["<C-[>"] = { "<Esc>", "" },
+
 		-- Window navigation - vim-like directional movement
 		["<C-h>"] = { "<C-w>h", "Window left" },
 		["<C-l>"] = { "<C-w>l", "Window right" },
@@ -57,7 +60,7 @@ M.general = {
 	},
 
 	t = {
-		["<Esc>"] = { [[<C-\><C-n>]], "Exit terminal mode", opts = { noremap = true } },
+		["<C-[>"] = { [[<C-\><C-n>]], "Exit terminal mode", opts = { noremap = true } },
 	},
 }
 
