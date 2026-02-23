@@ -7,34 +7,39 @@ return {
 		end,
 	},
 	{
-		"sudo-tee/opencode.nvim",
-		config = function()
-			require("opencode").setup({
-				preferred_picker = "snacks", -- Use snacks.nvim for all pickers
-
-				keymap = {
-					editor = {
-						["<leader>om"] = { "configure_provider", desc = "Select Opencode Model" },
-						["<leader>oa"] = { "select_agent", desc = "Select Opencode Agent" },
-					},
-				},
-			})
-		end,
+		"nickjvandyke/opencode.nvim",
+		version = "*", -- Latest stable release
 		dependencies = {
-			"nvim-lua/plenary.nvim",
 			{
-				"MeanderingProgrammer/render-markdown.nvim",
+				-- `snacks.nvim` integration is recommended, but optional
+				---@module "snacks" <- Loads `snacks.nvim` types for configuration intellisense
+				"folke/snacks.nvim",
+				optional = true,
 				opts = {
-					anti_conceal = { enabled = false },
-					file_types = { "markdown", "opencode_output" },
+					input = {}, -- Enhances `ask()`
+					picker = { -- Enhances `select()`
+						actions = {
+							opencode_send = function(...)
+								return require("opencode").snacks_picker_send(...)
+							end,
+						},
+						win = {
+							input = {
+								keys = {
+									["<a-a>"] = { "opencode_send", mode = { "n", "i" } },
+								},
+							},
+						},
+					},
+					terminal = {}, -- Enables the `snacks` provider
 				},
-				ft = { "markdown", "Avante", "copilot-chat", "opencode_output" },
 			},
-			-- Optional, for file mentions and commands completion, pick only one
-			"saghen/blink.cmp",
-
-			-- Optional, for file mentions picker, pick only one
-			"folke/snacks.nvim",
 		},
+		config = function()
+			---@type opencode.Opts
+			vim.g.opencode_opts = {
+				-- Your configuration, if any; goto definition on the type or field for details
+			}
+		end,
 	},
 }

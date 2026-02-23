@@ -10,9 +10,6 @@ local M = {}
 
 M.general = {
 	n = {
-		-- -- CapsLock to Escape
-		["<C-[>"] = { "<Esc>", "" },
-
 		-- Window navigation - vim-like directional movement
 		["<C-h>"] = { "<C-w>h", "Window left" },
 		["<C-l>"] = { "<C-w>l", "Window right" },
@@ -60,7 +57,19 @@ M.general = {
 	},
 
 	t = {
-		["<C-[>"] = { [[<C-\><C-n>]], "Exit terminal mode", opts = { noremap = true } },
+		["<Esc>"] = {
+			function()
+				self.esc_timer = self.esc_timer or (vim.uv or vim.loop).new_timer()
+				if self.esc_timer:is_active() then
+					self.esc_timer:stop()
+					vim.cmd("stopinsert")
+				else
+					self.esc_timer:start(200, 0, function() end)
+					return "<esc>"
+				end
+			end,
+			"Double escape to normal mode",
+		},
 	},
 }
 
@@ -275,6 +284,23 @@ M.git = {
 		["<leader>gD"] = {
 			diffview.close,
 			"Close Diffview",
+		},
+	},
+}
+
+M.ai = {
+	n = {
+		["<leader>oa"] = {
+			function()
+				require("opencode").ask()
+			end,
+			"Ask AI",
+		},
+		["<leader>oo"] = {
+			function()
+				require("opencode").toggle()
+			end,
+			"Toggle AI panel",
 		},
 	},
 }

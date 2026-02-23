@@ -1,8 +1,4 @@
-#========================= BASE IMAGE =========================
-FROM mcr.microsoft.com/devcontainers/base:2.1.3-debian13 AS base
-
-#========================= FUNDAMENTAL IMAGE =========================
-FROM base AS fundamental
+FROM mcr.microsoft.com/devcontainers/base:2.1.3-debian13
 
 WORKDIR /tmp
 
@@ -25,7 +21,6 @@ ENV RIPGREP_VERSION=15.1.0 \
     LAZYGIT_VERSION=0.58.0 \
     GIT_DELTA_VERSION=0.18.2 \
     FZF_VERSION=0.54.3 \
-    ZELLIJ_VERSION=v0.43.1 \
     EZA_VERSION=v0.23.4 \
     BAT_VERSION=v0.26.1 \
     SHFMT_VERSION=v3.12.0 \
@@ -53,9 +48,6 @@ RUN wget "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERS
     tar -xzf ./fzf.tar.gz && \
     mv fzf /usr/local/bin && \
     curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash -s -- --bin-dir /usr/local/bin && \
-    wget https://github.com/zellij-org/zellij/releases/download/${ZELLIJ_VERSION}/zellij-no-web-x86_64-unknown-linux-musl.tar.gz -O ./zellij.tar.gz && \
-    tar -xzf ./zellij.tar.gz && \
-    mv zellij /usr/local/bin/zellij && \
     wget https://github.com/eza-community/eza/releases/download/${EZA_VERSION}/eza_x86_64-unknown-linux-gnu.zip -O ./eza.zip && \
     unzip ./eza.zip && \
     mv eza /usr/local/bin/eza && \

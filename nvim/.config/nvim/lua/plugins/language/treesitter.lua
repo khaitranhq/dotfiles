@@ -29,7 +29,7 @@ return {
 			end
 
 			if #missing_parsers > 0 then
-				require("nvim-treesitter").install(missing_parsers):wait(300000) -- wait max. 5 minutes
+				require("nvim-treesitter").install(missing_parsers):wait(10000)
 			end
 
 			local function start_ts(buf)

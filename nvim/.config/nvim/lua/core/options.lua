@@ -51,19 +51,20 @@ opt.showtabline = 0
 -- SYSTEM INTEGRATION
 
 -- Clipboard integration
-opt.clipboard = "unnamedplus" -- Use system clipboard for all operations
+-- Choose clipboard provider based on availability
+-- Use OSC52 for remote environments (SSH), otherwise use xsel for local systems
 g.clipboard = {
-	name = "xsel",
+	name = "OSC 52",
 	copy = {
-		["+"] = "xsel --nodetach -i -b",
-		["*"] = "xsel --nodetach -i -p",
+		["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+		["*"] = require("vim.ui.clipboard.osc52").copy("*"),
 	},
 	paste = {
-		["+"] = "xsel -o -b",
-		["*"] = "xsel -o -p",
+		["+"] = function() end,
+		["*"] = function() end,
 	},
-	cache_enabled = 1,
 }
+opt.clipboard = "unnamedplus" -- Use system clipboard for all operations
 
 -- Terminal and color support
 opt.termguicolors = true -- Enable 24-bit RGB color support
