@@ -2,13 +2,18 @@
   "image": "devcontainer-local:latest",
   "runArgs": ["--name", "container-name"],
   "mounts": [
-    "source=${localEnv:HOME}/dotfiles/nvim/.config/nvim,target=/home/ktran/.config/nvim,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/devcontainer/fish/.config/fish,target=/home/ktran/.config/fish,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/ohmyposh/.config/ohmyposh,target=/home/ktran/.config/ohmyposh,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/golangci-lint/.golangci.yaml,target=/home/ktran/.golangci.yaml,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/eza/.config/eza,target=/home/ktran/.config/eza,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/lazygit/.config/lazygit,target=/home/ktran/.config/lazygit,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/dotfiles/opencode/.config/opencode,target=/home/ktran/.config/opencode,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/dotfiles/nvim/.config/nvim,target=/home/khaitran/.config/nvim,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/devcontainer/fish/.config/fish,target=/home/khaitran/.config/fish,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/ohmyposh/.config/ohmyposh,target=/home/khaitran/.config/ohmyposh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/golangci-lint/.golangci.yaml,target=/home/khaitran/.golangci.yaml,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/eza/.config/eza,target=/home/khaitran/.config/eza,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/lazygit/.config/lazygit,target=/home/khaitran/.config/lazygit,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/opencode/.config/opencode,target=/home/khaitran/.config/opencode,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh/git,target=/home/khaitran/.ssh/git,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/khaitran/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.config/git,target=/home/khaitran/.config/git,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/git/.gitconfig,target=/home/khaitran/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/dotfiles/git/.config/git,target=/home/khaitran/.config/git,type=bind,consistency=cached"
   ],
   "features": {
     "ghcr.io/khaitranhq/devcontainer-features/go:1.1.3": {
@@ -19,5 +24,5 @@
       "version": "2.10.1"
     }
   },
-  "remoteUser": "ktran"
+  "remoteUser": "khaitran"
 }

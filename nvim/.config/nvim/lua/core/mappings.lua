@@ -17,7 +17,12 @@ M.general = {
 		["<C-k>"] = { "<C-w>k", "Window up" },
 
 		-- Quick actions
-		["qq"] = { "<cmd>qa<CR>", "Quit Neovim" },
+		["qq"] = {
+			function()
+				vim.cmd("qa")
+			end,
+			"Quit Neovim",
+		},
 		[";"] = { ":", "Enter command mode" },
 		["<leader>/"] = { "<cmd>nohlsearch<CR>", "Clear search highlights" },
 
@@ -74,10 +79,14 @@ M.general = {
 }
 
 -- NOTIFICATION MANAGEMENT
-local notify = require("notify")
 M.notify = {
 	n = {
-		["<leader>zh"] = { notify.dismiss, "Dismiss all notifications" },
+		["<leader>zh"] = {
+			function()
+				Snacks.notifier.hide()
+			end,
+			"Dismiss all notifications",
+		},
 	},
 }
 
@@ -112,6 +121,12 @@ M.fuzzy = {
 			end,
 			"Find files",
 		},
+		["<leader>fu"] = {
+			function()
+				Snacks.picker.buffers()
+			end,
+			"Find buffers",
+		},
 	},
 }
 
@@ -123,7 +138,6 @@ M.navigate = {
 			SelectWindow,
 			"Interactive window picker",
 		},
-		["<leader>s"] = { require("custom.reach").open, "Select buffers" },
 	},
 }
 

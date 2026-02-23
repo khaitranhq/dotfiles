@@ -12,9 +12,9 @@ RUN echo 'deb http://download.opensuse.org/repositories/shells:/fish:/release:/4
     apt install python3 file zip unzip yamllint fish -y && \
     sudo chsh -s $(which fish) vscode && \
     rm -rf /var/lib/apt/lists/* && \
-    groupadd -g 1001 ktran && \
-    useradd -rm -d /home/ktran -s /usr/bin/fish -g root -G sudo -u 1001 ktran && \
-    echo "ktran ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    groupadd -g 1001 khaitran && \
+    useradd -rm -d /home/khaitran -s /usr/bin/fish -g root -G sudo -u 1001 khaitran && \
+    echo "khaitran ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 ENV RIPGREP_VERSION=15.1.0 \
     NEOVIM_VERSION=v0.11.6 \

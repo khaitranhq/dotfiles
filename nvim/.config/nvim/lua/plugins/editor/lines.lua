@@ -50,14 +50,6 @@ return {
 		end,
 	},
 	{
-		"lukas-reineke/indent-blankline.nvim",
-		event = { "BufReadPre", "BufNewFile" },
-		main = "ibl",
-		---@module "ibl"
-		---@type ibl.config
-		opts = {},
-	},
-	{
 		"ya2s/nvim-cursorline",
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()

@@ -53,17 +53,17 @@ opt.showtabline = 0
 -- Clipboard integration
 -- Choose clipboard provider based on availability
 -- Use OSC52 for remote environments (SSH), otherwise use xsel for local systems
-g.clipboard = {
-	name = "OSC 52",
-	copy = {
-		["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-		["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-	},
-	paste = {
-		["+"] = function() end,
-		["*"] = function() end,
-	},
-}
+-- g.clipboard = {
+-- 	name = "OSC 52",
+-- 	copy = {
+-- 		["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+-- 		["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+-- 	},
+-- 	paste = {
+-- 		["+"] = function() end,
+-- 		["*"] = function() end,
+-- 	},
+-- }
 opt.clipboard = "unnamedplus" -- Use system clipboard for all operations
 
 -- Terminal and color support
