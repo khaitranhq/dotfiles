@@ -120,27 +120,28 @@ config.keys = {
 	{ key = "9", mods = "ALT", action = wezterm.action({ ActivateTab = 8 }) },
 	{ key = "v", mods = "SHIFT|CTRL", action = wezterm.action.PasteFrom("Clipboard") },
 	{ key = "c", mods = "SHIFT|CTRL", action = wezterm.action.CopyTo("Clipboard") },
-	-- { key = "H", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Left", 5 } }) },
-	-- { key = "J", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Down", 5 } }) },
-	-- { key = "K", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Up", 5 } }) },
-	-- { key = "L", mods = "ALT|SHIFT", action = wezterm.action({ AdjustPaneSize = { "Right", 5 } }) },
-	-- { key = "h", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Left" }) },
-	-- { key = "j", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Down" }) },
-	-- { key = "k", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Up" }) },
-	-- { key = "l", mods = "ALT", action = wezterm.action({ ActivatePaneDirection = "Right" }) },
 	{ key = "t", mods = "ALT", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
 	{ key = "-", mods = "ALT", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
 	{ key = "|", mods = "ALT|SHIFT", action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }) },
 	{
-		key = "Enter",
-		mods = "ALT",
-		action = wezterm.action.DisableDefaultAssignment,
+		key = "o",
+		mods = "ALT|CTRL",
+		action = wezterm.action.SplitPane({
+			direction = "Right",
+			command = { args = { "opencode" } },
+			size = { Percent = 30 },
+		}),
 	},
 	{
-		key = "Enter",
-		mods = "CTRL",
-		action = wezterm.action.SendString("\n"),
+		key = "]",
+		mods = "ALT|CTRL",
+		action = wezterm.action.SplitPane({
+			direction = "Right",
+			size = { Percent = 30 },
+		}),
 	},
+	{ key = "h", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection("Left") },
+	{ key = "l", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection("Right") },
 }
 
 return config

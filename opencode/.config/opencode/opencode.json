@@ -40,12 +40,15 @@
       "mmdc *": "allow",
       "sed -n *": "allow",
       "test -f *": "allow",
-      "test -d *": "allow"
+      "test -d *": "allow",
+      "sort": "allow",
+      "sort *": "allow"
     },
     "external_directory": {
       "*": "ask",
       "~/dotfiles/opencode/.config/opencode/**/*": "allow",
-      "~/go/pkg/mod": "allow"
+      "~/go/pkg/mod": "allow",
+      "/tmp": "allow"
     }
   },
   "tools": {

@@ -84,5 +84,33 @@ return {
 				},
 			},
 		},
+		config = function(_, opts)
+			require("snacks").setup(opts)
+
+			vim.schedule(function()
+				-- Copy from https://github.com/folke/snacks.nvim/blob/bc0630e43be5699bb94dadc302c0d21615421d93/lua/snacks/util/init.lua#L139-L141
+				Snacks.util.icon = function(name, cat, opts)
+					opts = opts or {}
+					opts.fallback = opts.fallback or {}
+					if cat == "directory" then
+						return opts.fallback.dir or "󰉋 ", "Directory"
+					end
+					local Icons = require("nvim-web-devicons")
+					if cat == "filetype" then
+						return Icons.get_icon_by_filetype(name, { default = false })
+					elseif cat == "file" then
+						local basename = vim.fn.fnamemodify(name, ":t")
+						local ext = basename:match("%w%.(%w+)$") -- NOTE: regex was changed
+						return Icons.get_icon(basename, ext, { default = false })
+					-- elseif cat == "file" then
+					--   local ext = name:match("%.(%w+)$")
+					--   return Icons.get_icon(name, ext, { default = false }) --[[@as string, string]]
+					elseif cat == "extension" then
+						return Icons.get_icon(nil, name, { default = false }) --[[@as string, string]]
+					end
+					return opts.fallback.file or "󰈔 "
+				end
+			end)
+		end,
 	},
 }
