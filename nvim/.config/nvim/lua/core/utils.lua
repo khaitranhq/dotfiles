@@ -184,4 +184,73 @@ function M.set_markdown_priority(priority)
 	end
 end
 
+--- Opens a centered floating window to select a buffer using keyboard shortcuts (a-z, 0-9).
+--- Shows all loaded buffers with a modified indicator (yellow icon) for unsaved buffers.
+--- @return nil
+function M.select_buffer()
+	local buffers = vim.fn.getbufinfo({ buflisted = true })
+	if #buffers == 0 then
+		vim.notify("No buffers available", vim.log.levels.WARN)
+		return
+	end
+
+	-- Create list of buffer entries with keyboard shortcuts
+	local entries = {}
+	local buf_map = {} -- Maps key to buffer number
+	local modified_lines = {} -- Track which lines are modified for highlighting
+	local keys = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+	for i, buf in ipairs(buffers) do
+		if i > #keys then
+			break -- Only show first 36 buffers (a-z, 0-9)
+		end
+
+		local key = keys:sub(i, i)
+		local bufnr = buf.bufnr
+		local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":t") or "[No Name]"
+		local modified = buf.changed == 1
+		local icon = modified and "●" or "○" -- Filled circle for modified, empty circle for normal
+		local status = modified and " (modified)" or ""
+
+		table.insert(entries, string.format("  %s  %s  %s%s", key, icon, name, status))
+		buf_map[key] = bufnr
+		if modified then
+			modified_lines[i] = true
+		end
+	end
+
+	-- Create window with Snacks.win
+	local win = Snacks.win({
+		title = "Select Buffer",
+		width = 0.3,
+		height = 0.4,
+		minimal = true,
+		position = "float",
+		border = "rounded",
+		text = entries,
+		keys = {},
+		on_buf = function(self)
+			-- Apply yellow highlight to modified buffer lines
+			for line_num, is_modified in pairs(modified_lines) do
+				if is_modified then
+					vim.api.nvim_buf_add_highlight(self.buf, -1, "WarningMsg", line_num - 1, 0, -1)
+				end
+			end
+
+			-- Add keymaps for buffer selection
+			for key, bufnr in pairs(buf_map) do
+				vim.keymap.set("n", key, function()
+					self:close()
+					vim.api.nvim_set_current_buf(bufnr)
+				end, { buffer = self.buf, noremap = true, silent = true })
+			end
+
+			-- Add quit key
+			vim.keymap.set("n", "q", function()
+				self:close()
+			end, { buffer = self.buf, noremap = true, silent = true })
+		end,
+	})
+end
+
 return M

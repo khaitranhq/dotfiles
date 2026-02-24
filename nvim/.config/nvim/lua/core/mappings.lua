@@ -138,6 +138,12 @@ M.navigate = {
 			SelectWindow,
 			"Interactive window picker",
 		},
+		["<leader>s"] = {
+			function()
+				require("core.utils").select_buffer()
+			end,
+			"Interactive buffer picker",
+		},
 	},
 }
 
