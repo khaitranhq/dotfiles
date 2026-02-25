@@ -2,11 +2,27 @@ Generate a single, short, concise, precise commit messages following the Convent
 
 ## Commit Message Format
 
-<type>[scope]: <description>
+```gitcommit
+<type>[scope]: <summary description>
+
+# Commit body if there are multiple changes or more details to provide
+<type>[scope]: description for change 1
+<type>[scope]: description for change 2
+```
 
 ## Example
 
+- Single change in a commit:
+
+```gitcommit
+feat[auth]: add OAuth2 login support
 ```
+
+- Multiple changes in a single commit:
+
+```gitcommit
+feat[api]: Oauth login support and null pointer fix in user endpoint
+
 feat[auth]: add OAuth2 login support
 fix[api]: resolve null pointer exception in user endpoint
 ```
