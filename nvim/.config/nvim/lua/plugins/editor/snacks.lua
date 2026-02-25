@@ -7,12 +7,17 @@ return {
 			"nvim-tree/nvim-web-devicons",
 		},
 		opts = {
-			animate = {},
+			styles = {
+				terminal = {
+					keys = {
+						term_normal = false,
+					},
+				},
+			},
 			indent = {},
 			input = {},
 			lazygit = {},
 			notifier = {},
-			scroll = {},
 			statuscolumn = {
 				folds = {
 					open = true, -- show open fold icons

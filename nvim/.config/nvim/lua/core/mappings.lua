@@ -292,4 +292,21 @@ M.git = {
 	},
 }
 
+M.ai = {
+	n = {
+		["<leader>om"] = {
+			function()
+				require("opencode.api").configure_provider()
+			end,
+			"Select OpenCode provider & models",
+		},
+		["<leader>oa"] = {
+			function()
+				require("opencode.api").select_agent()
+			end,
+			"OpenCode actions menu",
+		},
+	},
+}
+
 return M

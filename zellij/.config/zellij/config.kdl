@@ -80,7 +80,6 @@ keybinds clear-defaults=true {
           };
           SwitchToMode "normal";
         }
-        bind "Ctrl Enter" { Write 10; }
     }
     shared_except "session" {
         bind "Alt o" { SwitchToMode "session"; }

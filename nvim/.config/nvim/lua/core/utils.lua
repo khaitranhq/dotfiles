@@ -186,9 +186,12 @@ end
 
 --- Opens a centered floating window to select a buffer using keyboard shortcuts (a-z, 0-9).
 --- Shows all loaded buffers with a modified indicator (yellow icon) for unsaved buffers.
+--- Excludes the current buffer from the list.
 --- @return nil
 function M.select_buffer()
 	local buffers = vim.fn.getbufinfo({ buflisted = true })
+	local current_buf = vim.api.nvim_get_current_buf()
+
 	if #buffers == 0 then
 		vim.notify("No buffers available", vim.log.levels.WARN)
 		return
@@ -199,23 +202,28 @@ function M.select_buffer()
 	local buf_map = {} -- Maps key to buffer number
 	local modified_lines = {} -- Track which lines are modified for highlighting
 	local keys = "abcdefghijklmnopqrstuvwxyz0123456789"
+	local entry_count = 0
 
-	for i, buf in ipairs(buffers) do
-		if i > #keys then
-			break -- Only show first 36 buffers (a-z, 0-9)
-		end
+	for _, buf in ipairs(buffers) do
+		-- Skip the current buffer
+		if buf.bufnr ~= current_buf then
+			entry_count = entry_count + 1
+			if entry_count > #keys then
+				break -- Only show first 36 buffers (a-z, 0-9)
+			end
 
-		local key = keys:sub(i, i)
-		local bufnr = buf.bufnr
-		local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":t") or "[No Name]"
-		local modified = buf.changed == 1
-		local icon = modified and "●" or "○" -- Filled circle for modified, empty circle for normal
-		local status = modified and " (modified)" or ""
+			local key = keys:sub(entry_count, entry_count)
+			local bufnr = buf.bufnr
+			local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":t") or "[No Name]"
+			local modified = buf.changed == 1
+			local icon = modified and "●" or "○" -- Filled circle for modified, empty circle for normal
+			local status = modified and " (modified)" or ""
 
-		table.insert(entries, string.format("  %s  %s  %s%s", key, icon, name, status))
-		buf_map[key] = bufnr
-		if modified then
-			modified_lines[i] = true
+			table.insert(entries, string.format("  %s  %s  %s%s", key, icon, name, status))
+			buf_map[key] = bufnr
+			if modified then
+				modified_lines[entry_count] = true
+			end
 		end
 	end
 

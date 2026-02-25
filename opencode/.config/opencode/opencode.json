@@ -48,7 +48,7 @@
       "*": "ask",
       "~/dotfiles/opencode/.config/opencode/**/*": "allow",
       "~/go/pkg/mod": "allow",
-      "/tmp": "allow"
+      "/tmp/*": "allow"
     }
   },
   "tools": {

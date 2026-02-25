@@ -45,7 +45,6 @@ function zellij_session -d "Interactive Zellij session manager"
                     echo "🚀 Creating new session with layout '$layout_path'"
                     zellij --layout "$layout_path"
                 end
-                exit
             end
         end
 
@@ -56,11 +55,9 @@ function zellij_session -d "Interactive Zellij session manager"
             echo "🚀 Creating new session with default name"
             zellij
         end
-        exit
     else
         echo "🔗 Attaching to session: $selection"
         zellij attach "$selection"
-        exit
     end
 end
 

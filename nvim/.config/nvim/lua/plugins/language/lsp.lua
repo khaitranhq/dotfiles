@@ -221,10 +221,9 @@ return {
 		event = "InsertEnter",
 		version = "*",
 		opts = {
-		keymap = {
-			preset = "default",
-			["<Tab>"] = { "select_and_accept", "fallback" },
-		},
+			keymap = {
+				preset = "default",
+			},
 			completion = {
 				documentation = { auto_show = true, auto_show_delay_ms = 500 },
 			},

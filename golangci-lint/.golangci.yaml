@@ -25,6 +25,8 @@ linters:
     cyclop:
       # The maximal code complexity to report.
       max-complexity: 15
+    lll:
+      line-length: 150
 
   exclusions:
     rules:

@@ -123,25 +123,6 @@ config.keys = {
 	{ key = "t", mods = "ALT", action = wezterm.action({ SpawnTab = "CurrentPaneDomain" }) },
 	{ key = "-", mods = "ALT", action = wezterm.action({ SplitVertical = { domain = "CurrentPaneDomain" } }) },
 	{ key = "|", mods = "ALT|SHIFT", action = wezterm.action({ SplitHorizontal = { domain = "CurrentPaneDomain" } }) },
-	{
-		key = "o",
-		mods = "ALT|CTRL",
-		action = wezterm.action.SplitPane({
-			direction = "Right",
-			command = { args = { "opencode" } },
-			size = { Percent = 30 },
-		}),
-	},
-	{
-		key = "]",
-		mods = "ALT|CTRL",
-		action = wezterm.action.SplitPane({
-			direction = "Right",
-			size = { Percent = 30 },
-		}),
-	},
-	{ key = "h", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection("Left") },
-	{ key = "l", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection("Right") },
 }
 
 return config
