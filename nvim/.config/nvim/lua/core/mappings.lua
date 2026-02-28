@@ -248,7 +248,6 @@ M.markdown = {
 
 -- GIT INTEGRATION
 local gitsigns = require("gitsigns")
-local diffview = require("diffview")
 M.git = {
 	n = {
 		["<leader>gs"] = {
@@ -280,14 +279,6 @@ M.git = {
 				gitsigns.nav_hunk("next")
 			end,
 			"Next hunk",
-		},
-		["<leader>gd"] = {
-			diffview.open,
-			"Open Diffview",
-		},
-		["<leader>gD"] = {
-			diffview.close,
-			"Close Diffview",
 		},
 	},
 }

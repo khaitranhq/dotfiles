@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "theme": "tokyonight",
   "plugin": ["@mohak34/opencode-notifier@latest"],
   "permission": {
     "bash": {
@@ -110,11 +109,17 @@
     },
     "ArchitectMasterAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/ArchitectMasterAgent.md}"
+      "prompt": "{file:agents/ArchitectMasterAgent.md}",
+      "permission": {
+        "question": "allow"
+      }
     },
     "ImplementationMasterAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/ImplementationMasterAgent.md}"
+      "prompt": "{file:agents/ImplementationMasterAgent.md}",
+      "permission": {
+        "question": "allow"
+      }
     },
     "plan": {
       "disable": true

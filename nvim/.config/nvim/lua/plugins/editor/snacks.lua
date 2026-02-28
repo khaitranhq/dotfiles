@@ -97,21 +97,34 @@ return {
 				Snacks.util.icon = function(name, cat, opts)
 					opts = opts or {}
 					opts.fallback = opts.fallback or {}
-					if cat == "directory" then
-						return opts.fallback.dir or "󰉋 ", "Directory"
-					end
-					local Icons = require("nvim-web-devicons")
-					if cat == "filetype" then
-						return Icons.get_icon_by_filetype(name, { default = false })
-					elseif cat == "file" then
-						local basename = vim.fn.fnamemodify(name, ":t")
-						local ext = basename:match("%w%.(%w+)$") -- NOTE: regex was changed
-						return Icons.get_icon(basename, ext, { default = false })
-					-- elseif cat == "file" then
-					--   local ext = name:match("%.(%w+)$")
-					--   return Icons.get_icon(name, ext, { default = false }) --[[@as string, string]]
-					elseif cat == "extension" then
-						return Icons.get_icon(nil, name, { default = false }) --[[@as string, string]]
+					local try = {
+						function()
+							return MiniIcons.get(cat or "file", name)
+						end,
+						function()
+							if cat == "directory" then
+								return opts.fallback.dir or "󰉋 ", "Directory"
+							end
+							local Icons = require("nvim-web-devicons")
+							if cat == "filetype" then
+								return Icons.get_icon_by_filetype(name, { default = false })
+							elseif cat == "file" then
+								local basename = vim.fn.fnamemodify(name, ":t")
+								local ext = basename:match("%w%.(%w+)$") -- NOTE: regex was changed
+								return Icons.get_icon(basename, ext, { default = false })
+							-- elseif cat == "file" then
+							--   local ext = name:match("%.(%w+)$")
+							--   return Icons.get_icon(name, ext, { default = false }) --[[@as string, string]]
+							elseif cat == "extension" then
+								return Icons.get_icon(nil, name, { default = false }) --[[@as string, string]]
+							end
+						end,
+					}
+					for _, fn in ipairs(try) do
+						local ret = { pcall(fn) }
+						if ret[1] and ret[2] then
+							return ret[2], ret[3]
+						end
 					end
 					return opts.fallback.file or "󰈔 "
 				end

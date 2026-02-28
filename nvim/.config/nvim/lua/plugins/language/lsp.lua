@@ -233,7 +233,7 @@ return {
 			},
 
 			sources = {
-				default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+				default = { "lazydev", "lsp", "path", "buffer" },
 				providers = {
 					buffer = {
 						max_items = 4, -- Limit buffer completion items
@@ -250,7 +250,6 @@ return {
 		},
 		opts_extend = { "sources.default" },
 		dependencies = {
-			"rafamadriz/friendly-snippets",
 			{
 				"folke/lazydev.nvim",
 				ft = "lua", -- only load on lua files
