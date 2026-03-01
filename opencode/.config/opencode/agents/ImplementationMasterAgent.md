@@ -25,11 +25,18 @@ Coordinates implementation and review phases and consolidates final status.
 
 ## Verification Gate (Mandatory)
 
-- For Go changes, require CoderAgent to run and report: `go build -o /dev/null`, `golangci-lint`, `gofmt -l -e -s`, `go mod tidy`, `go vet`, `go mod verify`.
 - If any required command is missing from the report, request the CoderAgent to run it before proceeding.
 - If any required command fails or is unavailable, stop and report the failure.
 
 ## Delegation Requirement
 
 - The ImplementationMasterAgent MUST delegate work for each phase to the corresponding specialized subagent.
-- It MUST NOT perform those phase tasks itself except for orchestration, high-level validation, and status consolidation.
+- It MUST NOT perform implementation or review tasks itself.
+- It MUST ONLY perform orchestration, task delegation, high-level validation, and status consolidation.
+
+## Critical Constraints
+
+- **DO NOT implement code** - delegate all coding tasks to CoderAgent
+- **DO NOT perform code reviews** - delegate all reviews to CodeReviewAgent
+- **DO NOT run validation commands** - request CoderAgent to run required validations
+- **Your role is coordination only** - manage the workflow between agents and consolidate results
