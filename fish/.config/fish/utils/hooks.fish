@@ -22,9 +22,32 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
        end
    end
 
-   set --local exit_status $status
+    set --local exit_status $status
 
-   if test $CMD_DURATION -gt 5000
-      notify-send "Fish Shell Notification" "Command: $argv[1]\nDuration: "(math $CMD_DURATION / 1000)" seconds\nExit Status: $exit_status"
-   end
+    if test $CMD_DURATION -gt 5000
+        set --local cmd_duration_seconds (math $CMD_DURATION / 1000)
+        set --local notification_message "Command: $argv[1]\nDuration: $cmd_duration_seconds seconds\nExit Status: $exit_status"
+
+         if type -q powershell.exe
+             powershell.exe -NoProfile -Command "
+                 [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
+                 [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
+
+                 \$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+                 \$xml.LoadXml(
+                   '<toast><visual><binding template=\"ToastText02\">' +
+                   '<text id=\"1\">Fish Shell - Command Complete</text>' +
+                   '<text id=\"2\">Command: $argv[1]</text>' +
+                   '<text id=\"3\">Duration: ' + ($CMD_DURATION / 1000) + ' seconds | Exit: $exit_status</text>' +
+                   '</binding></visual></toast>'
+                 )
+
+                 \$toast = New-Object Windows.UI.Notifications.ToastNotification \$xml
+                 \$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Fish Shell')
+                 \$notifier.Show(\$toast)
+             "
+        else if type -q notify-send
+            notify-send "Fish Shell Notification" $notification_message
+        end
+    end
 end
