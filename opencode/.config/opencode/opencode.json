@@ -13,6 +13,7 @@
       "go vet *": "allow",
       "go test *": "allow",
       "gofmt *": "allow",
+      "go fmt *": "allow",
       "golangci-lint *": "allow",
       "go mod *": "allow",
       "staticcheck *": "allow",
