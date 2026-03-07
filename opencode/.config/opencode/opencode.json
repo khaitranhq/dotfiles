@@ -42,7 +42,8 @@
       "test -f *": "allow",
       "test -d *": "allow",
       "sort": "allow",
-      "sort *": "allow"
+      "sort *": "allow",
+      "yamllint *": "allow"
     },
     "external_directory": {
       "*": "ask",
@@ -138,6 +139,10 @@
       "environment": {
         "AWS_PROFILE": "default"
       }
+    },
+    "mermaid-mcp": {
+      "url": "https://mcp.mermaid.ai/mcp",
+      "type": "remote"
     }
   }
 }
