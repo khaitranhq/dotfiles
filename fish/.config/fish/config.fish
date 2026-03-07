@@ -22,6 +22,7 @@ set -Ux MANPAGER "nvim +Man!"
 
 set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
+set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
@@ -121,3 +122,6 @@ if not string match -q -- $PNPM_HOME $PATH
   set -gx PATH "$PNPM_HOME" $PATH
 end
 # pnpm end
+
+# opencode
+fish_add_path /home/khaitran/.opencode/bin
