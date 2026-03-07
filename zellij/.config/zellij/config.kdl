@@ -67,6 +67,7 @@ keybinds clear-defaults=true {
         }
     }
     shared {
+        bind "Alt q" { Quit; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Alt h" { MoveFocus "left"; }
         bind "Alt j" { MoveFocus "down"; }
