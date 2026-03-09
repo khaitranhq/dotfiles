@@ -20,7 +20,7 @@ return {
       notifier = {},
       statuscolumn = {
         folds = {
-          open = true,   -- show open fold icons
+          open = true, -- show open fold icons
           git_hl = true, -- use Git Signs hl for fold icons
         },
       },

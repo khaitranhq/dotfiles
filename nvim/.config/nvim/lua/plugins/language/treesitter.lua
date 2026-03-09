@@ -19,6 +19,7 @@ return {
         "dockerfile",
         "typescript",
         "javascript",
+        "sql",
       }
 
       -- Check for missing parsers and install them
