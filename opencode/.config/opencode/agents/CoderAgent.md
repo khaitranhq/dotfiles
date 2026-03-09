@@ -102,12 +102,13 @@ Expert coding agent that implements features from requirements with excellence i
 
 - Run these exact commands and report results:
   - `go build -o /dev/null`
-  - `golangci-lint`
-  - `gofmt -l -e -s`
+  - `golangci-lint run <relative file paths from go module root>`
+  - `gofmt -l -e -s <relative file paths from go module root>`
   - `go mod tidy`
   - `go vet`
   - `go mod verify`
 - If any command is unavailable or fails, report the failure and stop further verification.
+- For golangci-lint, fix warnings related changes in session only, but report any other warnings without fixing.
 
 ### 8. **Report Completion**
 
