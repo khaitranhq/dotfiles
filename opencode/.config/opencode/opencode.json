@@ -43,13 +43,15 @@
       "test -d *": "allow",
       "sort": "allow",
       "sort *": "allow",
-      "yamllint *": "allow"
+      "yamllint *": "allow",
+      "d2 *": "allow"
     },
     "external_directory": {
       "*": "ask",
       "~/dotfiles/opencode/.config/opencode/**/*": "allow",
-      "~/go/pkg/mod": "allow",
-      "/tmp/*": "allow"
+      "~/.config/opencode/**/*": "allow",
+      "~/go/pkg/mod/**/*": "allow",
+      "/tmp/**/*": "allow"
     }
   },
   "tools": {
@@ -130,19 +132,7 @@
   "mcp": {
     "aws-pricing": {
       "type": "local",
-      "command": [
-        "uvx",
-        "--from",
-        "git+https://github.com/khaitranhq/mcp@fix/pricing-add-botocore-crt#subdirectory=src/aws-pricing-mcp-server",
-        "awslabs.aws-pricing-mcp-server"
-      ],
-      "environment": {
-        "AWS_PROFILE": "default"
-      }
-    },
-    "mermaid-mcp": {
-      "url": "https://mcp.mermaid.ai/mcp",
-      "type": "remote"
+      "command": ["npx", "@drawio/mcp"]
     }
   }
 }

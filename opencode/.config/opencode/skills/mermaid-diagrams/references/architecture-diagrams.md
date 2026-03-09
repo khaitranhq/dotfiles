@@ -89,18 +89,6 @@ architecture-beta
 
 ## Icons
 
-**Default icons:** `cloud`, `database`, `disk`, `internet`, `server`
-
-**Custom icons:** Use any of 200,000+ icons from iconify.design:
-
-```mermaid
-architecture-beta
-    service web(aws:ec2)[Web Server]
-    service storage(aws:s3)[Storage]
-```
-
-### Using @iconify-json Icon Packs
-
 Use npm icon packs with Mermaid CLI for a wide variety of technology logos:
 
 ```bash
@@ -132,6 +120,10 @@ architecture-beta
 | `@iconify-json/simple-icons` | Simple icons                                  | `npm i @iconify-json/simple-icons` |
 
 Usage: `pack:icon-name` (e.g., `logos:docker`, `mdi:database`)
+
+## Mandatory Cloud Provider Icons
+
+When diagramming AWS, Azure, or GCP infrastructure, always use the matching icon from an icon pack (e.g., `logos:aws`, `logos:azure`, `logos:googlecloud`). This keeps provider branding consistent and improves readability. Prefer `@iconify-json/logos` for these icons and reference them explicitly on the service lines that represent provider-managed resources.
 
 ## Complex Example
 
