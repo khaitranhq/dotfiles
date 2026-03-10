@@ -51,7 +51,7 @@
       "~/dotfiles/opencode/.config/opencode/**/*": "allow",
       "~/.config/opencode/**/*": "allow",
       "~/go/pkg/mod/**/*": "allow",
-      "/tmp/**/*": "allow"
+      "/tmp/*": "allow"
     }
   },
   "tools": {
@@ -130,9 +130,13 @@
     }
   },
   "mcp": {
-    "aws-pricing": {
-      "type": "local",
-      "command": ["npx", "@drawio/mcp"]
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_MCP_TOKEN}"
+      }
     }
   }
 }

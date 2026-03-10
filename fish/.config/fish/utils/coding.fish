@@ -29,8 +29,8 @@ export default tseslint.config(
 
     pnpm init
     pnpm install --save-dev \
-        eslint \
-        @eslint/js \
+        eslint@9.39.4 \
+        @eslint/js@9.39.4 \
         typescript \
         typescript-eslint \
         eslint-plugin-prettier \

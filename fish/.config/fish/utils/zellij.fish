@@ -27,27 +27,6 @@ function zellij_session -d "Interactive Zellij session manager"
     if test "$selection" = "✨ Create a new session"
         set -l session_name (gum input --prompt="📝 New Session Name: " --placeholder="Leave empty for default")
 
-        set -l layout_choice (printf "Default (no layout)\nSpecify layout file/name" | gum filter --header="Select layout (optional)" --prompt="> " --height=6)
-        set -l layout_exit_code $status
-        if test $layout_exit_code -ne 0; or test -z "$layout_choice"
-            echo "🚫 Operation cancelled"
-            return 0
-        end
-
-        if test "$layout_choice" = "Specify layout file/name"
-            set -l layout_path (gum input --prompt="📐 Layout Name/Path: " --placeholder="Leave empty to skip")
-
-            if test -n "$layout_path"
-                if test -n "$session_name"
-                    echo "🚀 Creating session '$session_name' with layout '$layout_path'"
-                    zellij --session "$session_name" --layout "$layout_path"
-                else
-                    echo "🚀 Creating new session with layout '$layout_path'"
-                    zellij --layout "$layout_path"
-                end
-            end
-        end
-
         if test -n "$session_name"
             echo "🚀 Creating session: $session_name"
             zellij attach --create "$session_name"
