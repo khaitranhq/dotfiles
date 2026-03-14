@@ -14,7 +14,7 @@
       "go test *": "allow",
       "gofmt *": "allow",
       "go fmt *": "allow",
-      "golangci-lint *": "allow",
+      "golangci-lint run *": "allow",
       "go mod *": "allow",
       "staticcheck *": "allow",
       "gosec *": "allow",

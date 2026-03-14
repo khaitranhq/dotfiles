@@ -28,13 +28,11 @@ fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
 fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/go/bin
-fish_add_path $HOME/.cargo/bin
+fish_add_path $HOME/.opencode/bin
 
 #=========================Init apps=========================
-# oh-my-posh init fish --config '/home/lewis/.config/ohmyposh/jandedobbeleer.omp.json' | source
 oh-my-posh init fish --config "$HOME/.config/ohmyposh/tokyonigh.omp.json" | source
 zoxide init fish | source
-__check_nvm
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
 
 #=========================SSH Agent=========================
@@ -114,13 +112,3 @@ alias ta='task-add'
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
 bind \cr history_search
-
-# pnpm
-set -gx PNPM_HOME "/home/khaitran/.local/share/pnpm"
-if not string match -q -- $PNPM_HOME $PATH
-  set -gx PATH "$PNPM_HOME" $PATH
-end
-# pnpm end
-
-# opencode
-fish_add_path /home/khaitran/.opencode/bin

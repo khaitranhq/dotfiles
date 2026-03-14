@@ -67,13 +67,18 @@ Load the focused reference based on what the user needs:
 
 ### Enforce Validation
 
-- Always run `d2 validate <diagram>.d2` before finalizing output so syntax is guaranteed; the steps in `references/command-usage.md` describe this workflow in detail.
+Always run validation commands before finalizing output so syntax is guaranteed; the steps in `references/command-usage.md` describe this workflow in detail
+
+- `d2 validate <diagram>.d2` .
+- `d2 fmt <diagram>.d2` to ensure consistent formatting before sharing or rendering.
+- `d2 <diagram>.d2 <output>.svg` then remove svg file to ensure the D2 code is correct and the user can run the command themselves.
 
 ## Icon Usage
 
 - Assign an icon to every node by referencing `references/icon-links.txt` so diagrams consistently pair iconography with architecture elements.
 - Run `rg "<keyword>" references/icon-links.txt` (or `grep` if needed) to find the best matching icon entry and copy its URL into the node’s `icon` attribute or `image` metadata.
 - Prefer icon names that clearly describe the node’s role (e.g., search for "Database" before choosing an icon for data stores) and document the selected icon when sharing the `.d2` file.
+- Use `shape: image` for leaf nodes (non container nodes) that should render the icon as the primary visual element
 
 ## Expected Output Style
 
