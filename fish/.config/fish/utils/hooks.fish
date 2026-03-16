@@ -11,6 +11,23 @@ function __check_nvm --on-variable PWD --description 'Do nvm stuff'
  end
 end
 
+function add-keys-ssh-agent
+  if not ssh-add -l >/dev/null 2>&1
+    # Unlock Bitwarden and export the session for bw CLI
+    set -lx BW_SESSION (bw unlock --raw)
+
+    # Get the folder id for the "SSH keys" folder
+    set -l FOLDER_ID (bw list folders --search "SSH keys" | yq -r '.[0].id')
+
+    # Stream each private key (encoded by jq as base64), decode and add to ssh-agent
+    bw list items --folderid $FOLDER_ID | yq -r '.[].sshKey.privateKey | @base64' | while read b64
+        printf '%s' "$b64" | base64 -d | ssh-add -
+    end
+
+    set -e BW_SESSION
+  end
+end
+
 # It is invoked by the fish shell automatically using its event system.
 function __postexec_notify_on_long_running_commands --on-event fish_postexec
    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn' 'zj' 'zellij' 'oc' 'opencode' 'sqlit' 'lazygit'

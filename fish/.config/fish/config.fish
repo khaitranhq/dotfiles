@@ -30,11 +30,6 @@ fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/go/bin
 fish_add_path $HOME/.opencode/bin
 
-#=========================Init apps=========================
-oh-my-posh init fish --config "$HOME/.config/ohmyposh/tokyonigh.omp.json" | source
-zoxide init fish | source
-complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
-
 #=========================SSH Agent=========================
 # Reuse a running ssh-agent when possible. If none is available,
 # start one and write fish-friendly env exports to ~/.ssh/ssh-agent.fish
@@ -71,17 +66,15 @@ if test $agent_ok -ne 1
     source $HOME/.ssh/ssh-agent.fish
 end
 
+#=========================Initialize=========================
+oh-my-posh init fish --config "$HOME/.config/ohmyposh/tokyonigh.omp.json" | source
+zoxide init fish | source
+complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
+add-keys-ssh-agent
+
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish
   source $HOME/.config/fish/ai.fish
-end
-
-# Add SSH keys from Bitwarden if the agent has no identities yet.
-# This avoids re-running the add-keys function when keys are already loaded.
-if not ssh-add -l >/dev/null 2>&1
-    if functions -q add-keys-ssh-agent
-        add-keys-ssh-agent
-    end
 end
 
 #=========================Aliases=========================
