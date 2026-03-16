@@ -30,90 +30,84 @@
 
 #### Master agents
 
-- Architect master agent
-  - Delegates to RequirementsAgent, ArchitectAgent, PlanningAgent
-- Implementation master agent
-  - Delegates to ImplementationAgent, ReviewAgent
+- architect-master-agent
+  - Clarifies requirements, then delegates to architect-agent and planning-agent
+- implementation-master-agent
+  - Delegates to solid-coder and code-reviewer
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant ArchitectMasterAgent
-  participant ImplementationMasterAgent
-  participant RequirementsAgent
-  participant ArchitectAgent
-  participant PlanningAgent
-  participant ImplementationAgent
-  participant ReviewAgent
+  participant ArchMaster as architect-master-agent
+  participant ImplMaster as implementation-master-agent
+  participant Architect as architect-agent
+  participant Planner as planning-agent
+  participant SolidCoder as solid-coder
+  participant CodeReviewer as code-reviewer
   participant AI_Folder as Folder
 
   Note over User,AI_Folder: Requirements gathering and clarification
-  User->>ArchitectMasterAgent: Provide high-level requirements and hard constraints
-  ArchitectMasterAgent->>RequirementsAgent: Trigger/coordinate requirements gathering
-  RequirementsAgent-->>User: Ask user to clarify ambiguities and request details
-  User->>RequirementsAgent: Provide answers / sign off requirements
-  RequirementsAgent->>AI_Folder: Clear existing requirements and write `requirements.md`
-  RequirementsAgent-->>ArchitectMasterAgent: Report requirements written
+  User->>ArchMaster: Provide high-level requirements and hard constraints
+  ArchMaster-->>User: Ask only blocking clarification questions
+  User->>ArchMaster: Provide answers / sign off requirements
+  ArchMaster->>AI_Folder: Write `requirements.md`
 
   Note over User,AI_Folder: Design
-  ArchitectMasterAgent-->>ArchitectAgent: Deliver clarified requirements (from `requirements.md`)
-  ArchitectAgent-->>User: Present design aligned with principles and Well-Architected Framework
-  User->>ArchitectAgent: Review and sign off design
-  ArchitectAgent->>AI_Folder: Write `design.md` with final design
-  ArchitectAgent-->>ArchitectMasterAgent: Report design written
+  ArchMaster-->>Architect: Deliver clarified requirements (from `requirements.md`)
+  Architect-->>User: Present design aligned with principles and Well-Architected Framework
+  User->>Architect: Review and sign off design
+  Architect->>AI_Folder: Write `design.md` with final design
+  Architect-->>ArchMaster: Report design written
 
   Note over User,AI_Folder: Planning
-  ArchitectMasterAgent-->>PlanningAgent: Produce task plan and milestones (based on `design.md`)
-  PlanningAgent-->>User: Present plan for review
-  User->>PlanningAgent: Review and sign off plan
-  PlanningAgent->>AI_Folder: Write `plan.md` with tasks and milestones
-  PlanningAgent-->>ArchitectMasterAgent: Report plan written
+  ArchMaster-->>Planner: Produce task plan and milestones (based on `design.md`)
+  Planner-->>User: Present plan for review
+  User->>Planner: Review and sign off plan
+  Planner->>AI_Folder: Write `plan.md` with tasks and milestones
+  Planner-->>ArchMaster: Report plan written
 
   Note over User,AI_Folder: Implementation
   loop For each implementation task
-    ArchitectMasterAgent->>ImplementationMasterAgent: Handoff implementation plan
-    ImplementationMasterAgent->>ImplementationAgent: Coordinate start of implementation tasks
-    ImplementationAgent-->>ImplementationAgent: Execute implementation tasks (based on requirements from supervisor)
-    ImplementationAgent-->>ImplementationMasterAgent: Report implementation task completed
-    ImplementationMasterAgent-->>ReviewAgent: Submit changes for review
-    ReviewAgent-->>ImplementationMasterAgent: Present review results and compliance checks
-    ImplementationMasterAgent->>ImplementationAgent: Request rework if needed
+    ArchMaster->>ImplMaster: Handoff implementation plan
+    ImplMaster->>SolidCoder: Coordinate start of implementation tasks
+    SolidCoder-->>SolidCoder: Execute implementation tasks
+    SolidCoder-->>ImplMaster: Report implementation task completed
+    ImplMaster-->>CodeReviewer: Submit changes for review
+    CodeReviewer-->>ImplMaster: Present review results and compliance checks
+    ImplMaster->>SolidCoder: Request rework if needed
   end
-  ImplementationMasterAgent-->>ImplementationMasterAgent: Review changes again to ensure requirements met
-  ImplementationMasterAgent->>AI_Folder: Write implementation summary and documentation
-  ImplementationMasterAgent-->>User: Present final aggregated status and process log
+  ImplMaster-->>ImplMaster: Review changes again to ensure requirements met
+  ImplMaster->>AI_Folder: Write implementation summary and documentation
+  ImplMaster-->>User: Present final aggregated status and process log
 ```
 
 #### Requirements for each agent
 
-- RequirementsAgent:
-  - Outcome-oriented: ensure clear, complete, and testable requirements, following the user's objectives and acceptance criteria.
-  - Should only ask user to clarify important ambiguities or missing details that block progress.
-- ArchitectAgent:
+- architect-agent:
   - Break down the system into components/modules with clear responsibilities.
   - Output design includes diagrams, data flow, and technology choices aligned with best practices.
-- PlanningAgent:
+- planning-agent:
   - Create a detailed task list with
     - Task description
     - Resources needed (tools, information, files,...)
     - Subtasks as detailed steps
     - AC
   - Split to phases if the task scope is large.
-- ImplementationAgent:
+- solid-coder:
   - Follow best coding practices, ensure code quality, maintainability, and security.
   - Write comment only where necessary to explain complex logic.
   - Should run tools to check code quality, security, and compliance before reporting task completion.
-- ReviewAgent:
+- code-reviewer:
   - Perform thorough code reviews, checking for adherence to requirements, design, and coding standards.
   - Provide constructive feedback and suggest improvements.
   - Ensure all acceptance criteria are met before approving changes.
-- ArchitectMasterAgent:
-  - Coordinate requirements, design, and planning phases.
-  - Aggregate reports from RequirementsAgent, ArchitectAgent, and PlanningAgent.
+- architect-master-agent:
+  - Clarify requirements, then coordinate design and planning phases.
+  - Aggregate reports from architect-agent and planning-agent.
   - Stop immediately if negative impact/guardrail issues are detected
-- ImplementationMasterAgent:
+- implementation-master-agent:
   - Coordinate implementation and review phases.
-  - Aggregate reports from ImplementationAgent and ReviewAgent.
+  - Aggregate reports from solid-coder and code-reviewer.
   - Present final aggregated status and process log to the user.
   - Stop immediately if negative impact/guardrail issues are detected
 
