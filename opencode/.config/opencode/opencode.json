@@ -61,11 +61,11 @@
     "GitGenerator": {
       "mode": "primary",
       "model": "github-copilot/gpt-4.1",
-      "prompt": "{file:agents/GitGenerator.md}"
+      "prompt": "{file:agents/git-generator.md}"
     },
     "RequirementsAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/RequirementsAgent.md}",
+      "prompt": "{file:agents/requirements-agent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -74,7 +74,7 @@
     },
     "ArchitectAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/ArchitectAgent.md}",
+      "prompt": "{file:agents/architect-agent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -86,7 +86,7 @@
     },
     "PlanningAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/PlanningAgent.md}",
+      "prompt": "{file:agents/planning-agent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -95,7 +95,7 @@
     },
     "CoderAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/CoderAgent.md}",
+      "prompt": "{file:agents/coder-agent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -104,7 +104,7 @@
     },
     "CodeReviewAgent": {
       "mode": "subagent",
-      "prompt": "{file:agents/CodeReviewAgent.md}",
+      "prompt": "{file:agents/code-review-agent.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -113,14 +113,14 @@
     },
     "ArchitectMasterAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/ArchitectMasterAgent.md}",
+      "prompt": "{file:agents/architect-master-agent.md}",
       "permission": {
         "question": "allow"
       }
     },
     "ImplementationMasterAgent": {
       "mode": "primary",
-      "prompt": "{file:agents/ImplementationMasterAgent.md}",
+      "prompt": "{file:agents/implementation-master-agent.md}",
       "permission": {
         "question": "allow"
       }

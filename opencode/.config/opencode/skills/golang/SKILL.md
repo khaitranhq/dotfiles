@@ -93,7 +93,16 @@ After implementing Go code, follow these steps to ensure code quality:
    - Run tests for all packages in the project
    - Ensure all tests pass before moving to formatting
 
-2. **Format Code**
+2. **Build and Verify Compilation**
+
+   ```bash
+   go build -o /dev/null ./...
+   ```
+
+   - Verify the code compiles without errors
+   - Use `-o /dev/null` to discard the output binary
+
+3. **Format Code**
    Apply formatting tools in the following order:
    - **golines**: Break long lines appropriately
      ```bash
@@ -112,7 +121,7 @@ After implementing Go code, follow these steps to ensure code quality:
      goimports -w .
      ```
 
-3. **Run Linter**
+4. **Run Linter**
 
    ```bash
    golangci-lint run ./...
@@ -121,6 +130,12 @@ After implementing Go code, follow these steps to ensure code quality:
    - Fix any linting issues reported
    - Mark any false positives with `//nolint` comments, but use sparingly and add justifying comments for why the lint is being ignored
    - Ensure code follows best practices and conventions
+
+5. **Run Static Analysis Tools**
+   - **govet**: Examines Go source code and reports suspicious constructs
+     ```bash
+     go vet ./...
+     ```
 
 ### 4. Common Issues and Solutions
 
