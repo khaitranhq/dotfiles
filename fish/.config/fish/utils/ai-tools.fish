@@ -1,9 +1,9 @@
 # AI-powered git commit message generator
 function ai_commit -d "Generate AI-powered commit messages from staged changes"
     # Validate required dependencies
-    if not command -v opencode >/dev/null 2>&1
-        echo "❌ Error: opencode command not found" >&2
-        echo "   Please install opencode first" >&2
+    if not command -v copilot >/dev/null 2>&1
+        echo "❌ Error: copilot command not found" >&2
+        echo "   Please install copilot first" >&2
         return 1
     end
 
@@ -30,9 +30,11 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        opencode run \
-        --agent="GitGenerator" \
-        "$diff_content")"
+        copilot \
+        --silent \
+        --agent "git-commit-generator" \
+        --model "gpt-4.1" \
+        -p "diff: $diff_content")"
 
     set generate_message_exit_code $status
 
@@ -71,146 +73,4 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     gum input --placeholder="Press Enter to continue..." --prompt="" --no-show-help > /dev/null
 
     return $commit_exit_code
-end
-
-# Generate and execute bash commands using AI
-function ai_bash -d "Generate and execute bash commands using AI"
-    # Validate required dependencies
-    if not command -v agentcrew >/dev/null 2>&1
-        echo "❌ Error: agentcrew command not found" >&2
-        echo "   Please install agentcrew first" >&2
-        return 1
-    end
-
-    if not command -v gum >/dev/null 2>&1
-        echo "❌ Error: gum command not found" >&2
-        echo "   Install with: brew install gum" >&2
-        return 1
-    end
-
-    # Validate prompt argument
-    if test (count $argv) -eq 0
-        echo "Usage: ai_bash <prompt request command>" >&2
-        echo "Example: ai_bash 'find all python files modified in last 7 days'" >&2
-        return 1
-    end
-
-    set prompt $argv
-
-    echo "🤖 Generating command for: $prompt"
-    echo ""
-
-    # Call agentcrew to generate command
-    set generated_command "$(agentcrew job \
-        --agent="BashAgent" \
-        --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/BashAgent.toml" \
-        --provider=github_copilot \
-        --model-id="gpt-4.1" \
-        "$prompt" 2>&1)"
-
-    set agentcrew_exit_code $status
-
-    # Handle agentcrew execution errors
-    if test $agentcrew_exit_code -ne 0
-        echo "❌ Error: Failed to generate command" >&2
-        echo "   Exit code: $agentcrew_exit_code" >&2
-        echo "   Output: $generated_command" >&2
-        return 1
-    end
-
-    # Validate generated command is not empty
-    if test -z "$generated_command"
-        echo "❌ Error: Generated command is empty" >&2
-        return 1
-    end
-
-    # Strip surrounding quotes from JSON output
-    set generated_command (echo "$generated_command" | sed 's/^["'\''[:space:]]*//;s/["'\''[:space:]]*$//')
-
-    # Display the generated command with syntax highlighting
-    echo "📝 Generated command:"
-    echo "   $generated_command"
-    echo ""
-
-    # Ask user for confirmation using gum
-    if gum confirm "Execute this command?" --affirmative="✅ Yes, run it" --negative="❌ No, cancel"
-        echo ""
-        echo "🚀 Executing command..."
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-        # Execute the command and capture its exit code
-        # Use eval to properly expand environment variables and handle shell syntax
-        eval "echo \$AWS_ACCOUNT_ID"
-        eval "$generated_command"
-        set cmd_exit_code $status
-
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-        # Report execution status
-        if test $cmd_exit_code -eq 0
-            echo "✅ Command executed successfully"
-        else
-            echo "⚠️  Command exited with code: $cmd_exit_code" >&2
-        end
-
-        return $cmd_exit_code
-    else
-        echo ""
-        echo "🚫 Command execution cancelled"
-        return 0
-    end
-end
-
-# Generate code snippets using AI
-function code_snip -d "Generate code snippets using AI"
-    # Validate required dependencies
-    if not command -v agentcrew >/dev/null 2>&1
-        echo "❌ Error: agentcrew command not found" >&2
-        echo "   Please install agentcrew first" >&2
-        return 1
-    end
-
-    # Validate prompt argument
-    if test (count $argv) -eq 0
-        echo "Usage: code_snip <code snippet request>" >&2
-        echo "Example: code_snip 'python function to parse JSON file'" >&2
-        return 1
-    end
-
-    set prompt $argv
-
-    echo "🤖 Generating code snippet for: $prompt"
-    echo ""
-
-    # Call agentcrew to generate code snippet
-    set generated_snippet "$(agentcrew job \
-        --agent="CodeSnipper" \
-        --agent-config "https://raw.githubusercontent.com/khaitranhq/dotfiles/refs/heads/windows-wsl/AgentCrew/.AgentCrew/job-agents/CodeSnipper.toml" \
-        --provider=github_copilot \
-        --model-id="claude-sonnet-4.5" \
-        "$prompt" 2>&1)"
-
-    set agentcrew_exit_code $status
-
-    # Handle agentcrew execution errors
-    if test $agentcrew_exit_code -ne 0
-        echo "❌ Error: Failed to generate code snippet" >&2
-        echo "   Exit code: $agentcrew_exit_code" >&2
-        echo "   Output: $generated_snippet" >&2
-        return 1
-    end
-
-    # Validate generated snippet is not empty
-    if test -z "$generated_snippet"
-        echo "❌ Error: Generated code snippet is empty" >&2
-        return 1
-    end
-
-    # Display the generated snippet
-    echo "📝 Generated code snippet:"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "$generated_snippet"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-    return 0
 end
