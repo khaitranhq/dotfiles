@@ -1,0 +1,12 @@
+{
+  "command": {
+    "enabled": true,
+    "path": "powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-Command",
+      "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $APP_ID = 'OpenCode'; $eventType = '{event}'; $message = '{message}'; $title = switch($eventType) { 'permission' { 'Permission Required' } 'error' { 'Error' } 'complete' { 'Complete' } 'subagent_complete' { 'Subagent Complete' } 'question' { 'Question' } default { $eventType } }; $toastXml = '<toast><visual><binding template=\"ToastText02\"><text id=\"1\">' + $title + '</text><text id=\"2\">' + $message + '</text></binding></visual><audio src=\"ms-winsoundevent:Notification.Default\" silent=\"true\" /></toast>'; $xml = New-Object Windows.Data.Xml.Dom.XmlDocument; $xml.LoadXml($toastXml); $toast = New-Object Windows.UI.Notifications.ToastNotification $xml; $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($APP_ID); $notifier.Show($toast);"
+    ],
+    "minDuration": 1
+  }
+}

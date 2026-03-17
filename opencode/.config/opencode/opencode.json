@@ -1,0 +1,142 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@mohak34/opencode-notifier@latest"],
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "ls *": "allow",
+      "find *": "allow",
+      "grep *": "allow",
+      "go build *": "allow",
+      "go doc *": "allow",
+      "go version*": "allow",
+      "go vet *": "allow",
+      "go test *": "allow",
+      "gofmt *": "allow",
+      "go fmt *": "allow",
+      "golangci-lint run *": "allow",
+      "go mod *": "allow",
+      "staticcheck *": "allow",
+      "gosec *": "allow",
+      "which *": "allow",
+      "wc *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "echo *": "allow",
+      "pwd": "allow",
+      "rg *": "allow",
+      "xargs *": "allow",
+      "git log *": "allow",
+      "git status *": "allow",
+      "git diff *": "allow",
+      "git show *": "allow",
+      "git branch*": "allow",
+      "pulumi preview *": "allow",
+      "pulumi stack ls*": "allow",
+      "tee *": "allow",
+      "awk *": "allow",
+      "mkdir *": "allow",
+      "mmdc *": "allow",
+      "sed -n *": "allow",
+      "test -f *": "allow",
+      "test -d *": "allow",
+      "sort": "allow",
+      "sort *": "allow",
+      "yamllint *": "allow",
+      "d2 *": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "~/dotfiles/opencode/.config/opencode/**/*": "allow",
+      "~/.config/opencode/**/*": "allow",
+      "~/go/pkg/mod/**/*": "allow",
+      "/tmp/*": "allow"
+    }
+  },
+  "tools": {
+    "aws-pricing*": false
+  },
+  "agent": {
+    "GitGenerator": {
+      "mode": "primary",
+      "model": "github-copilot/gpt-4.1",
+      "prompt": "{file:agents/GitGenerator.md}"
+    },
+    "RequirementsAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/RequirementsAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
+    "ArchitectAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/ArchitectAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      },
+      "tools": {
+        "aws-pricing*": true
+      }
+    },
+    "PlanningAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/PlanningAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
+    "CoderAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/CoderAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
+    "CodeReviewAgent": {
+      "mode": "subagent",
+      "prompt": "{file:agents/CodeReviewAgent.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
+    "ArchitectMasterAgent": {
+      "mode": "primary",
+      "prompt": "{file:agents/ArchitectMasterAgent.md}",
+      "permission": {
+        "question": "allow"
+      }
+    },
+    "ImplementationMasterAgent": {
+      "mode": "primary",
+      "prompt": "{file:agents/ImplementationMasterAgent.md}",
+      "permission": {
+        "question": "allow"
+      }
+    },
+    "plan": {
+      "disable": true
+    }
+  },
+  "mcp": {
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_MCP_TOKEN}"
+      }
+    }
+  }
+}

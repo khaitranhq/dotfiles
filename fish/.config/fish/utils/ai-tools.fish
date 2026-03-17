@@ -1,9 +1,9 @@
 # AI-powered git commit message generator
 function ai_commit -d "Generate AI-powered commit messages from staged changes"
     # Validate required dependencies
-    if not command -v copilot >/dev/null 2>&1
-        echo "❌ Error: copilot command not found" >&2
-        echo "   Please install copilot first" >&2
+    if not command -v opencode >/dev/null 2>&1
+        echo "❌ Error: opencode command not found" >&2
+        echo "   Please install opencode first" >&2
         return 1
     end
 
@@ -30,11 +30,9 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        copilot \
-        --silent \
-        --agent "git-commit-generator" \
-        --model "gpt-4.1" \
-        -p "diff: $diff_content")"
+        opencode run \
+        --agent="GitGenerator" \
+        "$diff_content")"
 
     set generate_message_exit_code $status
 
