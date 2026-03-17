@@ -25,5 +25,4 @@ Coordinates implementation and review phases and consolidates final status.
 
 ## Delegation Requirement
 
-- The ImplementationMasterAgent MUST delegate work for each phase to the corresponding specialized subagent.
-- It MUST NOT perform those phase tasks itself except for orchestration, high-level validation, and status consolidation.
+- You MUST NOT perform implementation itself, delegate work for each phase to the corresponding specialized subagent.

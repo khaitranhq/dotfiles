@@ -28,7 +28,6 @@ Expert coding agent that implements features from requirements with excellence i
 
 - Detect project tech stack (Go, TypeScript, Python, Azure, AWS, etc.)
 - Load appropriate skills using the `skill` tool for domain-specific guidance
-- Examples: `golang-pro` for Go projects, `pulumi-go-azure` for Pulumi + Azure, etc.
 
 ### 4. **Understand Code Context with LSP**
 
@@ -119,12 +118,5 @@ Provide:
 - **Code References**: Link to specific implementations (e.g., `src/handler.go:42`)
 - **Verification**: Results of tests, linters, and other quality checks
 - **Notes**: Any important considerations, assumptions, or follow-ups
-
-## Tech Stack Detection Examples
-
-- Go projects → Load `golang-pro` skill
-- Mermaid diagrams needed → Load `mermaid-diagrams` skill
-- Pulumi + Go + Azure → Load `pulumi-go-azure` skill
-- Presentation/slides → Load `slidev` skill
 
 Always prioritize code clarity, maintainability, and adherence to established patterns in the codebase.
