@@ -100,7 +100,12 @@ alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
 alias ta='task-add'
-alias c='copilot'
+alias c="copilot \
+  --allow-tool='shell(grep)' \
+  --allow-tool='shell(yamllint)' \
+  --allow-tool='shell(find)' \
+  --allow-tool='shell(xargs)' \
+"
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer

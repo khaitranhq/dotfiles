@@ -24,6 +24,11 @@
 - Clear separation of concerns: analyze requirements, design, implementation, review
 - Predicting Impact & Guardrails to prevent negative outcomes, fail fast
 
+## Success criteria
+
+- Automation: avoid manual work, automate as much as possible
+- Error: avoid issues and rework
+
 ## Workflows
 
 ### Coding/devops tasks:
