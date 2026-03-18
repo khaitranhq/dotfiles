@@ -1,3 +1,22 @@
+---
+name: golang
+description: Provides specialized instructions and workflows for Go/Golang programming tasks including code organization, struct design, error handling, testing, and production-grade implementation patterns.
+license: MIT
+metadata:
+  author: OpenCode
+  version: "1.0.0"
+  domain: language
+  triggers:
+    - Go
+    - Golang
+    - Go programming
+    - Go development
+    - Go debugging
+  role: specialist
+  scope: implementation
+  output-format: code
+---
+
 # Go (Golang) Skill
 
 ## Purpose
@@ -138,6 +157,129 @@ After implementing Go code, follow these steps to ensure code quality:
      ```
 
 ### 4. Common Issues and Solutions
+
+## Constraints
+
+### MUST DO
+
+- **Add context.Context to all blocking operations** — Pass context through the call stack to enable graceful cancellation and timeout handling
+- **Handle all errors explicitly** — Never use naked returns; return errors or use explicit error handling
+- **Write table-driven tests with subtests** — Use `t.Run()` for parametrized tests; enables better test isolation and reporting
+- **Propagate errors with fmt.Errorf("%w", err)** — Use error wrapping to preserve error chain for debugging
+- **Use errors.New("") for sentinel errors** — Create package-level error variables for error comparison
+- **Define clear interface contracts** — Keep interfaces small and focused; design around behavior, not implementation
+- **Run all post-implementation steps** — Format, lint, test, and verify before committing
+- **Document exported functions and types** — Add clear documentation comments for all public API
+
+### MUST NOT DO
+
+- **Ignore errors** — Avoid `_ = ` assignments without explicit justification; handle or propagate all errors
+- **Use panic for normal error handling** — Reserve panic for truly exceptional conditions; use errors for control flow
+- **Hardcode values** — Use configuration files, constants, or environment variables instead of hardcoded values
+- **Create goroutines without lifecycle management** — Always ensure goroutines can be cancelled or have bounded lifetime
+
+## Error Handling Example
+
+```go
+// Sentinel error for reuse
+var ErrNotFound = errors.New("item not found")
+
+func fetchUser(ctx context.Context, id string) (*User, error) {
+    // Check context cancellation
+    if err := ctx.Err(); err != nil {
+        return nil, fmt.Errorf("fetch user: %w", err)
+    }
+
+    // Do work...
+    user, err := db.GetUser(ctx, id)
+    if err != nil {
+        // Wrap errors with context
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, fmt.Errorf("fetch user %s: %w", id, ErrNotFound)
+        }
+        return nil, fmt.Errorf("fetch user %s: %w", id, err)
+    }
+
+    return user, nil
+}
+```
+
+## Table-Driven Tests Example
+
+```go
+func TestFetchUser(t *testing.T) {
+    tests := []struct {
+        name    string
+        userID  string
+        want    *User
+        wantErr bool
+        errType error
+    }{
+        {
+            name:   "valid user",
+            userID: "123",
+            want:   &User{ID: "123", Name: "John"},
+        },
+        {
+            name:    "not found",
+            userID:  "999",
+            wantErr: true,
+            errType: ErrNotFound,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            ctx := context.Background()
+            got, err := fetchUser(ctx, tt.userID)
+
+            if tt.wantErr {
+                if !errors.Is(err, tt.errType) {
+                    t.Fatalf("got error %v, want %v", err, tt.errType)
+                }
+                return
+            }
+
+            if err != nil {
+                t.Fatalf("unexpected error: %v", err)
+            }
+
+            if got.ID != tt.want.ID {
+                t.Errorf("got ID %s, want %s", got.ID, tt.want.ID)
+            }
+        })
+    }
+}
+```
+
+## Interface Design Guidelines
+
+```go
+// Good: Small, focused interfaces
+type Reader interface {
+    Read(ctx context.Context, key string) ([]byte, error)
+}
+
+type Writer interface {
+    Write(ctx context.Context, key string, value []byte) error
+}
+
+// Composition over large interfaces
+type Store interface {
+    Reader
+    Writer
+}
+
+// Avoid: Large monolithic interfaces
+type BadStore interface {
+    Read(key string) ([]byte, error)
+    Write(key string, value []byte) error
+    Delete(key string) error
+    List() ([]string, error)
+    Exists(key string) bool
+    // ... many more methods
+}
+```
 
 ## When to Use This Skill
 

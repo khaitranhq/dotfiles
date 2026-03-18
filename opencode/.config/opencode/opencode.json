@@ -31,7 +31,8 @@
       "git status *": "allow",
       "git diff *": "allow",
       "git show *": "allow",
-      "git branch*": "allow",
+      "git branch *": "allow",
+      "git rev-parse *": "allow",
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
@@ -58,12 +59,12 @@
     "aws-pricing*": false
   },
   "agent": {
-    "GitGenerator": {
+    "git-generator": {
       "mode": "primary",
       "model": "github-copilot/gpt-4.1",
       "prompt": "{file:agents/git-generator.md}"
     },
-    "RequirementsAgent": {
+    "requirements-agent": {
       "mode": "subagent",
       "prompt": "{file:agents/requirements-agent.md}",
       "permission": {
@@ -72,7 +73,7 @@
         "question": "allow"
       }
     },
-    "ArchitectAgent": {
+    "architect-agent": {
       "mode": "subagent",
       "prompt": "{file:agents/architect-agent.md}",
       "permission": {
@@ -84,7 +85,7 @@
         "aws-pricing*": true
       }
     },
-    "PlanningAgent": {
+    "planning-agent": {
       "mode": "subagent",
       "prompt": "{file:agents/planning-agent.md}",
       "permission": {
@@ -93,7 +94,7 @@
         "question": "allow"
       }
     },
-    "CoderAgent": {
+    "coder-agent": {
       "mode": "subagent",
       "prompt": "{file:agents/coder-agent.md}",
       "permission": {
@@ -102,7 +103,7 @@
         "question": "allow"
       }
     },
-    "CodeReviewAgent": {
+    "code-review-agent": {
       "mode": "subagent",
       "prompt": "{file:agents/code-review-agent.md}",
       "permission": {
@@ -111,14 +112,14 @@
         "question": "allow"
       }
     },
-    "ArchitectMasterAgent": {
+    "architect-master-agent": {
       "mode": "primary",
       "prompt": "{file:agents/architect-master-agent.md}",
       "permission": {
         "question": "allow"
       }
     },
-    "ImplementationMasterAgent": {
+    "implementation-master-agent": {
       "mode": "primary",
       "prompt": "{file:agents/implementation-master-agent.md}",
       "permission": {

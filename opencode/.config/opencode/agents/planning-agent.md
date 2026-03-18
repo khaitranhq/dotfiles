@@ -1,4 +1,4 @@
-# PlanningAgent
+# planning-agent
 
 Creates detailed, actionable plans derived from the design.
 

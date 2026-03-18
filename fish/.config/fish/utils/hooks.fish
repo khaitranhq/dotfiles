@@ -43,10 +43,10 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
 
      if test $CMD_DURATION -gt 5000
          set --local cmd_duration_seconds (math $CMD_DURATION / 1000)
-         set --local notification_message "Command: $argv[1]\nDuration: $cmd_duration_seconds seconds\nExit Status: $exit_status"
+         set --local sanitized_command (string replace -a "'" "" $argv[1])
 
-          if type -q powershell.exe
-              powershell.exe -NoProfile -Command "
+         if type -q powershell.exe
+             powershell.exe -NoProfile -Command "
                   [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
                   [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
 
@@ -65,7 +65,7 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
                   \$xml.LoadXml(\$toastXml)
 
                   # Set text content safely (auto-escapes special characters)
-                  \$xml.SelectSingleNode('//text[@id=\"2\"]').InnerText = 'Command: $argv[1]'
+                  \$xml.SelectSingleNode('//text[@id=\"2\"]').InnerText = 'Command: $sanitized_command'
                   \$xml.SelectSingleNode('//text[@id=\"3\"]').InnerText = 'Duration: ' + ($CMD_DURATION / 1000) + ' seconds | Exit: $exit_status'
 
                   \$toast = New-Object Windows.UI.Notifications.ToastNotification \$xml
@@ -73,7 +73,8 @@ function __postexec_notify_on_long_running_commands --on-event fish_postexec
                   \$notifier.Show(\$toast)
               "
          else if type -q notify-send
-             notify-send "Fish Shell Notification" $notification_message
+            set --local notification_message "Command: $sanitized_command\nDuration: $cmd_duration_seconds seconds\nExit Status: $exit_status"
+            notify-send "Fish Shell Notification" $notification_message
          end
      end
 end

@@ -1,4 +1,4 @@
-# ArchitectAgent
+# architect-agent
 
 Turns clarified requirements into a coherent, well-structured system design.
 

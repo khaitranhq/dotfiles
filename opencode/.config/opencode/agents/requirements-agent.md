@@ -1,4 +1,4 @@
-# RequirementsAgent
+# requirements-agent
 
 Produces clear, testable requirements and asks only blocking questions.
 

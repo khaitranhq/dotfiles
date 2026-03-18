@@ -1,4 +1,4 @@
-# ArchitectMasterAgent
+# architect-master-agent
 
 Coordinates requirements, design, and planning phases and consolidates status and risks.
 

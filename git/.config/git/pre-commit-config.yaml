@@ -1,4 +1,3 @@
----
 # Global Pre-commit Configuration
 # Applied to all repositories via core.hooksPath
 
@@ -6,7 +5,9 @@
 fail_fast: true
 
 # Default stages - run on commit and manual
-default_stages: [pre-commit, manual]
+default_stages:
+  - pre-commit
+  - manual
 
 repos:
   # =============================================================================
@@ -29,14 +30,16 @@ repos:
       # File hygiene
       - id: trailing-whitespace
         name: "🧹 Trim trailing whitespace"
-        args: [--markdown-linebreak-ext=md]
+        args:
+          - --markdown-linebreak-ext=md
 
       # Git-specific checks
       - id: check-merge-conflict
         name: "🔀 Check for merge conflict markers"
       - id: check-added-large-files
         name: "🚫 Block large files (>5MB)"
-        args: [--maxkb=5000]
+        args:
+          - --maxkb=5000
       - id: forbid-submodules
         name: "🚫 Forbid git submodules"
 
@@ -55,7 +58,8 @@ repos:
       # Yaml validation
       - id: check-yaml
         name: "✅ Validate YAML syntax"
-        args: [--allow-multiple-documents]
+        args:
+          - --allow-multiple-documents
         exclude: |
           (?x)^(
             .*\.sops\.ya?ml$|
@@ -73,4 +77,16 @@ repos:
       # Prevent commits to protected branches
       - id: no-commit-to-branch
         name: "🌳 Prevent commits to main/master"
-        args: [--branch, main, --branch, master]
+        args:
+          - --branch
+          - main
+          - --branch
+          - master
+
+  # =============================================================================
+  # 🧹 GENERAL FILE QUALITY - Zizmor Pre-commit
+  # =============================================================================
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.22.0
+    hooks:
+      - id: zizmor

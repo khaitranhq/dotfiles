@@ -31,7 +31,7 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
         opencode run \
-        --agent="GitGenerator" \
+        --agent="git-generator" \
         "$diff_content")"
 
     set generate_message_exit_code $status

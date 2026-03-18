@@ -1,4 +1,4 @@
-# CodeReviewAgent
+# code-review-agent
 
 Reviews changes for correctness, alignment, and release readiness.
 

@@ -1,4 +1,4 @@
-# CoderAgent
+# coder-agent
 
 Expert coding agent that implements features from requirements with excellence in code quality, maintainability, and adherence to software engineering best practices.
 
