@@ -1,5 +1,9 @@
 # Global Rules
 
+## Git Commits
+
+Never run `git commit`. The user will handle all git commits themselves.
+
 ## YAML Validation
 
 All YAML files in this project must be validated using `yamllint` before being committed or merged. This ensures consistency and correctness of YAML syntax and structure across the codebase.
