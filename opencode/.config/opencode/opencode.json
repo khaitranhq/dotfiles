@@ -14,6 +14,8 @@
       "go test *": "allow",
       "gofmt *": "allow",
       "go fmt *": "allow",
+      "goimports *": "allow",
+      "gofumpt *": "allow",
       "golangci-lint run *": "allow",
       "go mod *": "allow",
       "staticcheck *": "allow",
@@ -33,6 +35,7 @@
       "git show *": "allow",
       "git branch *": "allow",
       "git rev-parse *": "allow",
+      "git ls-tree *": "allow",
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
@@ -45,7 +48,9 @@
       "sort": "allow",
       "sort *": "allow",
       "yamllint *": "allow",
-      "d2 *": "allow"
+      "d2 *": "allow",
+      "actionlint *": "allow",
+      "zizmor *": "allow"
     },
     "external_directory": {
       "*": "ask",

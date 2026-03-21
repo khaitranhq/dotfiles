@@ -24,6 +24,17 @@ yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
 
+## Pre-Execution Analysis
+
+Before executing any task or prompt, agents must:
+
+1. **Analyze Requirements** - Carefully read and understand what the user is asking for
+2. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
+3. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.)
+4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
+
+This ensures that agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
+
 ## Summary of Work
 
 After completing any task, agents must provide a clear, readable summary of findings, results, solutions, and changes made. The summary should use:
