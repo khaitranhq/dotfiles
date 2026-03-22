@@ -44,7 +44,111 @@ This skill captures Pulumi best practices for composing stacks, managing secrets
 - Store secrets via `pulumi.Config::requireSecret` or the language-specific secret helpers; never log or export them.
 - When passing secrets between stacks, export as `pulumi.Output.secret` and unwrap only where absolutely necessary.
 
-### 4. Type Safety and Post-Deployment Checks
+### 4. Structured Configuration
+
+- Use **Structured Configuration** for complex, nested configuration hierarchies instead of flat key-value pairs.
+- Define configuration objects as strongly-typed structs (e.g., `type DatabaseConfig struct { Host string; Port int; ... }`).
+- Leverage `pulumi.Config::getObject` or language-specific equivalents to unmarshal structured config into typed objects.
+- Validate configuration early in stack initialization; fail fast with clear error messages if required fields are missing or invalid.
+- Document the config schema clearly so users understand the expected structure and can generate config files with `pulumi config` commands.
+- Use structured config to group related settings (e.g., all database settings in one object, all network settings in another) for clarity and maintainability.
+
+#### Example: YAML Configuration
+
+In `Pulumi.yaml`:
+
+```yaml
+name: my-stack
+runtime: go
+description: A sample infrastructure stack
+
+config:
+  database:
+    host: localhost
+    port: 5432
+    username: admin
+    password:
+      secure: AAABAxxxx...  # Pulumi will encrypt this
+  networking:
+    vpcCidr: 10.0.0.0/16
+    subnetCount: 3
+    enableNatGateway: true
+```
+
+#### Example: Go Code for Loading
+
+Define strongly-typed configuration structs:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+)
+
+// DatabaseConfig represents database configuration
+type DatabaseConfig struct {
+	Host     string `pulumi:"host"`
+	Port     int    `pulumi:"port"`
+	Username string `pulumi:"username"`
+	Password string `pulumi:"password"`
+}
+
+// NetworkingConfig represents networking configuration
+type NetworkingConfig struct {
+	VpcCidr           string `pulumi:"vpcCidr"`
+	SubnetCount       int    `pulumi:"subnetCount"`
+	EnableNatGateway  bool   `pulumi:"enableNatGateway"`
+}
+
+// StackConfig holds all configuration for the stack
+type StackConfig struct {
+	Database  DatabaseConfig  `pulumi:"database"`
+	Networking NetworkingConfig `pulumi:"networking"`
+}
+
+func main() {
+	pulumi.Run(func(ctx *pulumi.Context) error {
+		cfg := config.New(ctx, "")
+
+		// Load structured configuration
+		var stackConfig StackConfig
+		if err := cfg.GetObject("", &stackConfig); err != nil {
+			return fmt.Errorf("failed to load stack config: %w", err)
+		}
+
+		// Validate required fields
+		if stackConfig.Database.Host == "" {
+			return fmt.Errorf("database.host is required")
+		}
+		if stackConfig.Database.Port <= 0 {
+			return fmt.Errorf("database.port must be greater than 0")
+		}
+		if stackConfig.Networking.SubnetCount <= 0 {
+			return fmt.Errorf("networking.subnetCount must be greater than 0")
+		}
+
+		// Use configuration in your stack
+		ctx.Log.Info(fmt.Sprintf("Configuring database: %s:%d",
+			stackConfig.Database.Host, stackConfig.Database.Port), nil)
+		ctx.Log.Info(fmt.Sprintf("VPC CIDR: %s", stackConfig.Networking.VpcCidr), nil)
+
+		// Continue with resource creation...
+		return nil
+	})
+}
+```
+
+Key patterns in this example:
+- Define nested structs matching your configuration hierarchy
+- Use `pulumi` struct tags to map YAML keys to struct fields
+- Call `cfg.GetObject("", &stackConfig)` to unmarshal entire config
+- Validate all required fields immediately after loading
+- Return descriptive errors when validation fails
+
+### 5. Type Safety and Post-Deployment Checks
 
 - Use strongly typed inputs/outputs for components (e.g., `type NetworkArgs struct { ... }`).
 - Validate expected values in previews with `pulumi.RunFunc` tests or CLI assertions before deployment.

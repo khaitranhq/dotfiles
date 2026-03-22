@@ -67,7 +67,7 @@ Load the focused reference based on what the user needs:
 
 ### Enforce Validation
 
-Always run validation commands before finalizing output so syntax is guaranteed; the steps in `references/command-usage.md` describe this workflow in detail
+Always run following validation commands before finalizing output so syntax is guaranteed:
 
 - `d2 validate <diagram>.d2` .
 - `d2 fmt <diagram>.d2` to ensure consistent formatting before sharing or rendering.

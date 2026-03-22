@@ -9,6 +9,11 @@ return {
 						color = "#384d54",
 						name = "Gitignore",
 					},
+					hcl = {
+						icon = "",
+						color = "#384d54",
+						name = "HCL",
+					},
 				},
 			})
 		end,
