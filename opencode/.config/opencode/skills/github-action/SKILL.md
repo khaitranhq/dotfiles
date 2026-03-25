@@ -44,23 +44,26 @@ echo "::error file=app.js,line=1,col=5,endColumn=7,title=YOUR-TITLE::Missing sem
 Pin all GitHub Actions to specific commit SHAs to prevent supply-chain attacks. Always include the version tag as a comment for reference.
 
 **Good — Pin to commit SHA:**
+
 ```yaml
 uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 ```
 
 **Bad — Do not use floating tags:**
+
 ```yaml
 uses: actions/checkout@v4
 uses: actions/checkout@main
 ```
 
 To find the commit SHA for a specific tag:
-```bash
-# Get the commit SHA for a specific tag
-curl -s https://api.github.com/repos/{owner}/{repo}/git/ref/tags/{tag_name} | yq '.object.sha'
 
-# Get the latest release information
+```bash
+# Step 1. Get the latest release information
 curl -s https://api.github.com/repos/{owner}/{repo}/releases/latest | yq '.tag_name'
+
+# Step 2. Get the commit SHA for a specific tag
+curl -s https://api.github.com/repos/{owner}/{repo}/git/ref/tags/{tag_name} | yq '.object.sha'
 ```
 
 ### Least-Privilege Permissions
@@ -72,7 +75,7 @@ jobs:
   build:
     permissions:
       contents: read
-      id-token: write  # only if using OIDC for cloud auth
+      id-token: write # only if using OIDC for cloud auth
 ```
 
 ### OIDC for Cloud Authentication
@@ -84,11 +87,13 @@ Use OpenID Connect (OIDC) for cloud provider authentication instead of long-live
 Never use user-controlled values directly in shell commands. Always assign to environment variables first so they're treated as data, not code.
 
 **Bad — Vulnerable to injection:**
+
 ```yaml
 - run: echo "${{ github.event.pull_request.title }}"
 ```
 
 **Good — Safe approach:**
+
 ```yaml
 - env:
     PR_TITLE: ${{ github.event.pull_request.title }}
