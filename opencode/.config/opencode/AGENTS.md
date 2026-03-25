@@ -4,6 +4,16 @@
 
 Never run `git commit`. The user will handle all git commits themselves.
 
+## YAML and JSON Processing
+
+When processing YAML and JSON files, use the following tools in order of preference:
+
+1. **yq** - Preferred tool for both YAML and JSON processing (provides native parsing and manipulation for both formats)
+2. **jq** - Fallback if yq is not available (for JSON files only)
+3. **sed** - Last resort for simple text-based replacements when yq and jq are unavailable
+
+This ensures proper YAML and JSON structure preservation and minimizes errors from text-based processing.
+
 ## YAML Validation
 
 All YAML files in this project must be validated using `yamllint` before being committed or merged. This ensures consistency and correctness of YAML syntax and structure across the codebase.
