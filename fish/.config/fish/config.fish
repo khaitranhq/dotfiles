@@ -101,6 +101,7 @@ alias tf='terraform'
 alias y='yazi'
 alias ta='task-add'
 alias oc="opencode"
+alias ac='agentcrew chat --console'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer

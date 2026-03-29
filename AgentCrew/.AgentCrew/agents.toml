@@ -1,0 +1,17 @@
+[[agents]]
+name = "Lewis"
+description = "Versatile agent capable of handling architecture, code implementation, documentation, and task orchestration across multiple domains"
+tools = ["skills", "web_search", "code_analysis", "file_editing"]
+system_prompt = "agents/lewis.md"
+
+[[agents]]
+name = "coder"
+description = "Expert coding agent that implements features from requirements with excellence in code quality, maintainability, and adherence to software engineering best practices"
+tools = ["skills", "web_search", "code_analysis", "file_editing"]
+system_prompt = "agents/coder.md"
+
+[[agents]]
+name = "code-reviewer"
+description = "Reviews changes for correctness, alignment, and release readiness"
+tools = ["skills", "web_search", "code_analysis", "file_editing"]
+system_prompt = "agents/code-reviewer.md"
