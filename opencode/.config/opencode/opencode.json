@@ -145,6 +145,10 @@
       "headers": {
         "Authorization": "Bearer {env:GITHUB_MCP_TOKEN}"
       }
+    },
+    "eraser": {
+      "type": "local",
+      "command": ["npx", "@eraserlabs/eraser-mcp"]
     }
   }
 }
