@@ -52,7 +52,11 @@
       "yamllint *": "allow",
       "d2 *": "allow",
       "actionlint *": "allow",
-      "zizmor *": "allow"
+      "zizmor *": "allow",
+      "eslint *": "allow",
+      "npx eslint *": "allow",
+      "prettier *": "allow",
+      "npx tsc *": "allow"
     },
     "external_directory": {
       "*": "ask",
@@ -71,18 +75,18 @@
       "model": "github-copilot/gpt-4.1",
       "prompt": "{file:agents/git-generator.md}"
     },
-    "requirements-agent": {
+    "requirements-analyzer": {
       "mode": "subagent",
-      "prompt": "{file:agents/requirements-agent.md}",
+      "prompt": "{file:agents/requirements-analyzer.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
       }
     },
-    "architect-agent": {
+    "architect": {
       "mode": "subagent",
-      "prompt": "{file:agents/architect-agent.md}",
+      "prompt": "{file:agents/architect.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
@@ -92,43 +96,43 @@
         "aws-pricing*": true
       }
     },
-    "planning-agent": {
+    "planner": {
       "mode": "subagent",
-      "prompt": "{file:agents/planning-agent.md}",
+      "prompt": "{file:agents/planner.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
       }
     },
-    "coder-agent": {
+    "coder": {
       "mode": "subagent",
-      "prompt": "{file:agents/coder-agent.md}",
+      "prompt": "{file:agents/coder.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
       }
     },
-    "code-review-agent": {
+    "code-reviewer": {
       "mode": "subagent",
-      "prompt": "{file:agents/code-review-agent.md}",
+      "prompt": "{file:agents/code-reviewer.md}",
       "permission": {
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
       }
     },
-    "architect-master-agent": {
+    "architect-orchestrator": {
       "mode": "primary",
-      "prompt": "{file:agents/architect-master-agent.md}",
+      "prompt": "{file:agents/architect-orchestrator.md}",
       "permission": {
         "question": "allow"
       }
     },
-    "implementation-master-agent": {
+    "development-coordinator": {
       "mode": "primary",
-      "prompt": "{file:agents/implementation-master-agent.md}",
+      "prompt": "{file:agents/development-coordinator.md}",
       "permission": {
         "question": "allow"
       }
