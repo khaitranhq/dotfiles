@@ -78,8 +78,3 @@ repos:
     rev: "d3b285c53314308629174f2e156cb93325478d75"
     hooks:
       - id: semgrep-ci
-
-  - repo: https://github.com/semgrep/pre-commit
-    rev: "d3b285c53314308629174f2e156cb93325478d75"
-    hooks:
-      - id: semgrep
