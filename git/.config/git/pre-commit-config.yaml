@@ -83,6 +83,16 @@ repos:
           - --branch
           - master
 
+  - repo: https://github.com/semgrep/pre-commit
+    rev: "v1.157.0"
+    hooks:
+      - id: semgrep-ci
+
+  - repo: https://github.com/semgrep/pre-commit
+    rev: "v1.157.0"
+    hooks:
+      - id: semgrep
+
   # =============================================================================
   # 🧹 GENERAL FILE QUALITY - Zizmor Pre-commit
   # =============================================================================
