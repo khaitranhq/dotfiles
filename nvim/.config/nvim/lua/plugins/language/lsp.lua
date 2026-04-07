@@ -1,222 +1,222 @@
 return {
-	{
-		"neovim/nvim-lspconfig",
-		event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
-		dependencies = {
-			{ "saghen/blink.cmp" },
-		},
-		opts = {
-			servers = {
-				lua_ls = {
-					settings = {
-						Lua = {
-							diagnostics = {
-								globals = { "vim", "Linemode" },
-							},
-							hint = {
-								enable = true, -- necessary
-							},
-						},
-					},
-				},
-				pyright = {
-					settings = {
-						pyright = {
-							-- Using Ruff's import organizer
-							disableOrganizeImports = true,
-						},
-						python = {
-							analysis = {
-								-- Ignore all files for analysis to exclusively use Ruff for linting
-								ignore = { "*" },
-								autoSearchPaths = false,
-								useLibraryCodeForTypes = false,
-								typeCheckingMode = "off", -- Since you're using Ruff
-							},
-						},
-					},
-					handlers = {
-						-- Override the default rename handler to remove the `annotationId` from edits.
-						--
-						-- Pyright is being non-compliant here by returning `annotationId` in the edits, but not
-						-- populating the `changeAnnotations` field in the `WorkspaceEdit`. This causes Neovim to
-						-- throw an error when applying the workspace edit.
-						--
-						-- See:
-						-- - https://github.com/neovim/neovim/issues/34731
-						-- - https://github.com/microsoft/pyright/issues/10671
-						[vim.lsp.protocol.Methods.textDocument_rename] = function(err, result, ctx)
-							if err then
-								vim.notify("Pyright rename failed: " .. err.message, vim.log.levels.ERROR)
-								return
-							end
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" }, -- Lazy load LSP
+    dependencies = {
+      { "saghen/blink.cmp" },
+    },
+    opts = {
+      servers = {
+        lua_ls = {
+          settings = {
+            Lua = {
+              diagnostics = {
+                globals = { "vim", "Linemode" },
+              },
+              hint = {
+                enable = true, -- necessary
+              },
+            },
+          },
+        },
+        pyright = {
+          settings = {
+            pyright = {
+              -- Using Ruff's import organizer
+              disableOrganizeImports = true,
+            },
+            python = {
+              analysis = {
+                -- Ignore all files for analysis to exclusively use Ruff for linting
+                ignore = { "*" },
+                autoSearchPaths = false,
+                useLibraryCodeForTypes = false,
+                typeCheckingMode = "off", -- Since you're using Ruff
+              },
+            },
+          },
+          handlers = {
+            -- Override the default rename handler to remove the `annotationId` from edits.
+            --
+            -- Pyright is being non-compliant here by returning `annotationId` in the edits, but not
+            -- populating the `changeAnnotations` field in the `WorkspaceEdit`. This causes Neovim to
+            -- throw an error when applying the workspace edit.
+            --
+            -- See:
+            -- - https://github.com/neovim/neovim/issues/34731
+            -- - https://github.com/microsoft/pyright/issues/10671
+            [vim.lsp.protocol.Methods.textDocument_rename] = function(err, result, ctx)
+              if err then
+                vim.notify("Pyright rename failed: " .. err.message, vim.log.levels.ERROR)
+                return
+              end
 
-							---@cast result lsp.WorkspaceEdit
-							for _, change in ipairs(result.documentChanges or {}) do
-								for _, edit in ipairs(change.edits or {}) do
-									if edit.annotationId then
-										edit.annotationId = nil
-									end
-								end
-							end
+              ---@cast result lsp.WorkspaceEdit
+              for _, change in ipairs(result.documentChanges or {}) do
+                for _, edit in ipairs(change.edits or {}) do
+                  if edit.annotationId then
+                    edit.annotationId = nil
+                  end
+                end
+              end
 
-							local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
-							vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
-						end,
-					},
-				},
-				ts_ls = {
-					init_options = {
-						preferences = {
-							disableSuggestions = true,
-						},
-					},
-					settings = {
-						typescript = {
-							inlayHints = {
-								includeInlayParameterNameHints = "literals",
-								includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = false,
-								includeInlayVariableTypeHints = false,
-								includeInlayPropertyDeclarationTypeHints = false,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
-							},
-						},
-						javascript = {
-							inlayHints = {
-								includeInlayParameterNameHints = "literals",
-								includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = false,
-								includeInlayVariableTypeHints = false,
-								includeInlayPropertyDeclarationTypeHints = false,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
-							},
-						},
-					},
-					on_attach = function(client, _)
-						-- disable tsserver formatting so null-ls / Prettier is used instead
-						client.server_capabilities.documentFormattingProvider = false
-						client.server_capabilities.documentRangeFormattingProvider = false
-					end,
-				},
-				gopls = {
-					settings = {
-						gopls = {
-							completeUnimported = true,
-							staticcheck = true,
-							analyses = {
-								ST1000 = false,
-								ST1005 = false,
-								QF1003 = true,
-								QF1007 = true,
-								ST1003 = true,
-								unusedparams = true,
-								unusedfuncs = true,
-								unreachable = true,
-								useany = true,
-							},
-							hints = {
-								assignVariableTypes = true,
-								compositeLiteralFields = true,
-								compositeLiteralTypes = true,
-								constantValues = true,
-								functionTypeParameters = true,
-								parameterNames = true,
-								rangeVariableTypes = true,
-							},
-							codelenses = {
-								gc_details = false,
-								generate = false,
-								regenerate_cgo = false,
-								test = false,
-								tidy = false,
-								upgrade_dependency = false,
-								vendor = false,
-							},
-						},
-					},
-				},
-				clangd = {},
-				bashls = {},
-				csharp_ls = {},
-				jsonls = {},
-				ty = {},
-				terraformls = {
-					filetypes = { "tf", "tfvars", "terraform", "terragrunt" },
-				},
-				docker_language_server = {},
-				docker_compose_language_service = {},
-				marksman = {},
-				powershell_es = {
-					bundle_path = "/home/khaitran/.local/share/powershell-es",
-					shell = "pwsh",
-				},
-			},
-		},
-		config = function(_, opts)
-			-- Configure each LSP server using the new vim.lsp.config API
-			for server, config in pairs(opts.servers) do
-				vim.lsp.config(server, config)
-			end
+              local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
+              vim.lsp.util.apply_workspace_edit(result, client.offset_encoding)
+            end,
+          },
+        },
+        ts_ls = {
+          init_options = {
+            preferences = {
+              disableSuggestions = true,
+            },
+          },
+          settings = {
+            typescript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "literals",
+                includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = false,
+                includeInlayVariableTypeHints = false,
+                includeInlayPropertyDeclarationTypeHints = false,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+              },
+            },
+            javascript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "literals",
+                includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+                includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+                includeInlayFunctionParameterTypeHints = false,
+                includeInlayVariableTypeHints = false,
+                includeInlayPropertyDeclarationTypeHints = false,
+                includeInlayFunctionLikeReturnTypeHints = true,
+                includeInlayEnumMemberValueHints = true,
+              },
+            },
+          },
+          on_attach = function(client, _)
+            -- disable tsserver formatting so null-ls / Prettier is used instead
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+          end,
+        },
+        gopls = {
+          settings = {
+            gopls = {
+              completeUnimported = true,
+              staticcheck = true,
+              analyses = {
+                ST1000 = false,
+                ST1005 = false,
+                QF1003 = true,
+                QF1007 = true,
+                ST1003 = true,
+                unusedparams = true,
+                unusedfuncs = true,
+                unreachable = true,
+                useany = true,
+              },
+              hints = {
+                assignVariableTypes = true,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = true,
+                constantValues = true,
+                functionTypeParameters = true,
+                parameterNames = true,
+                rangeVariableTypes = true,
+              },
+              codelenses = {
+                gc_details = false,
+                generate = false,
+                regenerate_cgo = false,
+                test = false,
+                tidy = false,
+                upgrade_dependency = false,
+                vendor = false,
+              },
+            },
+          },
+        },
+        clangd = {},
+        bashls = {},
+        csharp_ls = {},
+        jsonls = {},
+        ty = {},
+        terraformls = {
+          filetypes = { "tf", "tfvars", "terraform", "terragrunt" },
+        },
+        docker_language_server = {},
+        docker_compose_language_service = {},
+        marksman = {},
+        powershell_es = {
+          bundle_path = "/home/khaitran/.local/share/powershell-es",
+          shell = "pwsh",
+        },
+      },
+    },
+    config = function(_, opts)
+      -- Configure each LSP server using the new vim.lsp.config API
+      for server, config in pairs(opts.servers) do
+        vim.lsp.config(server, config)
+      end
 
-			-- Enable all configured LSP servers using the new vim.lsp.enable API
-			local servers = vim.tbl_keys(opts.servers)
-			vim.lsp.enable(servers)
+      -- Enable all configured LSP servers using the new vim.lsp.enable API
+      local servers = vim.tbl_keys(opts.servers)
+      vim.lsp.enable(servers)
 
-			vim.defer_fn(function()
-				vim.lsp.inlay_hint.enable()
-			end, 100)
-		end,
-	},
-	{
-		"saghen/blink.cmp",
-		event = "InsertEnter",
-		version = "*",
-		opts = {
-			keymap = {
-				preset = "default",
-			},
-			completion = {
-				documentation = { auto_show = true, auto_show_delay_ms = 500 },
-			},
+      vim.defer_fn(function()
+        vim.lsp.inlay_hint.enable()
+      end, 100)
+    end,
+  },
+  {
+    "saghen/blink.cmp",
+    event = "InsertEnter",
+    version = "*",
+    opts = {
+      keymap = {
+        preset = "default",
+      },
+      completion = {
+        documentation = { auto_show = true, auto_show_delay_ms = 500 },
+      },
 
-			appearance = {
-				nerd_font_variant = "normal",
-			},
+      appearance = {
+        nerd_font_variant = "normal",
+      },
 
-			sources = {
-				default = { "lazydev", "lsp", "path", "buffer" },
-				providers = {
-					buffer = {
-						max_items = 4, -- Limit buffer completion items
-						min_keyword_length = 3, -- Require 3 chars before buffer completion
-					},
-					lazydev = {
-						name = "LazyDev",
-						module = "lazydev.integrations.blink",
-						score_offset = 100,
-					},
-				},
-			},
-			fuzzy = { implementation = "prefer_rust" },
-		},
-		opts_extend = { "sources.default" },
-		dependencies = {
-			{
-				"folke/lazydev.nvim",
-				ft = "lua", -- only load on lua files
-				opts = {
-					library = {
-						{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
-						{ path = "snacks.nvim", words = { "Snacks" } },
-						{ path = "lazy.nvim", words = { "LazyVim" } },
-					},
-				},
-			},
-		},
-	},
+      sources = {
+        default = { "lazydev", "lsp", "path", "buffer" },
+        providers = {
+          buffer = {
+            max_items = 4,    -- Limit buffer completion items
+            min_keyword_length = 3, -- Require 3 chars before buffer completion
+          },
+          lazydev = {
+            name = "LazyDev",
+            module = "lazydev.integrations.blink",
+            score_offset = 100,
+          },
+        },
+      },
+      fuzzy = { implementation = "prefer_rust" },
+    },
+    opts_extend = { "sources.default" },
+    dependencies = {
+      {
+        "folke/lazydev.nvim",
+        ft = "lua", -- only load on lua files
+        opts = {
+          library = {
+            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+            { path = "snacks.nvim",        words = { "Snacks" } },
+            { path = "lazy.nvim",          words = { "LazyVim" } },
+          },
+        },
+      },
+    },
+  },
 }
