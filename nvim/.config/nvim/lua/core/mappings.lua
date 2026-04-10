@@ -280,6 +280,12 @@ M.git = {
 			end,
 			"Next hunk",
 		},
+		["<leader>gb"] = {
+			function()
+				gitsigns.blame_line({ full = true })
+			end,
+			"Blame line",
+		},
 	},
 }
 

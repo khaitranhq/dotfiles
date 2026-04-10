@@ -153,6 +153,10 @@
     "eraser": {
       "type": "local",
       "command": ["npx", "@eraserlabs/eraser-mcp"]
+    },
+    "jira": {
+      "type": "remote",
+      "url": "https://mcp.atlassian.com/v1/mcp"
     }
   }
 }
