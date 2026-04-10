@@ -119,6 +119,9 @@ plugins {
     session-manager location="zellij:session-manager"
     strider location="zellij:strider"
     tab-bar location="zellij:tab-bar"
+    welcome-screen location="zellij:session-manager" {
+        welcome_screen true
+    }
 }
 
 load_plugins {}
@@ -128,6 +131,6 @@ web_client {
 }
 pane_frames false
 theme "tokyo-night"
-default_layout "_custom"
+default_layout "welcome"
 layout_dir "/home/khaitran/.config/zellij/layouts"
 show_startup_tips false
