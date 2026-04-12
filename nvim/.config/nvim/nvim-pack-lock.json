@@ -4,6 +4,10 @@
       "rev": "456d38d1cd3743926f329204c2340f3e7840aad6",
       "src": "https://github.com/saghen/blink.cmp"
     },
+    "copilot.vim": {
+      "rev": "a12fd5672110c8aa7e3c8419e28c96943ca179be",
+      "src": "https://github.com/github/copilot.vim"
+    },
     "gitsigns.nvim": {
       "rev": "8d82c240f190fc33723d48c308ccc1ed8baad69d",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
@@ -12,6 +16,10 @@
       "rev": "b960d5038c5c505c52e56a54490f9bbb1f0e6ef6",
       "src": "https://codeberg.org/andyg/leap.nvim"
     },
+    "lualine.nvim": {
+      "rev": "a905eeebc4e63fdc48b5135d3bf8aea5618fb21c",
+      "src": "https://github.com/nvim-lualine/lualine.nvim"
+    },
     "none-ls-extras.nvim": {
       "rev": "14fa31ce8c0268a3b2c9cc14979ecf771982d433",
       "src": "https://github.com/nvimtools/none-ls-extras.nvim"
@@ -19,6 +27,10 @@
     "none-ls.nvim": {
       "rev": "899e93f9f10251d7220b188eba1b837c0ba27927",
       "src": "https://github.com/nvimtools/none-ls.nvim"
+    },
+    "nvim-autopairs": {
+      "rev": "59bce2eef357189c3305e25bc6dd2d138c1683f5",
+      "src": "https://github.com/windwp/nvim-autopairs"
     },
     "nvim-lspconfig": {
       "rev": "cb5bc0b2b35a6d513e3298d285db81453e791f4f",

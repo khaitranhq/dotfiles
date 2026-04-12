@@ -17,6 +17,9 @@ M.setup = function()
 		"https://github.com/saghen/blink.cmp",
 		"https://github.com/tpope/vim-repeat",
 		"https://codeberg.org/andyg/leap.nvim",
+		"https://github.com/github/copilot.vim",
+		"https://github.com/windwp/nvim-autopairs",
+		"https://github.com/nvim-lualine/lualine.nvim",
 	})
 
 	-- Load all setup() functions from plugins/configs folder

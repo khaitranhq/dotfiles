@@ -11,6 +11,8 @@ local lsp_config = {
 			},
 		},
 	},
+	docker_language_server = {},
+	bashls = {},
 }
 
 local blink_config = {
@@ -53,6 +55,8 @@ M.setup = function()
 	-- Enable all configured LSP servers using the new vim.lsp.enable API
 	local servers = vim.tbl_keys(lsp_config)
 	vim.lsp.enable(servers)
+
+	vim.api.nvim_buf_set_option(0, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
 	vim.defer_fn(function()
 		vim.lsp.inlay_hint.enable()

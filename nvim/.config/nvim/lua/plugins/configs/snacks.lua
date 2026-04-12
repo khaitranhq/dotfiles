@@ -11,6 +11,7 @@ M.setup = function()
 		},
 		indent = {},
 		input = {},
+		explorer = {},
 		lazygit = {},
 		notifier = {},
 		statuscolumn = {
