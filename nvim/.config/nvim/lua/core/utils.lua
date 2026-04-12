@@ -1,27 +1,4 @@
 local M = {}
-local merge_tb = vim.tbl_deep_extend
-
-M.load_mappings = function()
-	vim.schedule(function()
-		local mappings = require("core.mappings")
-
-		for _, sect in pairs(mappings) do
-			for mode, mode_values in pairs(sect) do
-				local default_opts = merge_tb("force", { mode = mode }, {})
-				for keybind, mapping_info in pairs(mode_values) do
-					-- merge default + user opts
-					local opts = merge_tb("force", default_opts, mapping_info.opts or {})
-
-					mapping_info.opts, opts.mode = nil, nil
-					opts.desc = mapping_info[2]
-
-					vim.keymap.set(mode, keybind, mapping_info[1], opts)
-				end
-			end
-		end
-	end)
-end
-
 --- Prompt user to copy current buffer's absolute or relative path to clipboard.
 --- Uses vim.ui.select for UI, copies result to system clipboard.
 --- - Absolute: Full path to file.
@@ -228,7 +205,7 @@ function M.select_buffer()
 	end
 
 	-- Create window with Snacks.win
-	local win = Snacks.win({
+	require("snacks").win({
 		title = "Select Buffer",
 		width = 0.3,
 		height = 0.4,
