@@ -19,6 +19,8 @@ set -euo pipefail
 # BUILD_PATH is optional - defaults to '.' (root) if not specified
 declare -A PARSER_CONFIG=(
   [go]="https://github.com/tree-sitter/tree-sitter-go.git|1547678a9da59885853f5f5cc8a99cc203fa2e2c|."
+  [gosum]="https://github.com/tree-sitter-grammars/tree-sitter-go-sum.git|afd6da80a9509c2edbc0f3ea540564d100babd67|."
+  [gomod]="https://github.com/camdencheek/tree-sitter-go-mod.git|df9221c297dbcff1558225e0aff6661db8d1dedd|."
   [bash]="https://github.com/tree-sitter/tree-sitter-bash.git|5d8a33249511ed8bcf6cf135b7b2a815c7a02d9b|."
   [typescript]="https://github.com/tree-sitter/tree-sitter-typescript.git|75b3874edb2dc714fb1fd77a32013d0f8699989f|typescript"
 )

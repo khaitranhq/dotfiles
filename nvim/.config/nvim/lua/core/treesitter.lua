@@ -1,5 +1,7 @@
 local parser_filetype_map = {
 	["go"] = { "go" },
+	["gomod"] = { "gomod" },
+	["gosum"] = { "gosum" },
 }
 
 local M = {}
