@@ -8,6 +8,7 @@ M.setup = function()
 
 	function custom_fname:init(options)
 		custom_fname.super.init(self, options)
+		self.options.path = 1 -- Show relative path from cwd
 		self.status_colors = {
 			saved = highlight.create_component_highlight_group(
 				{ bg = default_status_colors.saved, fg = fg },
