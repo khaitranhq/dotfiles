@@ -120,32 +120,29 @@ keymaps.git = {
 keymaps.lsp = {
 	n = {
 		-- Diagnostics navigation
-		["<leader>dp"] = {
+		["gep"] = {
 			function()
 				vim.diagnostic.jump({ count = -1, float = true })
 			end,
 			"Previous diagnostic",
 		},
-		["<leader>dn"] = {
+		["gen"] = {
 			function()
 				vim.diagnostic.jump({ count = 1, float = true })
 			end,
 			"Next diagnostic",
 		},
-		["<leader>de"] = {
+		["gef"] = {
 			function()
 				vim.diagnostic.open_float()
 			end,
 			"Show diagnostics in floating window",
 		},
-
-		-- LSP actions
-		["<leader>ds"] = {
+		["gd"] = {
 			function()
-				vim.lsp.buf.format({ async = false })
-				vim.cmd("write")
+				vim.lsp.buf.definition()
 			end,
-			"Format and save buffer",
+			"Go to definition",
 		},
 	},
 	i = {
