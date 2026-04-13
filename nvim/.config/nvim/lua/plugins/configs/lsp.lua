@@ -13,6 +13,43 @@ local lsp_config = {
 	},
 	docker_language_server = {},
 	bashls = {},
+	gopls = {
+		settings = {
+			gopls = {
+				completeUnimported = true,
+				staticcheck = true,
+				analyses = {
+					ST1000 = false,
+					ST1005 = false,
+					QF1003 = true,
+					QF1007 = true,
+					ST1003 = true,
+					unusedparams = true,
+					unusedfuncs = true,
+					unreachable = true,
+					useany = true,
+				},
+				hints = {
+					assignVariableTypes = true,
+					compositeLiteralFields = true,
+					compositeLiteralTypes = true,
+					constantValues = true,
+					functionTypeParameters = true,
+					parameterNames = true,
+					rangeVariableTypes = true,
+				},
+				codelenses = {
+					gc_details = false,
+					generate = false,
+					regenerate_cgo = false,
+					test = false,
+					tidy = false,
+					upgrade_dependency = false,
+					vendor = false,
+				},
+			},
+		},
+	},
 }
 
 local blink_config = {
