@@ -87,6 +87,8 @@ M.setup = function()
 	}
 
 	require("snacks").setup(opts)
+
+	vim.api.nvim_create_user_command("Trouble", ":lua Snacks.picker.diagnostics()", {})
 end
 
 return M

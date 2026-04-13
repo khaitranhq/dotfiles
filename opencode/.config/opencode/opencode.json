@@ -66,7 +66,10 @@
     }
   },
   "tools": {
-    "aws-pricing*": false
+    "clickup*": false,
+    "github*": false,
+    "eraser*": false,
+    "jira*": false
   },
   "agent": {
     "git-generator": {
@@ -102,6 +105,10 @@
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
+      },
+      "tools": {
+        "jira*": true,
+        "clickup*": true
       }
     },
     "coder": {
@@ -156,6 +163,10 @@
     "jira": {
       "type": "remote",
       "url": "https://mcp.atlassian.com/v1/mcp"
+    },
+    "clickup": {
+      "type": "remote",
+      "url": "https://mcp.clickup.com/mcp"
     }
   }
 }
