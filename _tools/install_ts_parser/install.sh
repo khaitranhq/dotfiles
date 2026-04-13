@@ -23,6 +23,7 @@ declare -A PARSER_CONFIG=(
   [gomod]="https://github.com/camdencheek/tree-sitter-go-mod.git|df9221c297dbcff1558225e0aff6661db8d1dedd|."
   [bash]="https://github.com/tree-sitter/tree-sitter-bash.git|5d8a33249511ed8bcf6cf135b7b2a815c7a02d9b|."
   [typescript]="https://github.com/tree-sitter/tree-sitter-typescript.git|75b3874edb2dc714fb1fd77a32013d0f8699989f|typescript"
+  [yaml]="https://github.com/tree-sitter-grammars/tree-sitter-yaml.git|4463985dfccc640f3d6991e3396a2047610cf5f8|."
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

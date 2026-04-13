@@ -32,6 +32,10 @@
       "rev": "59bce2eef357189c3305e25bc6dd2d138c1683f5",
       "src": "https://github.com/windwp/nvim-autopairs"
     },
+    "nvim-early-retirement": {
+      "rev": "3b05315a61c8f01bb893249f9e044fc359122c9d",
+      "src": "https://github.com/chrisgrieser/nvim-early-retirement.git"
+    },
     "nvim-lspconfig": {
       "rev": "cb5bc0b2b35a6d513e3298d285db81453e791f4f",
       "src": "https://github.com/neovim/nvim-lspconfig"
