@@ -7,6 +7,7 @@ set -euo pipefail
 #   $1 - Git repository URL (parser repo)
 #   $2 - Revision (commit hash, tag, or branch)
 #   $3 - Output path for .so file (directory + filename)
+#   $4 - Build path within repository (optional, e.g., 'tsx', 'typescript')
 #
 # Security measures:
 #   - Strict bash settings (set -euo pipefail)
@@ -28,14 +29,15 @@ chmod 700 "$TEMP_BUILD_DIR"
 # ARGUMENT VALIDATION
 # ============================================================================
 
-if [[ $# -ne 3 ]]; then
-	echo "Usage: $0 <git_repo_url> <revision> <output_path>" >&2
+if [[ $# -lt 3 ]] || [[ $# -gt 4 ]]; then
+	echo "Usage: $0 <git_repo_url> <revision> <output_path> [build_path]" >&2
 	exit 1
 fi
 
 GIT_REPO="$1"
 REVISION="$2"
 OUTPUT_PATH="$3"
+BUILD_PATH="${4:-.}" # Default to current directory if not specified
 
 # Validate git repository URL
 # Allow https://, http://, git://, ssh://, and local paths
@@ -48,6 +50,12 @@ fi
 # Validate revision (alphanumeric, hyphens, dots, underscores, slashes for refs)
 if ! [[ "$REVISION" =~ ^[a-zA-Z0-9._/\-]+$ ]]; then
 	echo "Error: Invalid revision format. Only alphanumeric, dots, hyphens, underscores, and slashes allowed" >&2
+	exit 1
+fi
+
+# Validate build path (alphanumeric, hyphens, underscores, slashes, dots)
+if ! [[ "$BUILD_PATH" =~ ^[a-zA-Z0-9._/\-]+$ ]] && [[ "$BUILD_PATH" != "." ]]; then
+	echo "Error: Invalid build path format. Only alphanumeric, dots, hyphens, underscores, and slashes allowed" >&2
 	exit 1
 fi
 
@@ -75,15 +83,10 @@ cd "$TEMP_BUILD_DIR"
 
 echo "Cloning repository: $GIT_REPO" >&2
 
-# Clone with depth 1 and specific revision to minimize bandwidth
-# Use --filter for partial clone if available (git >= 2.17)
-if git clone --depth 1 --single-branch "$GIT_REPO" parser 2>/dev/null; then
-	:
-else
-	# Fallback for older git or when depth isn't available
-	if ! git clone "$GIT_REPO" parser 2>&1 | grep -q "fatal"; then
-		:
-	else
+# Clone repository - use shallow clone to minimize bandwidth
+if ! git clone --depth 1 "$GIT_REPO" parser 2>/dev/null; then
+	# Fallback to full clone if shallow clone fails
+	if ! git clone "$GIT_REPO" parser 2>/dev/null; then
 		echo "Error: Failed to clone repository" >&2
 		exit 1
 	fi
@@ -91,15 +94,41 @@ fi
 
 cd parser
 
-# Validate the revision exists and fetch it
+# Validate and fetch the specific revision
 echo "Checking out revision: $REVISION" >&2
 
-if ! git rev-parse "$REVISION" >/dev/null 2>&1; then
-	echo "Error: Revision not found: $REVISION" >&2
-	exit 1
-fi
+# First, check if we already have this revision locally
+if git rev-parse "$REVISION" >/dev/null 2>&1; then
+	# Revision might be available but shallow repositories need special handling
+	# Try to checkout first
+	if git checkout "$REVISION" >/dev/null 2>&1; then
+		: # Success
+	else
+		# Shallow repository - need to unshallow and fetch
+		echo "Unshallowing repository to access full history..." >&2
+		git fetch --unshallow 2>/dev/null || true
+		if ! git checkout "$REVISION" >/dev/null 2>&1; then
+			echo "Error: Failed to checkout revision: $REVISION" >&2
+			exit 1
+		fi
+	fi
+else
+	# Revision not found, fetch it from remote
+	echo "Fetching revision from remote..." >&2
+	if ! git fetch --unshallow origin "$REVISION" 2>/dev/null; then
+		# Try regular fetch if unshallow fails
+		if ! git fetch origin "$REVISION" 2>/dev/null; then
+			echo "Error: Could not fetch revision $REVISION from remote" >&2
+			exit 1
+		fi
+	fi
 
-git checkout "$REVISION" >/dev/null 2>&1
+	# Checkout the fetched revision
+	if ! git checkout FETCH_HEAD >/dev/null 2>&1; then
+		echo "Error: Failed to checkout fetched revision" >&2
+		exit 1
+	fi
+fi
 
 # Verify checkout succeeded
 CURRENT_REF=$(git rev-parse HEAD)
@@ -114,6 +143,12 @@ echo "Building parser with tree-sitter..." >&2
 if [[ ! -f "binding.gyp" ]] && [[ ! -f "src/grammar.json" ]]; then
 	echo "Error: This does not appear to be a valid Treesitter parser repository" >&2
 	exit 1
+fi
+
+# Change to build directory if specified
+if [[ "$BUILD_PATH" != "." ]] && [[ -d "$BUILD_PATH" ]]; then
+	echo "Entering build directory: $BUILD_PATH" >&2
+	cd "$BUILD_PATH"
 fi
 
 # Run tree-sitter build

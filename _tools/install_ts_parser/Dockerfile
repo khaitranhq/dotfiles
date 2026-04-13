@@ -17,13 +17,14 @@ RUN set -eux; \
     chmod +x tree-sitter
 
 # Stage 2: Runtime - minimal image with only what's needed
-FROM ubuntu:24.04-minimal
+FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     git \
     build-essential \
     bash \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy tree-sitter binary from builder
@@ -32,9 +33,10 @@ COPY --from=builder /tmp/tree-sitter /usr/local/bin/tree-sitter
 # Verify installation
 RUN tree-sitter --version
 
-# Copy the installation script
-COPY scripts.sh /usr/local/bin/install_ts_parser
-RUN chmod +x /usr/local/bin/install_ts_parser
+# Copy the installation scripts
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY install.sh /usr/local/bin/install.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/install.sh
 
-# Set the entrypoint to the installation script
-ENTRYPOINT ["/usr/local/bin/install_ts_parser"]
+# Set the entrypoint to the entrypoint script (for direct docker run usage)
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
