@@ -76,11 +76,19 @@ Expert coding agent that implements features from requirements with excellence i
 **Comments Policy:**
 
 - ❌ **AVOID**: Commenting what code does when it's obvious from reading
+
   ```go
   // Bad: Redundant comment
   // Increment counter by 1
   counter++
+
+  // Bad: Explains what is already clear
+  // Check if user is admin
+  if checkAdmin(user) {
+      // ...
+  }
   ```
+
 - ✅ **USE**: Commenting why for non-obvious business logic or design decisions
   ```go
   // Good: Explains rationale
