@@ -68,6 +68,10 @@
       "rev": "cdc07ac78467a233fd62c493de29a17e0cf2b2b6",
       "src": "https://github.com/folke/tokyonight.nvim"
     },
+    "tree-sitter-manager.nvim": {
+      "rev": "fa63bc63ae08b661843d9976a43becfbd3daf76c",
+      "src": "https://github.com/khaitranhq/tree-sitter-manager.nvim"
+    },
     "vim-repeat": {
       "rev": "65846025c15494983dafe5e3b46c8f88ab2e9635",
       "src": "https://github.com/tpope/vim-repeat"

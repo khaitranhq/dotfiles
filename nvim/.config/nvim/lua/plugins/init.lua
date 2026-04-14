@@ -24,6 +24,7 @@ M.setup = function()
     "https://github.com/folke/todo-comments.nvim",
     "https://github.com/rachartier/tiny-inline-diagnostic.nvim",
     "https://github.com/chrisgrieser/nvim-early-retirement.git",
+    "https://github.com/khaitranhq/tree-sitter-manager.nvim",
   })
 
   -- Load all setup() functions from plugins/configs folder
