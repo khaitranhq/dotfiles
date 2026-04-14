@@ -2,20 +2,20 @@ local M = {}
 
 M.setup = function()
   vim.pack.add({
-    "https://github.com/nvim-tree/nvim-web-devicons",
-    "https://github.com/folke/snacks.nvim",
-    "https://github.com/nvimtools/none-ls.nvim",
-    "https://github.com/nvimtools/none-ls-extras.nvim",
+    "https://github.com/khaitranhq/nvim-web-devicons",
+    "https://github.com/khaitranhq/snacks.nvim",
+    "https://github.com/khaitranhq/none-ls.nvim",
+    "https://github.com/khaitranhq/none-ls-extras.nvim",
     -- TODO: remove this plugin in the future
     -- Ref:
     -- - https://github.com/nvim-lua/plenary.nvim#:~:text=This%20repository%20is%20no%20longer%20actively%20maintained%20and%20will%20be%20officially%20archived%20soon.
     -- - https://github.com/nvimtools/none-ls.nvim/issues/336
     "https://github.com/nvim-lua/plenary.nvim",
-    "https://github.com/folke/tokyonight.nvim",
+    "https://github.com/khaitranhq/tokyonight.nvim",
     "https://github.com/neovim/nvim-lspconfig",
-    "https://github.com/lewis6991/gitsigns.nvim",
-    "https://github.com/saghen/blink.cmp",
-    "https://github.com/tpope/vim-repeat",
+    "https://github.com/khaitranhq/gitsigns.nvim",
+    "https://github.com/khaitranhq/blink.cmp",
+    -- NOTE: guess this won't be attacked :)
     "https://codeberg.org/andyg/leap.nvim",
     "https://github.com/github/copilot.vim",
     "https://github.com/windwp/nvim-autopairs",
