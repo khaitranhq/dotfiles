@@ -156,7 +156,7 @@ function M.select_buffer()
 
 			local key = keys:sub(entry_count, entry_count)
 			local bufnr = buf.bufnr
-			local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":t") or "[No Name]"
+			local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":.") or "[No Name]"
 			local modified = buf.changed == 1
 			local icon = modified and "●" or "○" -- Filled circle for modified, empty circle for normal
 			local status = modified and " (modified)" or ""
