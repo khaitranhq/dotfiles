@@ -13,6 +13,9 @@ M.setup = function()
 		input = {},
 		explorer = {},
 		lazygit = {},
+		image = {
+			enabled = false,
+		},
 		notifier = {},
 		statuscolumn = {
 			folds = {
@@ -37,6 +40,7 @@ M.setup = function()
 					hidden = true,
 					ignored = true,
 					auto_close = true,
+					layout = "default",
 					win = {
 						list = {
 							keys = { ["Y"] = "copy_path", ["o"] = "confirm" },
@@ -89,6 +93,9 @@ M.setup = function()
 	require("snacks").setup(opts)
 
 	vim.api.nvim_create_user_command("Trouble", ":lua Snacks.picker.diagnostics()", {})
+	vim.api.nvim_create_user_command("Keymaps", ":lua Snacks.picker.keymaps()", {})
+	vim.api.nvim_create_user_command("Commands", ":lua Snacks.picker.commands()", {})
+	vim.api.nvim_create_user_command("Help", ":lua Snacks.picker.help()", {})
 end
 
 return M

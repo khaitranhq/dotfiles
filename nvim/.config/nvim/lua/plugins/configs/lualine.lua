@@ -35,7 +35,12 @@ M.setup = function()
 	end
 
 	require("lualine").setup({
+		options = {
+			theme = "tokyonight-night",
+		},
 		sections = {
+			lualine_a = {},
+			lualine_b = { "diagnostics" },
 			lualine_c = { custom_fname },
 		},
 	})

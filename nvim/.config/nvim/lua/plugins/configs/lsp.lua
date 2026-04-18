@@ -56,8 +56,13 @@ local blink_config = {
 	keymap = {
 		preset = "default",
 	},
+
 	completion = {
 		documentation = { auto_show = true, auto_show_delay_ms = 500 },
+	},
+
+	cmdline = {
+		enabled = true,
 	},
 
 	appearance = {
@@ -65,7 +70,7 @@ local blink_config = {
 	},
 
 	sources = {
-		default = { "lsp", "path", "buffer" },
+		default = { "lsp", "path", "buffer", "cmdline", "snippets", "omni" },
 		providers = {
 			buffer = {
 				max_items = 4, -- Limit buffer completion items
@@ -74,9 +79,8 @@ local blink_config = {
 		},
 	},
 	fuzzy = {
-		implementation = "prefer_rust",
 		prebuilt_binaries = {
-			force_version = "v1.9.1",
+			force_version = "v1.10.2",
 		},
 	},
 }

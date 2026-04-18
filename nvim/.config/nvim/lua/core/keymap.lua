@@ -145,16 +145,6 @@ keymaps.lsp = {
 			"Go to definition",
 		},
 	},
-	i = {
-		["<C-o>"] = {
-			"copilot#Accept()",
-			"Accept Copilot suggetsion",
-			opts = {
-				expr = true,
-				replace_keycodes = false,
-			},
-		},
-	},
 }
 
 keymaps.navigate = {

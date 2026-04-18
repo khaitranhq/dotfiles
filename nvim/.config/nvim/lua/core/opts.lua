@@ -159,7 +159,7 @@ g.mapleader = " " -- Set space as leader key
 g.loaded_perl_provider = 0 -- Disable Perl provider
 g.loaded_ruby_provider = 0 -- Disable Ruby provider
 g.loaded_node_provider = 0 -- Disable Node.js provider
--- g.loaded_python3_provider = 0 -- Uncomment if you don't use Python features
+g.loaded_python3_provider = 0 -- Disable Python 3 provider (enable if using Python-based plugins)
 
 -- BUILT-IN PLUGIN MANAGEMENT
 -- Disable unused built-in plugins for faster startup

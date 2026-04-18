@@ -1,8 +1,50 @@
 local M = {}
 
+local function install_package(package_name)
+	local registry = require("mason-registry")
+	-- Check if the package exists in the registry
+	if registry.has_package(package_name) then
+		local pkg = registry.get_package(package_name)
+
+		-- Install only if not already installed
+		if not pkg:is_installed() then
+			print("Installing " .. package_name)
+			pkg:install():once("closed", function()
+				print(package_name .. " installed successfully!")
+			end)
+		end
+	else
+		print("Package " .. package_name .. " not found.")
+	end
+end
+
 M.setup = function()
 	local null_ls = require("null-ls")
 	local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
+
+	-- Check if MasonInstall command exists, if not setup mason first
+	if vim.fn.exists(":MasonInstall") == 0 then
+		require("mason").setup()
+	end
+
+	-- List of tools to install via mason
+	local tools_to_install = {
+		"stylua",
+		"golines",
+		"gofumpt",
+		"goimports",
+		"prettier",
+		"black",
+		"shfmt",
+		"yamlfmt",
+		"golangci-lint",
+		"yamllint",
+	}
+
+	for _, tool in ipairs(tools_to_install) do
+		install_package(tool)
+	end
+
 	null_ls.setup({
 		sources = {
 			null_ls.builtins.formatting.stylua,
@@ -11,8 +53,6 @@ M.setup = function()
 			null_ls.builtins.formatting.gofumpt,
 			null_ls.builtins.formatting.goimports,
 			null_ls.builtins.formatting.prettier,
-			null_ls.builtins.formatting.terraform_fmt,
-			null_ls.builtins.formatting.black,
 			null_ls.builtins.formatting.shfmt,
 			null_ls.builtins.formatting.yamlfmt,
 			null_ls.builtins.diagnostics.golangci_lint.with({
