@@ -1,5 +1,6 @@
 local lsp_config = {
 	lua_ls = {
+		mason_package = "lua-language-server",
 		settings = {
 			Lua = {
 				diagnostics = {
@@ -11,8 +12,12 @@ local lsp_config = {
 			},
 		},
 	},
-	docker_language_server = {},
-	bashls = {},
+	docker_language_server = {
+		mason_package = "dockerfile-language-server",
+	},
+	bashls = {
+		mason_package = "bash-language-server",
+	},
 	gopls = {
 		settings = {
 			gopls = {
@@ -88,6 +93,17 @@ local blink_config = {
 local M = {}
 
 M.setup = function()
+	local mason = require("plugins.configs.mason")
+
+	-- Install LSP servers
+	for server in pairs(lsp_config) do
+		if lsp_config[server].mason_package then
+			mason.install_package(lsp_config[server].mason_package)
+		else
+			mason.install_package(server)
+		end
+	end
+
 	-- Configure each LSP server using the new vim.lsp.config API
 	for server, config in pairs(lsp_config) do
 		vim.lsp.config(server, config)

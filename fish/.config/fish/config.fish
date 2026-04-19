@@ -22,7 +22,7 @@ set -Ux MANPAGER "nvim +Man!"
 
 set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
-set -x BROWSER '/mnt/c/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe'
+set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
 
 #=========================Path=========================
