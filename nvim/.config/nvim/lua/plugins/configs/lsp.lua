@@ -18,6 +18,9 @@ local lsp_config = {
 	bashls = {
 		mason_package = "bash-language-server",
 	},
+	ts_ls = {
+		mason_package = "typescript-language-server",
+	},
 	gopls = {
 		settings = {
 			gopls = {
