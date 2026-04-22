@@ -84,7 +84,7 @@ end
 
 #=========================Aliases=========================
 alias v="nvim"
-alias l='eza -lah --sort modified --icons --group-directories-first'
+alias l='eza -lah --sort modified --icons --group-directories-first --git'
 alias cat="bat -p"
 alias ld='lazydocker'
 alias lg='lazygit'
