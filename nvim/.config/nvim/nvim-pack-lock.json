@@ -4,6 +4,10 @@
       "rev": "456d38d1cd3743926f329204c2340f3e7840aad6",
       "src": "https://github.com/khaitranhq/blink.cmp"
     },
+    "codediff.nvim": {
+      "rev": "8afc229d38dc13ce71b2ffbb860084b2c726e061",
+      "src": "https://github.com/khaitranhq/codediff.nvim"
+    },
     "copilot.vim": {
       "rev": "a12fd5672110c8aa7e3c8419e28c96943ca179be",
       "src": "https://github.com/khaitranhq/copilot.vim"
@@ -23,6 +27,10 @@
     "mason.nvim": {
       "rev": "b03fb0f20bc1d43daf558cda981a2be22e73ac42",
       "src": "https://github.com/khaitranhq/mason.nvim"
+    },
+    "neogit": {
+      "rev": "d1cfc4986195239cac55700b675cea7a9578d430",
+      "src": "https://github.com/khaitranhq/neogit"
     },
     "none-ls-extras.nvim": {
       "rev": "70ec8815cdf186223af04cc5a15bc8bdface0ef0",

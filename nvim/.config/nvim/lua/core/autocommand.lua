@@ -11,6 +11,8 @@ M.setup = function()
       vim.cmd("%s/\\r//ge")
     end,
   })
+
+  vim.api.nvim_create_user_command("Trouble", vim.diagnostic.setqflist, {})
 end
 
 return M

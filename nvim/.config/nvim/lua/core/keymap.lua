@@ -80,9 +80,15 @@ keymaps.git = {
 	n = {
 		["<leader>gs"] = {
 			function()
-				require("snacks").lazygit({ cwd = vim.fn.expand("%:p:h") })
+				require("neogit").open({ cwd = vim.fn.expand("%:p:h") })
 			end,
-			"Open Lazygit",
+			"Open Neogit",
+		},
+		["<leader>gca"] = {
+			function()
+				require("snacks").terminal.open("ai_commit")
+				require("neogit").dispatch_refresh()
+			end,
 		},
 		["<leader>ghp"] = {
 			require("gitsigns").preview_hunk,
