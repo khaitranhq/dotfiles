@@ -20,7 +20,6 @@ set -Ux EDITOR "nvim"
 
 set -Ux MANPAGER "nvim +Man!"
 
-set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
 set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
@@ -31,7 +30,6 @@ fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
 fish_add_path $HOME/.local/share/nvim/mason/bin
 fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/go/bin
-fish_add_path $HOME/.opencode/bin
 fish_add_path $HOME/.dotnet
 fish_add_path $HOME/.dotnet/tools/
 
@@ -103,7 +101,6 @@ alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
 alias ta='task-add'
-alias oc="opencode"
 alias ac='agentcrew chat --console'
 
 #=========================Key Bindings=========================
