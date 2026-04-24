@@ -1,9 +1,9 @@
 # AI-powered git commit message generator
 function ai_commit -d "Generate AI-powered commit messages from staged changes"
     # Validate required dependencies
-    if not command -v opencode >/dev/null 2>&1
-        echo "❌ Error: opencode command not found" >&2
-        echo "   Please install opencode first" >&2
+    if not command -v agentcrew >/dev/null 2>&1
+        echo "❌ Error: agentcrew command not found" >&2
+        echo "   Please install agentcrew first" >&2
         return 1
     end
 
@@ -30,8 +30,9 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        opencode run \
-        --agent="git-generator" \
+        agentcrew job \
+        --agent="git-commitor" \
+        --agent-config="~/.AgentCrew/dedicated-agents/git-commitor.toml" \
         "$diff_content")"
 
     set generate_message_exit_code $status
