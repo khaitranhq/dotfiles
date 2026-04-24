@@ -14,7 +14,7 @@ M.setup = function()
 			null_ls.builtins.formatting.goimports,
 			null_ls.builtins.formatting.prettier,
 			null_ls.builtins.formatting.shfmt,
-			null_ls.builtins.formatting.yamlfmt,
+			-- null_ls.builtins.formatting.yamlfmt,
 			null_ls.builtins.diagnostics.golangci_lint.with({
 				timeout = 60000,
 			}),

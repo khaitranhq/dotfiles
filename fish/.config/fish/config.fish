@@ -20,6 +20,7 @@ set -Ux EDITOR "nvim"
 
 set -Ux MANPAGER "nvim +Man!"
 
+set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
 set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
@@ -101,7 +102,7 @@ alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
 alias ta='task-add'
-alias ac='agentcrew chat --console'
+alias oc="opencode"
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer
