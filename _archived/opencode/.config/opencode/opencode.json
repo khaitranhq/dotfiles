@@ -66,7 +66,7 @@
     }
   },
   "tools": {
-    "clickup*": false,
+    "ticktick*": false,
     "github*": false,
     "eraser*": false,
     "jira*": false
@@ -95,20 +95,7 @@
         "question": "allow"
       },
       "tools": {
-        "aws-pricing*": true
-      }
-    },
-    "planner": {
-      "mode": "subagent",
-      "prompt": "{file:agents/planner.md}",
-      "permission": {
-        "todowrite": "allow",
-        "todoread": "allow",
-        "question": "allow"
-      },
-      "tools": {
-        "jira*": true,
-        "clickup*": true
+        "eraser*": true
       }
     },
     "coder": {
@@ -144,7 +131,20 @@
       }
     },
     "plan": {
-      "disable": true
+      "enabled": true
+    },
+    "planner": {
+      "mode": "subagent",
+      "prompt": "{file:agents/planner.md}",
+      "tools": {
+        "jira*": true,
+        "ticktick*": true
+      },
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
     }
   },
   "mcp": {
@@ -157,16 +157,16 @@
       }
     },
     "eraser": {
-      "type": "local",
-      "command": ["npx", "@eraserlabs/eraser-mcp"]
+      "type": "remote",
+      "url": "https://app.eraser.io/api/mcp"
     },
     "jira": {
       "type": "remote",
       "url": "https://mcp.atlassian.com/v1/mcp"
     },
-    "clickup": {
+    "ticktick": {
       "type": "remote",
-      "url": "https://mcp.clickup.com/mcp"
+      "url": "https://mcp.ticktick.com"
     }
   }
 }

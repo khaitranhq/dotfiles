@@ -154,6 +154,66 @@ Key patterns in this example:
 - Validate expected values in previews with `pulumi.RunFunc` tests or CLI assertions before deployment.
 - Run `pulumi preview` locally and `pulumi up --skip-preview` with automation scripts that enforce policy compliance, such as checking for unwanted outputs.
 
+## Discovering Pulumi Go Types and Functions
+
+When implementing Pulumi stacks in Go, use `go doc` commands to discover available types, functions, and their correct signatures:
+
+### List available types and functions in a package
+
+```bash
+go doc <package>
+```
+
+Example:
+```bash
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2
+```
+
+This shows all exported types and functions in the package. Look for:
+- **Constructors** - functions that create resources (e.g., `NewInstance`)
+- **Args structs** - e.g., `InstanceArgs` that define resource properties
+- **Result types** - structs returned by constructors (e.g., `*Instance`)
+
+### Get detailed information about a specific type or function
+
+```bash
+go doc <package> <type/func name>
+```
+
+Examples:
+```bash
+# Get details about a constructor function
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 NewInstance
+
+# Get details about an Args struct
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 InstanceArgs
+
+# Get details about a resource type
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 Instance
+```
+
+This shows:
+- Function/type signature
+- Documentation explaining purpose
+- All fields in structs with their types and field tags
+- Required vs optional parameters
+
+### Workflow when implementing Pulumi Go code
+
+1. **Find the right package** - Determine which Pulumi provider package you need (e.g., `pulumi-aws`, `pulumi-gcp`)
+2. **List available resources** - Run `go doc <package>` to see available resource constructors
+3. **Choose the resource** - Identify the constructor function (e.g., `NewInstance`)
+4. **Get Args struct details** - Run `go doc <package> <ResourceType>Args` to see all available properties
+5. **Understand the return type** - Run `go doc <package> <ResourceType>` to see output fields and methods
+6. **Implement with correct types** - Use the exact field names, types, and struct tag names from documentation
+
+### Common patterns
+
+- Resource constructors typically follow the pattern `New<ResourceType>(ctx, name, args, opts...)`
+- Args structs use pointer types for optional fields
+- Output fields use `pulumi.Output` or `pulumi.StringOutput`, etc. for lazy evaluation
+- All resource IDs are automatically managed; avoid hardcoding IDs
+
 ## Constraints
 
 - **Require `ctx` for any multi-step automation** (e.g., `pulumi.Run` or `pulumi.StackReference`) so operations can be cancelled.
@@ -161,6 +221,7 @@ Key patterns in this example:
 - **Document exported components** and stack outputs so downstream stacks know what to expect.
 - **Validate YAML and Pulumi configs** with `yamllint` when changes involve YAML files.
 - **Avoid panics for normal flow**; emit errors or fail the deployment explicitly.
+- **Use `go doc` commands** to discover the correct types, functions, and signatures before implementing Pulumi Go code.
 
 ## Post-Implementation Steps
 

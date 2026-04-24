@@ -4,6 +4,18 @@
 
 Never run `git commit`. The user will handle all git commits themselves.
 
+## File Creation
+
+Do not create any files unless explicitly requested by the user. This includes:
+
+- Summary files
+- Proposal documents
+- Documentation files
+- Configuration files
+- Any other files not directly requested by the user
+
+**Exception**: Files that are an integral part of solving the user's stated problem (e.g., source code files for a feature request) should be created as needed to fulfill the request.
+
 ## YAML and JSON Processing
 
 When processing YAML and JSON files, use the following tools in order of preference:
@@ -34,13 +46,23 @@ yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
 
+## ⚠️ MANDATORY: Load Related Skills First
+
+**Before taking ANY other action, agents MUST load relevant skills using the `skill` tool.**
+
+This is a hard requirement, not optional. If a task matches any available skill (golang, github-action, aws-diagrams, d2, terraform-diagrams, etc.), you MUST load that skill immediately. Do not proceed with implementation until skills are loaded.
+
+**Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Skipping this step leads to incomplete, suboptimal solutions.
+
+---
+
 ## Pre-Execution Analysis
 
 Before executing any task or prompt, agents must:
 
-1. **Analyze Requirements** - Carefully read and understand what the user is asking for
-2. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
-3. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.)
+1. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.) - **THIS IS MANDATORY**
+2. **Analyze Requirements** - Carefully read and understand what the user is asking for
+3. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
 4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
 
 This ensures that agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
