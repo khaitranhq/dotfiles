@@ -156,7 +156,67 @@ After implementing Go code, follow these steps to ensure code quality:
      go vet ./...
      ```
 
-### 4. Common Issues and Solutions
+### 4. Discovering Go Documentation and Types
+
+When working with Go packages, use `go doc` commands to discover available types, functions, and their correct signatures:
+
+#### List available types and functions in a package
+
+```bash
+go doc <package>
+```
+
+Example:
+```bash
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2
+```
+
+This shows all exported types and functions in the package. Look for:
+- **Constructors** - functions that create resources or values (e.g., `NewInstance`)
+- **Args structs** - e.g., `InstanceArgs` that define properties
+- **Result types** - structs returned by constructors (e.g., `*Instance`)
+
+#### Get detailed information about a specific type or function
+
+```bash
+go doc <package> <type/func name>
+```
+
+Examples:
+```bash
+# Get details about a constructor function
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 NewInstance
+
+# Get details about an Args struct
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 InstanceArgs
+
+# Get details about a resource type
+go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 Instance
+```
+
+This shows:
+- Function/type signature
+- Documentation explaining purpose
+- All fields in structs with their types and field tags
+- Required vs optional parameters
+
+#### Workflow when implementing with external packages
+
+1. **Find the right package** - Determine which package you need (e.g., `pulumi-aws`, `pulumi-gcp`, or standard library packages)
+2. **List available resources** - Run `go doc <package>` to see available constructors and types
+3. **Choose the resource** - Identify the constructor function (e.g., `NewInstance`)
+4. **Get Args struct details** - Run `go doc <package> <ResourceType>Args` to see all available properties
+5. **Understand the return type** - Run `go doc <package> <ResourceType>` to see output fields and methods
+6. **Implement with correct types** - Use the exact field names, types, and struct tag names from documentation
+
+#### Common patterns
+
+- Constructors typically follow the pattern `New<ResourceType>(ctx, name, args, opts...)`
+- Args structs use pointer types for optional fields
+- Output fields use typed outputs (e.g., `StringOutput`, `IntOutput`) for lazy evaluation
+- Resource IDs are automatically managed; avoid hardcoding IDs
+
+### 5. Common Issues and Solutions
 
 ## Constraints
 
@@ -170,6 +230,7 @@ After implementing Go code, follow these steps to ensure code quality:
 - **Define clear interface contracts** — Keep interfaces small and focused; design around behavior, not implementation
 - **Run all post-implementation steps** — Format, lint, test, and verify before committing
 - **Document exported functions and types** — Add clear documentation comments for all public API
+- **Use `go doc` commands** — Discover correct types, functions, and signatures before implementing with external packages
 
 ### MUST NOT DO
 
