@@ -20,9 +20,10 @@ Do not create any files unless explicitly requested by the user. This includes:
 
 When processing YAML and JSON files, use the following tools in order of preference:
 
-1. **yq** - Preferred tool for both YAML and JSON processing (provides native parsing and manipulation for both formats)
-2. **jq** - Fallback if yq is not available (for JSON files only)
-3. **sed** - Last resort for simple text-based replacements when yq and jq are unavailable
+1. **yq** - Always use for both YAML and JSON processing (provides native parsing and manipulation for both formats)
+2. **sed** - Last resort for simple text-based replacements only when yq is unavailable
+
+⚠️ **Do not use jq** - Since `yq` handles both YAML and JSON natively, using `jq` is redundant and can lead to inconsistent handling.
 
 This ensures proper YAML and JSON structure preservation and minimizes errors from text-based processing.
 

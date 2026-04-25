@@ -154,6 +154,234 @@ Key patterns in this example:
 - Validate expected values in previews with `pulumi.RunFunc` tests or CLI assertions before deployment.
 - Run `pulumi preview` locally and `pulumi up --skip-preview` with automation scripts that enforce policy compliance, such as checking for unwanted outputs.
 
+### 6. Building Component Resources
+
+Component resources are reusable abstractions that encapsulate multiple Pulumi resources into a single, configurable unit. They enable code reuse, standardize infrastructure patterns, and can be shared across projects or teams.
+
+#### Why Build Components
+
+- **Reusability**: Define infrastructure once, deploy many times across environments
+- **Best Practices**: Encode company standards and security policies into components
+- **Maintainability**: Easier to update patterns across multiple stacks
+- **Multi-language**: Package as plugin packages to use from any Pulumi-supported language
+
+#### Component Structure
+
+A component consists of two main parts:
+
+1. **Component Arguments** - Strongly-typed input properties that configure the component
+2. **Component Resource** - The class/struct that extends `pulumi.ComponentResource` and manages child resources
+
+#### Defining Component Arguments
+
+Arguments must be strongly-typed, serializable, and use `pulumi.Input` types.
+
+**Go Example:**
+```go
+type DatabaseComponentArgs struct {
+	Engine          pulumi.StringInput `pulumi:"engine"`          // e.g., "mysql", "postgres"
+	EngineVersion   pulumi.StringInput `pulumi:"engineVersion"`   // e.g., "8.0"
+	AllocatedStorage pulumi.IntInput    `pulumi:"allocatedStorage"` // GB
+	InstanceClass   pulumi.StringInput `pulumi:"instanceClass"`   // e.g., "db.t3.micro"
+	DBName          pulumi.StringInput `pulumi:"dbName"`
+	Username        pulumi.StringInput `pulumi:"username"`
+	Password        pulumi.StringInput `pulumi:"password"` // Use secret in Pulumi.yaml
+	Tags            pulumi.MapInput    `pulumi:"tags"`
+}
+```
+
+**TypeScript Example:**
+```typescript
+export interface DatabaseComponentArgs {
+    engine: pulumi.Input<string>;
+    engineVersion: pulumi.Input<string>;
+    allocatedStorage: pulumi.Input<number>;
+    instanceClass: pulumi.Input<string>;
+    dbName: pulumi.Input<string>;
+    username: pulumi.Input<string>;
+    password: pulumi.Input<string>;
+    tags?: pulumi.Input<Record<string, pulumi.Input<string>>>;
+}
+```
+
+#### Implementing Component Resources
+
+Components extend `pulumi.ComponentResource` and define child resources in their constructor/factory function.
+
+**Go Example:**
+```go
+type DatabaseComponent struct {
+	pulumi.ResourceState
+
+	// Outputs
+	Endpoint pulumi.StringOutput `pulumi:"endpoint"`
+	Port     pulumi.IntOutput    `pulumi:"port"`
+	DBName   pulumi.StringOutput `pulumi:"dbName"`
+}
+
+func NewDatabaseComponent(ctx *pulumi.Context, name string, args *DatabaseComponentArgs,
+	opts ...pulumi.ResourceOption) (*DatabaseComponent, error) {
+
+	comp := &DatabaseComponent{}
+	err := ctx.RegisterComponentResource("company:rds:DatabaseComponent", name, comp, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the RDS instance
+	db, err := rds.NewInstance(ctx, fmt.Sprintf("%s-db", name), &rds.InstanceArgs{
+		Engine:          args.Engine,
+		EngineVersion:   args.EngineVersion,
+		AllocatedStorage: args.AllocatedStorage,
+		InstanceClass:   args.InstanceClass,
+		DBName:          args.DBName,
+		Username:        args.Username,
+		Password:        args.Password,
+		Tags:            args.Tags,
+	}, pulumi.Parent(comp))
+	if err != nil {
+		return nil, err
+	}
+
+	// Create security group for the database
+	sg, err := ec2.NewSecurityGroup(ctx, fmt.Sprintf("%s-sg", name), &ec2.SecurityGroupArgs{
+		Description: pulumi.Sprintf("Security group for %s", name),
+		EgressRules: ec2.SecurityGroupEgressRuleArray{
+			&ec2.SecurityGroupEgressRuleArgs{
+				Protocol:   pulumi.String("-1"),
+				FromPort:   pulumi.Int(0),
+				ToPort:     pulumi.Int(0),
+				CidrBlocks: pulumi.StringArray{pulumi.String("0.0.0.0/0")},
+			},
+		},
+	}, pulumi.Parent(comp))
+	if err != nil {
+		return nil, err
+	}
+
+	// Set outputs
+	comp.Endpoint = db.Endpoint
+	comp.Port = db.Port
+	comp.DBName = db.DBName
+
+	// Signal completion
+	ctx.RegisterResourceOutputs(comp, pulumi.Map{
+		"endpoint": db.Endpoint,
+		"port":     db.Port,
+		"dbName":   db.DBName,
+	})
+
+	return comp, nil
+}
+```
+
+**TypeScript Example:**
+```typescript
+export class DatabaseComponent extends pulumi.ComponentResource {
+    public readonly endpoint: pulumi.Output<string>;
+    public readonly port: pulumi.Output<number>;
+    public readonly dbName: pulumi.Output<string>;
+
+    constructor(name: string, args: DatabaseComponentArgs,
+                opts?: pulumi.ComponentResourceOptions) {
+        super("company:rds:DatabaseComponent", name, args, opts);
+
+        // Create RDS instance
+        const db = new aws.rds.Instance(`${name}-db`, {
+            engine: args.engine,
+            engineVersion: args.engineVersion,
+            allocatedStorage: args.allocatedStorage,
+            instanceClass: args.instanceClass,
+            dbName: args.dbName,
+            username: args.username,
+            password: args.password,
+            tags: args.tags,
+        }, { parent: this });
+
+        // Create security group
+        const sg = new aws.ec2.SecurityGroup(`${name}-sg`, {
+            description: `Security group for ${name}`,
+            egressRules: [{
+                protocol: "-1",
+                fromPort: 0,
+                toPort: 0,
+                cidrBlocks: ["0.0.0.0/0"],
+            }],
+        }, { parent: this });
+
+        this.endpoint = db.endpoint;
+        this.port = db.port;
+        this.dbName = db.dbName;
+
+        this.registerOutputs({
+            endpoint: this.endpoint,
+            port: this.port,
+            dbName: this.dbName,
+        });
+    }
+}
+```
+
+#### Key Component Principles
+
+1. **Set `parent: this`** (or `pulumi.Parent(comp)` in Go) on all child resources to establish resource hierarchy
+2. **Template child resource names** with the component name (e.g., ``${name}-db``, `fmt.Sprintf("%s-db", name)`) to avoid conflicts
+3. **Use `pulumi.Input<T>` and `pulumi.Output<T>`** for all arguments and outputs; never use plain types
+4. **Define `pulumi.Input` struct tags** to map configuration keys (Go: ``pulumi:"keyName"``, TypeScript: interfaces)
+5. **Document outputs** clearly in comments or docstrings to define the component's contract
+6. **Call `registerOutputs()` or `RegisterResourceOutputs()`** at the end to signal completion
+7. **Validate arguments early** to fail fast with clear error messages if required fields are missing
+8. **Use dependency ordering** with `dependsOn` when one child resource must be created before another
+
+#### Using Components in Pulumi Programs
+
+Once defined, use components like any other resource:
+
+**Go:**
+```go
+db, err := NewDatabaseComponent(ctx, "app-db", &DatabaseComponentArgs{
+	Engine:          pulumi.String("postgres"),
+	EngineVersion:   pulumi.String("13"),
+	AllocatedStorage: pulumi.Int(100),
+	InstanceClass:   pulumi.String("db.t3.small"),
+	DBName:          pulumi.String("appdb"),
+	Username:        pulumi.String("admin"),
+	Password:        cfg.RequireSecret("db:password"),
+})
+
+ctx.Export("dbEndpoint", db.Endpoint)
+ctx.Export("dbPort", db.Port)
+```
+
+**TypeScript:**
+```typescript
+const db = new DatabaseComponent("app-db", {
+    engine: "postgres",
+    engineVersion: "13",
+    allocatedStorage: 100,
+    instanceClass: "db.t3.small",
+    dbName: "appdb",
+    username: "admin",
+    password: config.requireSecret("db:password"),
+});
+
+export const dbEndpoint = db.endpoint;
+export const dbPort = db.port;
+```
+
+#### Sharing Components
+
+**Native Language Packages:**
+- Publish to npm (TypeScript), PyPI (Python), Maven (Java), NuGet (.NET), or Go modules
+- Simplest for single-language reuse
+
+**Plugin Packages:**
+- Package as a Pulumi plugin with `PulumiPlugin.yaml`, language manifest, and provider entry file
+- Enables use from any Pulumi-supported language via generated SDKs
+- Recommended for broad team/organization reuse
+
+See [Authoring a Source-Based Plugin Package](https://www.pulumi.com/docs/iac/guides/building-extending/packages/source-based-plugin/) for plugin packaging details.
+
 ## Constraints
 
 - **Require `ctx` for any multi-step automation** (e.g., `pulumi.Run` or `pulumi.StackReference`) so operations can be cancelled.
