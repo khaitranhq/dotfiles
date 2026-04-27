@@ -25,6 +25,29 @@ $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNoti
 $notifier.Show($toast)
 `;
 
+// Track subagent sessions to filter them out
+const subagentSessionIds = new Set<string>();
+
+function getSessionIDFromEvent(event: unknown): string | null {
+  const props = (event as any)?.properties;
+  if (typeof props?.sessionID === "string") {
+    return props.sessionID;
+  }
+  return null;
+}
+
+function getSessionLifecycleInfo(event: unknown): { id: string | null; parentID: string | null } {
+  const props = (event as any)?.properties;
+  return {
+    id: typeof props?.id === "string" ? props.id : null,
+    parentID: typeof props?.parentID === "string" ? props.parentID : null,
+  };
+}
+
+function isSubagentSession(sessionID: string | null): boolean {
+  return sessionID ? subagentSessionIds.has(sessionID) : false;
+}
+
 export const MyPlugin: Plugin = async ({
   project,
   client,
@@ -37,15 +60,37 @@ export const MyPlugin: Plugin = async ({
 
   return {
     event: async ({ event }) => {
-      // Send notification on session completion
-      if (event.type === "session.idle") {
-        const script = createToastScript(title, "Session completed!");
-        await $`powershell.exe -NoProfile -Command ${script}`;
+      // Track subagent sessions from session lifecycle events
+      if (event.type === "session.created") {
+        const info = getSessionLifecycleInfo(event);
+        if (info.parentID && info.id) {
+          subagentSessionIds.add(info.id);
+        }
       }
-      // Send notification when permission is asked
+
+      if (event.type === "session.deleted") {
+        const info = getSessionLifecycleInfo(event);
+        if (info.id) {
+          subagentSessionIds.delete(info.id);
+        }
+      }
+
+      const sessionID = getSessionIDFromEvent(event);
+
+      // Send notification on session completion only for parent sessions
+      if (event.type === "session.idle") {
+        if (!isSubagentSession(sessionID)) {
+          const script = createToastScript(title, "Session completed!");
+          await $`powershell.exe -NoProfile -Command ${script}`;
+        }
+      }
+
+      // Send notification when permission is asked only for parent sessions
       if (event.type === "permission.asked") {
-        const script = createToastScript(title, "Permission request");
-        await $`powershell.exe -NoProfile -Command ${script}`;
+        if (!isSubagentSession(sessionID)) {
+          const script = createToastScript(title, "Permission request");
+          await $`powershell.exe -NoProfile -Command ${script}`;
+        }
       }
     },
     "permission.ask": async () => {

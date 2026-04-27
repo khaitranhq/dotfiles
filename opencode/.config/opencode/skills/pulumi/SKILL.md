@@ -324,7 +324,9 @@ export class DatabaseComponent extends pulumi.ComponentResource {
 
 #### Key Component Principles
 
-1. **Set `parent: this`** (or `pulumi.Parent(comp)` in Go) on all child resources to establish resource hierarchy
+1. **Set `parent: this`** (or `pulumi.Parent(comp)` in Go) on **every child resource** — This is mandatory. Child resources in a component resource must have the `pulumi.Parent` option to establish the proper resource hierarchy and ensure correct dependency ordering.
+   - Go: `pulumi.Parent(comp)` resource option
+   - TypeScript: `{ parent: this }` in resource options
 2. **Template child resource names** with the component name (e.g., ``${name}-db``, `fmt.Sprintf("%s-db", name)`) to avoid conflicts
 3. **Use `pulumi.Input<T>` and `pulumi.Output<T>`** for all arguments and outputs; never use plain types
 4. **Define `pulumi.Input` struct tags** to map configuration keys (Go: ``pulumi:"keyName"``, TypeScript: interfaces)

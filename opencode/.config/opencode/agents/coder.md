@@ -87,6 +87,12 @@ Expert coding agent that implements features from requirements with excellence i
   if checkAdmin(user) {
       // ...
   }
+
+  // Bad: Redundant inline comment before function calls
+  // Attach batch job permissions
+  if err := AttachBatchJobPermissions(ctx, jobID) {
+      return err
+  }
   ```
 
 - ✅ **USE**: Commenting why for non-obvious business logic or design decisions
@@ -97,6 +103,8 @@ Expert coding agent that implements features from requirements with excellence i
   ```
 - ✅ **USE**: Complex algorithms, edge cases, or performance considerations
 - ✅ **USE**: Public APIs, exported functions (following language conventions like GoDoc)
+- ✅ **USE**: When variable/function names alone don't explain the business purpose
+- ⚠️ **PRINCIPLE**: Let descriptive function names do the work - if a function name is clear, don't add a comment above it repeating that name in plain English
 
 ### 7. **Quality Assurance**
 
