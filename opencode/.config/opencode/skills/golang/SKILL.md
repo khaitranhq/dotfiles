@@ -27,8 +27,98 @@ This skill provides specialized instructions and workflows for Go/Golang program
 
 ### 1. Code Organization
 
+#### Package Structure
+
 - Organize code into packages following Go conventions
 - Keep `main` package simple, put logic in separate packages
+
+#### File Organization Order
+
+Go source files should follow this strict order for optimal readability:
+
+1. **Package declaration** - at the top
+2. **Imports** - organized in groups (stdlib, third-party, local)
+3. **Constants** - package-level constants
+4. **Type definitions** - interfaces first, then structs
+5. **Variables** - package-level variables
+6. **Functions** - organized by logical grouping
+
+##### Example
+
+```go
+package mypackage
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/external/package"
+
+	"myproject/internal/helper"
+)
+
+// Constants
+const (
+	DefaultTimeout = 30 * time.Second
+	MaxRetries     = 3
+)
+
+// Interfaces (before concrete types)
+type Reader interface {
+	Read(ctx context.Context) ([]byte, error)
+}
+
+type Writer interface {
+	Write(ctx context.Context, data []byte) error
+}
+
+// Structs
+type Config struct {
+	Host string
+	Port int
+}
+
+type Service struct {
+	config Config
+	reader Reader
+}
+
+// Package-level variables
+var (
+	ErrInvalidConfig = errors.New("invalid configuration")
+	defaultConfig    = Config{Host: "localhost", Port: 8080}
+)
+
+// Constructor functions first
+func NewService(config Config, reader Reader) (*Service, error) {
+	if config.Host == "" {
+		return nil, ErrInvalidConfig
+	}
+	return &Service{config: config, reader: reader}, nil
+}
+
+// Methods and functions (grouped by receiver/purpose)
+func (s *Service) Start(ctx context.Context) error {
+	// implementation
+}
+
+func (s *Service) Stop() error {
+	// implementation
+}
+
+// Helper functions
+func parseConfig(raw string) (Config, error) {
+	// implementation
+}
+```
+
+##### Key Principles
+
+- **Interfaces before implementations** — Readers can understand contracts before seeing implementations
+- **Constructors early** — `New*` functions should come before methods that use the type
+- **Logical grouping** — Group related functions together (e.g., all `Service` methods, then helper functions)
+- **Alphabetical within groups** — Constants and variables within their sections (struct fields in alphabetical order, see section 2)
+- **Public before private** — Exported items before unexported ones within each section
 
 ### 2. Struct Organization and Design
 
@@ -122,23 +212,19 @@ After implementing Go code, follow these steps to ensure code quality:
    - Use `-o /dev/null` to discard the output binary
 
 3. **Format Code**
-   Apply formatting tools in the following order:
-   - **golines**: Break long lines appropriately
-     ```bash
-     golines -w .
-     ```
-   - **gofmt**: Standard Go formatting
-     ```bash
-     gofmt -w .
-     ```
-   - **gofumpt**: Stricter formatting than gofmt
-     ```bash
-     gofumpt -w .
-     ```
-   - **goimports**: Organize imports and fix missing/unused imports
-     ```bash
-     goimports -w .
-     ```
+    **MUST run ALL formatters in the following order.** Skipping any step can leave code inconsistently formatted:
+    - **goimports**: Organize imports and fix missing/unused imports
+      ```bash
+      goimports -w .
+      ```
+    - **gofumpt**: Stricter formatting than gofmt
+      ```bash
+      gofumpt -w .
+      ```
+    - **golines**: Break long lines appropriately
+      ```bash
+      golines -w .
+      ```
 
 4. **Run Linter**
 
