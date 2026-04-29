@@ -8,6 +8,10 @@
       "rev": "8afc229d38dc13ce71b2ffbb860084b2c726e061",
       "src": "https://github.com/khaitranhq/codediff.nvim"
     },
+    "copilot.lua": {
+      "rev": "94b22035e31e82821d015f6481ea3c17800e55b7",
+      "src": "https://github.com/khaitranhq/copilot.lua"
+    },
     "copilot.vim": {
       "rev": "a12fd5672110c8aa7e3c8419e28c96943ca179be",
       "src": "https://github.com/khaitranhq/copilot.vim"

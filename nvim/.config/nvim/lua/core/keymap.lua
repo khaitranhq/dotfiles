@@ -84,7 +84,7 @@ keymaps.git = {
 			end,
 			"Open Neogit",
 		},
-		["<leader>gca"] = {
+		["<leader>gci"] = {
 			function()
 				require("snacks").terminal.open("ai_commit")
 				require("neogit").dispatch_refresh()
@@ -172,6 +172,20 @@ keymaps.markdown = {
 				require("core.utils").fix_markdown_task_ids()
 			end,
 			"Toggle Markdown preview",
+		},
+	},
+}
+
+keymaps.ai = {
+	i = {
+		["<C-o>"] = {
+			function()
+				require("copilot.suggestion").accept()
+			end,
+			opts = {
+				expr = true,
+				replace_keycodes = false,
+			},
 		},
 	},
 }
