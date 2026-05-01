@@ -34,7 +34,9 @@ This skill provides specialized instructions and workflows for Go/Golang program
 
 #### File Organization Order
 
-Go source files should follow this strict order for optimal readability:
+**⚠️ CRITICAL: This ordering is mandatory and must be consistently applied to all Go source files. Maintaining strict file organization is essential for code maintainability, readability, and consistency across the codebase.**
+
+Go source files must follow this strict order for optimal readability and consistency:
 
 1. **Package declaration** - at the top
 2. **Imports** - organized in groups (stdlib, third-party, local)
@@ -191,7 +193,7 @@ Benefits:
 
 ### 3. Post-Implementation Steps
 
-After implementing Go code, follow these steps to ensure code quality:
+After implementing Go code, follow these steps to ensure code quality. Run every available formatter, linter, and static-analysis tool for the project and toolchain; if a tool is installed and applicable, do not skip it.
 
 1. **Run Tests**
 
@@ -212,7 +214,7 @@ After implementing Go code, follow these steps to ensure code quality:
    - Use `-o /dev/null` to discard the output binary
 
 3. **Format Code**
-    **MUST run ALL formatters in the following order.** Skipping any step can leave code inconsistently formatted:
+    **MUST run all available formatters in the following order.** If a formatter is installed and applicable, run it; do not skip one because another formatter already ran.
     - **goimports**: Organize imports and fix missing/unused imports
       ```bash
       goimports -w .
@@ -225,19 +227,25 @@ After implementing Go code, follow these steps to ensure code quality:
       ```bash
       golines -w .
       ```
+    - **gofmt**: Run if it is the only formatter available
+      ```bash
+      gofmt -w .
+      ```
 
-4. **Run Linter**
+4. **Run Linters**
 
-   ```bash
-   golangci-lint run ./...
-   ```
-
+   - Run every available linter for the project and toolchain
+   - `golangci-lint`
+     ```bash
+     golangci-lint run ./...
+     ```
    - Fix any linting issues reported
    - Mark any false positives with `//nolint` comments, but use sparingly and add justifying comments for why the lint is being ignored
    - Ensure code follows best practices and conventions
 
 5. **Run Static Analysis Tools**
-   - **govet**: Examines Go source code and reports suspicious constructs
+   - Run every available static-analysis tool for the project and toolchain
+   - **go vet**: Examines Go source code and reports suspicious constructs
      ```bash
      go vet ./...
      ```
@@ -308,6 +316,7 @@ This shows:
 
 ### MUST DO
 
+- **Follow strict File Organization Order** — Always organize Go source files with package declaration, imports, constants, types (interfaces first), variables, then functions in logical grouping. This is mandatory for consistency and maintainability
 - **Add context.Context to all blocking operations** — Pass context through the call stack to enable graceful cancellation and timeout handling
 - **Handle all errors explicitly** — Never use naked returns; return errors or use explicit error handling
 - **Write table-driven tests with subtests** — Use `t.Run()` for parametrized tests; enables better test isolation and reporting

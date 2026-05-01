@@ -5,6 +5,9 @@ M.setup = function()
 		checkbox = {
 			unchecked = { icon = "" },
 			checked = { icon = "", scope_highlight = "@markup.strikethrough" },
+			custom = {
+				doing = { raw = "[=]", rendered = "▶" },
+			},
 		},
 	})
 end

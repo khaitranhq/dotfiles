@@ -34,7 +34,8 @@
     },
     "neogit": {
       "rev": "d1cfc4986195239cac55700b675cea7a9578d430",
-      "src": "https://github.com/khaitranhq/neogit"
+      "src": "https://github.com/khaitranhq/neogit",
+      "version": "'fix/console-buffer-terminal-reuse'"
     },
     "none-ls-extras.nvim": {
       "rev": "70ec8815cdf186223af04cc5a15bc8bdface0ef0",
