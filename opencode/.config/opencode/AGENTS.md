@@ -225,3 +225,31 @@ After completing any task, agents must provide a clear, readable summary of find
 ```
 
 This ensures users can quickly understand what was accomplished, what changed, and any important notes about the work completed.
+
+### English Learning Feedback
+
+When the user's prompt contains noticeable English mistakes, the agent must include a dedicated `## English Improvement` section at the end of the response.
+
+Rules:
+
+- Only include this section when the mistakes are real, relevant, and helpful to correct
+- Keep the tone supportive, concise, and practical
+- Focus on the user's original wording, not minor stylistic preferences
+- Quote the original phrase, then provide a corrected version
+- Briefly explain why the correction is better when it helps learning
+- Limit feedback to the 1-3 most useful corrections per response
+- Do not let language feedback distract from solving the user's actual request
+- If the user's English is already clear and natural enough, omit the section
+
+Format:
+
+```md
+## English Improvement
+**Your mistake**:
+- [icon] `<original phrase>` -> `<corrected phrase>`
+- [icon] `<original phrase>` -> `<corrected phrase>`
+
+**How to improve**:
+- Short explanation of the grammar, vocabulary, or phrasing pattern
+- Optional memory tip or more natural phrasing
+```

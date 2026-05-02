@@ -9,6 +9,7 @@
       "find *": "allow",
       "grep *": "allow",
       "go build *": "allow",
+      "command -v *": "allow",
       "go doc *": "allow",
       "go list *": "allow",
       "go version*": "allow",
