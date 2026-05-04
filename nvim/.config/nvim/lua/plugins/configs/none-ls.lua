@@ -13,6 +13,23 @@ M.setup = function()
 			null_ls.builtins.formatting.gofumpt,
 			null_ls.builtins.formatting.goimports,
 			null_ls.builtins.formatting.shfmt,
+			null_ls.builtins.formatting.prettier.with({
+				filetypes = {
+					"astro",
+					"css",
+					"graphql",
+					"handlebars",
+					"html",
+					"json",
+					"jsonc",
+					"less",
+					"markdown",
+					"scss",
+					"svelte",
+					"vue",
+					"yaml",
+				},
+			}),
 			require("none-ls.formatting.oxfmt"),
 			null_ls.builtins.formatting.yamlfmt,
 			null_ls.builtins.diagnostics.golangci_lint.with({

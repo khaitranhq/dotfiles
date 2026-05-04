@@ -7,6 +7,7 @@ M.setup = function()
 		},
 		filetypes = {
 			yaml = true,
+			markdown = true,
 		},
 	})
 end

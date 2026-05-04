@@ -27,10 +27,6 @@ M.setup = function()
 		"https://github.com/khaitranhq/render-markdown.nvim",
 		"https://github.com/khaitranhq/mason.nvim",
 		"https://github.com/khaitranhq/codediff.nvim",
-		{
-			src = "https://github.com/khaitranhq/neogit",
-			version = "fix/console-buffer-terminal-reuse",
-		},
 		"https://github.com/khaitranhq/copilot.lua",
 	})
 
