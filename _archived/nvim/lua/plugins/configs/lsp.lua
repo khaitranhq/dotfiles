@@ -21,6 +21,9 @@ local lsp_config = {
 	ts_ls = {
 		mason_package = "typescript-language-server",
 	},
+	omnisharp = {},
+	oxfmt = {},
+	oxlint = {},
 	gopls = {
 		settings = {
 			gopls = {

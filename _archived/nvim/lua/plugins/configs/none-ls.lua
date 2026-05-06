@@ -30,13 +30,11 @@ M.setup = function()
 					"yaml",
 				},
 			}),
-			require("none-ls.formatting.oxfmt"),
 			null_ls.builtins.formatting.yamlfmt,
 			null_ls.builtins.diagnostics.golangci_lint.with({
 				timeout = 60000,
 			}),
 			require("none-ls.diagnostics.yamllint"),
-			require("none-ls.diagnostics.oxlint"),
 		},
 		on_attach = function(client, bufnr)
 			if client:supports_method("textDocument/formatting") then
