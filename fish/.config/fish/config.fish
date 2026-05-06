@@ -9,16 +9,14 @@ end
 set -g fish_greeting
 
 # for k9s
-set -Ux KUBE_EDITOR nvim
 
 # for kubectl
 set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 
 # others
-set -Ux VISUAL "nvim"
-set -Ux EDITOR "nvim"
-
-set -Ux MANPAGER "nvim +Man!"
+set -Ux KUBE_EDITOR vim
+set -Ux VISUAL "vim"
+set -Ux EDITOR "vim"
 
 set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
@@ -28,7 +26,6 @@ set -x DOTNET_ROOT "$HOME/.dotnet"
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
-fish_add_path $HOME/.local/share/nvim/mason/bin
 fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/go/bin
 fish_add_path $HOME/.dotnet
@@ -82,7 +79,6 @@ if test -e $HOME/.config/fish/ai.fish
 end
 
 #=========================Aliases=========================
-alias v="nvim"
 alias l='eza -lah --sort modified --icons --group-directories-first --git'
 alias cat="bat -p"
 alias ld='lazydocker'

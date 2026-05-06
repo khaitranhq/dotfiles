@@ -28,6 +28,30 @@ function add-keys-ssh-agent
   end
 end
 
+function __ensure_zellij_keepalive --on-event fish_prompt --description 'Keep WSL alive with detached zellij session'
+  if not status is-interactive
+    return
+  end
+
+  if not set -q WSL_DISTRO_NAME
+    return
+  end
+
+  if not type -q zellij
+    return
+  end
+
+  functions --erase __ensure_zellij_keepalive
+
+  set -l session_name wsl-keepalive
+
+  if contains -- $session_name (zellij list-sessions --short 2>/dev/null)
+    return
+  end
+
+  zellij attach --create-background $session_name >/dev/null 2>&1
+end
+
 # It is invoked by the fish shell automatically using its event system.
 function __postexec_notify_on_long_running_commands --on-event fish_postexec
    set --function interactive_commands 'nvim' 'v' 'tmux' 't' 'n' 'nnn' 'zj' 'zellij' 'oc' 'opencode' 'sqlit' 'lazygit'
