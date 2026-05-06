@@ -1,0 +1,73 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+  {
+    "context": "Editor && VimControl && !VimWaiting && !menu || Terminal || ProjectPanel || AgentPanel || GitPanel",
+    "bindings": {
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown",
+
+      "ctrl-s -": "vim::ResizePaneUp",
+      "ctrl-s =": "vim::ResizePaneDown",
+      "ctrl-s .": "vim::ResizePaneRight",
+      "ctrl-s ,": "vim::ResizePaneLeft",
+    },
+  },
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      ";": "command_palette::Toggle",
+    },
+  },
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      // https://github.com/zed-industries/zed/issues/4753
+      // https://github.com/zed-industries/zed/issues/4270
+      "enter": "project_panel::Open",
+      "o": "project_panel::NewDirectory",
+      "a": "project_panel::NewFile",
+      "r": "project_panel::Rename",
+      "x": "project_panel::Cut",
+      "y": "project_panel::Copy",
+      "p": "project_panel::Paste",
+      "d": "project_panel::Delete",
+      // Directory expansion
+      "l": "project_panel::ExpandSelectedEntry",
+      "h": "project_panel::CollapseSelectedEntry",
+      // Move up and down
+      "j": "menu::SelectNext",
+      "k": "menu::SelectPrevious",
+      // "space l": "workspace::ToggleLeftDock",
+    },
+  },
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      "ctrl-alt-r": "workspace::ToggleRightDock",
+    },
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-alt-r": "workspace::ToggleRightDock",
+      "ctrl-alt-l": "workspace::ToggleLeftDock",
+      "ctrl-t": "workspace::NewFile",
+    },
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-t": "workspace::NewTerminal",
+      "ctrl-n": null,
+      "ctrl-p": null,
+    },
+  },
+]

@@ -1,0 +1,93 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "file_finder": {
+    "include_ignored": "all",
+  },
+  "cli_default_open_behavior": "existing_window",
+  "terminal": {
+    "dock": "right",
+  },
+  "icon_theme": "Zed (Default)",
+  "language_models": {},
+  "restore_on_startup": "launchpad",
+  "project_panel": {
+    "dock": "left",
+  },
+  "outline_panel": {
+    "dock": "right",
+  },
+  "collaboration_panel": {
+    "dock": "right",
+  },
+  "ensure_final_newline_on_save": false,
+  "tab_size": 2,
+  "git_panel": {
+    "dock": "right",
+    "tree_view": true,
+  },
+  "agent": {
+    "play_sound_when_agent_done": "always",
+    "profiles": {
+      "coder": {
+        "name": "Coder",
+        "tools": {},
+        "enable_all_context_servers": false,
+        "context_servers": {},
+      },
+    },
+    "dock": "right",
+    "tool_permissions": {
+      "tools": {
+        "terminal": {
+          "default": "allow",
+        },
+      },
+    },
+    "default_model": {
+      "provider": "OpenCode Go",
+      "model": "DeepSeek V4 Flash",
+    },
+    "favorite_models": [],
+    "model_parameters": [],
+  },
+  "wsl_connections": [
+    {
+      "distro_name": "Debian",
+      "user": null,
+      "projects": [
+        {
+          "paths": ["/home/khaitran"],
+        },
+        {
+          "paths": ["/home/lewis/Workspaces"],
+        },
+      ],
+    },
+  ],
+  "session": {
+    "trust_all_worktrees": false,
+  },
+  "file_scan_exclusions": [],
+  "vim_mode": true,
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "relative_line_numbers": "enabled",
+  "theme": {
+    "mode": "dark",
+    "light": "Ayu Light",
+    "dark": "One Dark",
+  },
+  "buffer_font_family": "FiraCode Nerd Font",
+  "ui_font_family": "FiraCode Nerd Font",
+  "buffer_font_features": {
+    "calt": true,
+    "liga": true,
+  },
+}

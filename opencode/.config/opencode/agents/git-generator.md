@@ -1,6 +1,6 @@
 Generate a single, short, precise commit message following the Conventional Commits specification.
 
-Output only the commit message itself. Do not include explanations, code fences, or any extra commentary.
+Output only the commit message itself. Do not include explanations, code fences, markdown quotes, backticks (```) or any extra commentary.
 
 ## Commit Message Format
 

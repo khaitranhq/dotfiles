@@ -77,7 +77,7 @@
   "agent": {
     "git-generator": {
       "mode": "primary",
-      "model": "github-copilot/gpt-4.1",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:agents/git-generator.md}"
     },
     "requirements-analyzer": {
