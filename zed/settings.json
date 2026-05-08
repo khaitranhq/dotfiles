@@ -7,52 +7,74 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "agent_servers": {
+    "opencode": {
+      "type": "registry"
+    }
+  },
+  "auto_update": false,
+  "base_keymap": "VSCode",
+  "proxy": "",
+  "inlay_hints": {
+    "enabled": true
+  },
+  "edit_predictions": {
+    "provider": "copilot"
+  },
   "file_finder": {
-    "include_ignored": "all",
+    "include_ignored": "all"
   },
   "cli_default_open_behavior": "existing_window",
   "terminal": {
-    "dock": "right",
+    "dock": "right"
   },
   "icon_theme": "Zed (Default)",
-  "language_models": {},
+  "language_models": {
+    "opencode": {
+      "show_zen_models": false,
+      "show_go_models": true,
+      "show_free_models": true
+    }
+  },
   "restore_on_startup": "launchpad",
   "project_panel": {
-    "dock": "left",
+    "dock": "left"
   },
   "outline_panel": {
-    "dock": "right",
+    "dock": "right"
   },
   "collaboration_panel": {
-    "dock": "right",
+    "dock": "right"
   },
   "ensure_final_newline_on_save": false,
   "tab_size": 2,
   "git_panel": {
     "dock": "right",
-    "tree_view": true,
+    "tree_view": true
   },
   "agent": {
+    "default_model": {
+      "provider": "opencode",
+      "model": "go/deepseek-v4-flash",
+      "enable_thinking": true,
+      "effort": "max"
+    },
     "play_sound_when_agent_done": "always",
     "profiles": {
       "coder": {
         "name": "Coder",
         "tools": {},
         "enable_all_context_servers": false,
-        "context_servers": {},
-      },
+        "context_servers": {}
+      }
     },
     "dock": "right",
     "tool_permissions": {
       "tools": {
         "terminal": {
-          "default": "allow",
-        },
-      },
-    },
-    "default_model": {
-      "provider": "OpenCode Go",
-      "model": "DeepSeek V4 Flash",
+          "default": "allow"
+        }
+      }
     },
     "favorite_models": [],
     "model_parameters": [],
@@ -61,18 +83,11 @@
     {
       "distro_name": "Debian",
       "user": null,
-      "projects": [
-        {
-          "paths": ["/home/khaitran"],
-        },
-        {
-          "paths": ["/home/lewis/Workspaces"],
-        },
-      ],
-    },
+      "projects": []
+    }
   ],
   "session": {
-    "trust_all_worktrees": false,
+    "trust_all_worktrees": false
   },
   "file_scan_exclusions": [],
   "vim_mode": true,
@@ -82,12 +97,109 @@
   "theme": {
     "mode": "dark",
     "light": "Ayu Light",
-    "dark": "One Dark",
+    "dark": "One Dark"
   },
   "buffer_font_family": "FiraCode Nerd Font",
   "ui_font_family": "FiraCode Nerd Font",
   "buffer_font_features": {
     "calt": true,
-    "liga": true,
+    "liga": true
   },
+  "lsp": {
+    "gopls": {
+      "gofumpt": true,
+      "initialization_options": {
+        "gofumpt": true
+      }
+    },
+    "oxlint": {
+      "initialization_options": {
+        "settings": {
+          "configPath": null,
+          "run": "onType",
+          "disableNestedConfig": false,
+          "fixKind": "safe_fix",
+          "unusedDisableDirectives": "deny"
+        }
+      }
+    },
+    "oxfmt": {
+      "initialization_options": {
+        "settings": {
+          "fmt.configPath": null,
+          "run": "onSave"
+        }
+      }
+    }
+  },
+  "languages": {
+    "JavaScript": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": false
+      },
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        },
+        {
+          "code_action": "source.fixAll.oxc"
+        }
+      ]
+    },
+    "JSON": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": false
+      },
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ]
+    },
+    "JSON5": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": false
+      },
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ]
+    },
+    "JSONC": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": false
+      },
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ]
+    },
+    "TypeScript": {
+      "format_on_save": "on",
+      "prettier": {
+        "allowed": false
+      },
+      "formatter": [
+        {
+          "language_server": {
+            "name": "oxfmt"
+          }
+        }
+      ]
+    }
+  }
 }

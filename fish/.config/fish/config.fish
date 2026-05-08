@@ -23,6 +23,9 @@ set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
 set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
 
+set -x GOMAXPROCS 8
+set -x GOMEMLIMIT 20GiB
+
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin

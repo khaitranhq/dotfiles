@@ -40,6 +40,7 @@
       "git branch *": "allow",
       "git rev-parse *": "allow",
       "git ls-tree *": "allow",
+      "git ls-files *": "allow",
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
@@ -58,7 +59,9 @@
       "eslint *": "allow",
       "npx eslint *": "allow",
       "prettier *": "allow",
-      "npx tsc *": "allow"
+      "npx tsc *": "allow",
+      "yq *": "allow",
+      "file *": "allow"
     },
     "external_directory": {
       "*": "ask",
@@ -139,9 +142,17 @@
     "planner": {
       "mode": "subagent",
       "prompt": "{file:agents/planner.md}",
+      "permission": {
+        "todowrite": "allow",
+        "todoread": "allow",
+        "question": "allow"
+      }
+    },
+    "jira-assistant": {
+      "mode": "subagent",
+      "prompt": "{file:agents/jira-assistant.md}",
       "tools": {
-        "jira*": true,
-        "ticktick*": true
+        "jira*": true
       },
       "permission": {
         "todowrite": "allow",
