@@ -41,6 +41,7 @@
       "git rev-parse *": "allow",
       "git ls-tree *": "allow",
       "git ls-files *": "allow",
+      "git blame *": "allow",
       "pulumi preview *": "allow",
       "pulumi stack ls*": "allow",
       "tee *": "allow",
@@ -104,6 +105,11 @@
         "eraser*": true
       }
     },
+    "build": {
+      "tools": {
+        "github*": true
+      },
+    },
     "coder": {
       "mode": "subagent",
       "prompt": "{file:agents/coder.md}",
@@ -111,7 +117,7 @@
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
-      }
+      },
     },
     "code-reviewer": {
       "mode": "subagent",
