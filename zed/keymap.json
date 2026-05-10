@@ -17,14 +17,14 @@
       "ctrl-s -": "vim::ResizePaneUp",
       "ctrl-s =": "vim::ResizePaneDown",
       "ctrl-s .": "vim::ResizePaneRight",
-      "ctrl-s ,": "vim::ResizePaneLeft",
-    },
+      "ctrl-s ,": "vim::ResizePaneLeft"
+    }
   },
   {
     "context": "Editor && vim_mode == normal",
     "bindings": {
-      ";": "command_palette::Toggle",
-    },
+      ";": "command_palette::Toggle"
+    }
   },
   {
     "context": "ProjectPanel && not_editing",
@@ -44,15 +44,15 @@
       "h": "project_panel::CollapseSelectedEntry",
       // Move up and down
       "j": "menu::SelectNext",
-      "k": "menu::SelectPrevious",
+      "k": "menu::SelectPrevious"
       // "space l": "workspace::ToggleLeftDock",
-    },
+    }
   },
   {
     "context": "ProjectPanel",
     "bindings": {
-      "ctrl-alt-r": "workspace::ToggleRightDock",
-    },
+      "ctrl-alt-r": "workspace::ToggleRightDock"
+    }
   },
   {
     "context": "Workspace",
@@ -60,14 +60,37 @@
       "ctrl-alt-r": "workspace::ToggleRightDock",
       "ctrl-alt-l": "workspace::ToggleLeftDock",
       "ctrl-t": "workspace::NewFile",
-    },
+      "ctrl-shift-o": "projects::OpenRecent"
+    }
   },
   {
     "context": "Terminal",
     "bindings": {
       "ctrl-t": "workspace::NewTerminal",
       "ctrl-n": null,
-      "ctrl-p": null,
-    },
+      "ctrl-p": null
+    }
   },
+  {
+    "context": "Terminal",
+    "unbind": {
+      "ctrl-alt-r": "terminal::RerunTask"
+    }
+  },
+  {
+    "bindings": {
+      "alt-shift-`": "workspace::NewCenterTerminal"
+    }
+  },
+  {
+    "bindings": {
+      "ctrl-b": "project_panel::Toggle"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "unbind": {
+      "ctrl-shift-o": "outline::Toggle"
+    }
+  }
 ]

@@ -7,6 +7,9 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "allow_rewrap": "in_comments",
+  "show_wrap_guides": true,
+  "soft_wrap": "editor_width",
   "agent_servers": {
     "opencode": {
       "type": "registry"
@@ -26,9 +29,19 @@
   },
   "cli_default_open_behavior": "existing_window",
   "terminal": {
-    "dock": "right"
+    "font_size": 15.0,
+    "font_family": "FiraCode Nerd Font",
+    "dock": "right",
+    "font_features": {
+      "liga": true,
+      "calt": true
+    }
   },
-  "icon_theme": "Zed (Default)",
+  "icon_theme": {
+    "mode": "light",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)"
+  },
   "language_models": {
     "opencode": {
       "show_zen_models": false,
@@ -97,7 +110,7 @@
   "theme": {
     "mode": "dark",
     "light": "Ayu Light",
-    "dark": "One Dark"
+    "dark": "Tokyo Night"
   },
   "buffer_font_family": "FiraCode Nerd Font",
   "ui_font_family": "FiraCode Nerd Font",
@@ -107,6 +120,7 @@
   },
   "lsp": {
     "gopls": {
+      "gofumpt": true,
       "initialization_options": {
         "gofumpt": true
       }

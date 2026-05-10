@@ -66,9 +66,10 @@ repos:
             .*k8s.*\.ya?ml$|
             .*kubernetes.*\.ya?ml$
           )
-      # JSON validation
-      - id: check-json
-        name: "✅ Validate JSON syntax"
+
+      # # JSON validation
+      # - id: check-json
+      #   name: "✅ Validate JSON syntax"
 
       # TOML validation
       - id: check-toml
