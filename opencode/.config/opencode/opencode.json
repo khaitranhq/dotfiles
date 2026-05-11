@@ -67,6 +67,7 @@
     "external_directory": {
       "*": "ask",
       "~/dotfiles/opencode/.config/opencode/**/*": "allow",
+      "~/.agents/skills/**/*": "allow",
       "~/.config/opencode/**/*": "allow",
       "~/go/pkg/mod/**/*": "allow",
       "/tmp/*": "allow"

@@ -41,15 +41,13 @@ function __ensure_zellij_keepalive --on-event fish_prompt --description 'Keep WS
     return
   end
 
-  functions --erase __ensure_zellij_keepalive
-
   set -l session_name wsl-keepalive
 
   if contains -- $session_name (zellij list-sessions --short 2>/dev/null)
     return
   end
 
-  zellij attach --create-background $session_name >/dev/null 2>&1
+  zellij attach --create-background $session_name -- sh -c 'while true; sleep 300; end' >/dev/null 2>&1
 end
 
 # It is invoked by the fish shell automatically using its event system.

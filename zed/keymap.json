@@ -21,6 +21,15 @@
     }
   },
   {
+    "context": "extension == md",
+    "bindings": {
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown"
+    }
+  },
+  {
     "context": "Editor && vim_mode == normal",
     "bindings": {
       ";": "command_palette::Toggle"
@@ -91,6 +100,18 @@
     "context": "Editor && mode == full",
     "unbind": {
       "ctrl-shift-o": "outline::Toggle"
+    }
+  },
+  {
+    "context": "Editor && edit_prediction && edit_prediction_mode == eager && !showing_completions",
+    "unbind": {
+      "tab": "editor::AcceptEditPrediction"
+    }
+  },
+  {
+    "context": "Editor && edit_prediction",
+    "unbind": {
+      "alt-tab": "editor::AcceptEditPrediction"
     }
   }
 ]
