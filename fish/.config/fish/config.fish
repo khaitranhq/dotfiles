@@ -20,7 +20,7 @@ set -Ux EDITOR "nvim"
 
 set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
-set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
+set -x BROWSER '/mnt/c/Users/khai.tran/AppData/Local/BraveSoftware/Brave-Browser/Application/brave.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
 
 set -x GOMAXPROCS 8
