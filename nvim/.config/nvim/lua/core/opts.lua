@@ -192,7 +192,7 @@ end
 -- ADDITIONAL EDITOR ENHANCEMENTS
 
 -- Completion options
-opt.completeopt = { "menu", "menuone", "noselect" } -- Better completion experience
+opt.completeopt = { "menu", "menuone", "noselect", "popup" } -- Better completion experience
 opt.pumheight = 10 -- Maximum items in popup menu
 opt.pumblend = 10 -- Popup menu transparency
 

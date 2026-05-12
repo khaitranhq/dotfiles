@@ -1,10 +1,10 @@
 Generate a single, short, precise commit message following the Conventional Commits specification.
 
-Output only the commit message itself. Do not include explanations, code fences, markdown quotes, backticks (```) or any extra commentary.
+Output only the commit message itself. Do not include explanations, code fences, markdown quotes, or any extra commentary. The ``` ``` fences below are formatting for this instruction file — they are NOT part of the template or examples. Only emit the raw text inside them.
 
 ## Commit Message Format
 
-```text
+```
 <type>(scope): <summary description>
 
 # Optional body when multiple meaningful changes need separate detail
@@ -16,13 +16,13 @@ Output only the commit message itself. Do not include explanations, code fences,
 
 - Single change:
 
-```text
+```
 feat(auth): add oauth2 login support
 ```
 
 - Multiple meaningful changes:
 
-```text
+```
 feat(api): add oauth login and fix user endpoint crash
 
 feat(auth): add oauth2 login support
