@@ -7,29 +7,6 @@
 // from the command palette.
 [
   {
-    "context": "Editor && VimControl && !VimWaiting && !menu || Terminal || ProjectPanel || AgentPanel || GitPanel",
-    "bindings": {
-      "ctrl-h": "workspace::ActivatePaneLeft",
-      "ctrl-l": "workspace::ActivatePaneRight",
-      "ctrl-k": "workspace::ActivatePaneUp",
-      "ctrl-j": "workspace::ActivatePaneDown",
-
-      "ctrl-s -": "vim::ResizePaneUp",
-      "ctrl-s =": "vim::ResizePaneDown",
-      "ctrl-s .": "vim::ResizePaneRight",
-      "ctrl-s ,": "vim::ResizePaneLeft"
-    }
-  },
-  {
-    "context": "extension == md",
-    "bindings": {
-      "ctrl-h": "workspace::ActivatePaneLeft",
-      "ctrl-l": "workspace::ActivatePaneRight",
-      "ctrl-k": "workspace::ActivatePaneUp",
-      "ctrl-j": "workspace::ActivatePaneDown"
-    }
-  },
-  {
     "context": "Editor && vim_mode == normal",
     "bindings": {
       ";": "command_palette::Toggle"
@@ -69,7 +46,11 @@
       "ctrl-alt-r": "workspace::ToggleRightDock",
       "ctrl-alt-l": "workspace::ToggleLeftDock",
       "ctrl-t": "workspace::NewFile",
-      "ctrl-shift-o": "projects::OpenRecent"
+      "ctrl-shift-o": "projects::OpenRecent",
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown",
     }
   },
   {
@@ -112,6 +93,48 @@
     "context": "Editor && edit_prediction",
     "unbind": {
       "alt-tab": "editor::AcceptEditPrediction"
+    }
+  },
+  {
+    "context": "BufferSearchBar",
+    "unbind": {
+      "ctrl-h": "search::ToggleReplace"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "unbind": {
+      "ctrl-h": "buffer_search::DeployReplace"
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "ctrl-l": "editor::SelectLine"
+    }
+  },
+  {
+    "context": "FileFinder || FileFinder > Picker > Editor || FileFinder > Picker > menu",
+    "unbind": {
+      "ctrl-j": "pane::SplitDown"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "ctrl-j": "vim::Down"
+    }
+  },
+  {
+    "context": "vim_mode == literal",
+    "unbind": {
+      "ctrl-j": [
+        "vim::Literal",
+        [
+          "ctrl-j",
+          "\n"
+        ]
+      ]
     }
   }
 ]

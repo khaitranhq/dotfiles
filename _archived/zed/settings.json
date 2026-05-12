@@ -116,7 +116,7 @@
   "theme": {
     "mode": "dark",
     "light": "Ayu Light",
-    "dark": "Tokyo Night"
+    "dark": "One Dark"
   },
   "buffer_font_family": "FiraCode Nerd Font",
   "ui_font_family": "FiraCode Nerd Font",
@@ -181,7 +181,6 @@
         {
           "external": {
             "command": "golines",
-            "arguments": ["--base-formatter", "gofmt"]
           }
         }
       ]
