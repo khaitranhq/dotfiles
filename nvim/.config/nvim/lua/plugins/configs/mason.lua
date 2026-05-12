@@ -13,7 +13,7 @@ function M.install_package(package_name)
 	-- Use pcall to safely handle "package not found" errors
 	local ok, pkg = pcall(registry.get_package, package_name)
 	if not ok then
-		print("Error: Cannot find package '" .. package_name .. "'")
+		-- print("Warning: Cannot find package '" .. package_name .. "'")
 		return
 	end
 

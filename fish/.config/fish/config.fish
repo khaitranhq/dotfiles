@@ -14,9 +14,9 @@ set -g fish_greeting
 set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 
 # others
-set -Ux KUBE_EDITOR vim
-set -Ux VISUAL "vim"
-set -Ux EDITOR "vim"
+set -Ux KUBE_EDITOR nvim
+set -Ux VISUAL "nvim"
+set -Ux EDITOR "nvim"
 
 set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
@@ -82,6 +82,7 @@ if test -e $HOME/.config/fish/ai.fish
 end
 
 #=========================Aliases=========================
+alias v='nvim'
 alias l='eza -lah --sort modified --icons --group-directories-first --git'
 alias cat="bat -p"
 alias ld='lazydocker'
