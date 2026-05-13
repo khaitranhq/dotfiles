@@ -1,3 +1,5 @@
+vim.loader.enable()
+
 require("vim._core.ui2").enable()
 
 vim.filetype.add({
@@ -11,6 +13,4 @@ vim.filetype.add({
 require("core.opts")
 require("core.autocommand").setup()
 require("plugins").setup()
-require("core.keymap").setup()
-require("core.keymap").setup()
 require("core.keymap").setup()

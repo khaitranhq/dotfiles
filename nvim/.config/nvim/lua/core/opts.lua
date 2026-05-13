@@ -28,7 +28,7 @@ opt.incsearch = true -- Show search matches as you type
 
 -- Text rendering and display
 opt.conceallevel = 2 -- Hide markup characters in supported file types
-opt.wrap = true -- Don't wrap long lines by default
+opt.wrap = true
 opt.showbreak = "↪ "
 opt.linebreak = true
 opt.scrolloff = 8 -- Keep 8 lines visible above/below cursor
@@ -45,25 +45,10 @@ opt.listchars = {
 -- Window and buffer behavior
 opt.splitbelow = true -- Horizontal splits open below current window
 opt.splitright = true -- Vertical splits open to the right of current window
-opt.hidden = true -- Allow switching buffers without saving changes
 opt.showtabline = 0
 
 -- SYSTEM INTEGRATION
 
--- Clipboard integration
--- Choose clipboard provider based on availability
--- Use OSC52 for remote environments (SSH), otherwise use xsel for local systems
--- g.clipboard = {
--- 	name = "OSC 52",
--- 	copy = {
--- 		["+"] = require("vim.ui.clipboard.osc52").copy("+"),
--- 		["*"] = require("vim.ui.clipboard.osc52").copy("*"),
--- 	},
--- 	paste = {
--- 		["+"] = function() end,
--- 		["*"] = function() end,
--- 	},
--- }
 opt.clipboard = "unnamedplus" -- Use system clipboard for all operations
 
 -- Terminal and color support
@@ -109,7 +94,6 @@ setup_undo_directory()
 -- File handling
 opt.swapfile = false -- Disable swap files (we have persistent undo)
 opt.backup = false -- Disable backup files
-opt.writebackup = false -- Disable backup before overwriting
 
 -- Timing and responsiveness
 opt.updatetime = 250 -- Faster completion and diagnostics (default: 4000ms)
@@ -118,8 +102,6 @@ opt.ttimeoutlen = 10 -- Faster key sequence completion
 
 -- Rendering optimizations
 opt.synmaxcol = 300 -- Limit syntax highlighting for long lines
-opt.ttyfast = true -- Indicate fast terminal connection
-opt.redrawtime = 1500 -- Time limit for 'hlsearch' and :match highlighting
 
 -- Memory and processing
 opt.maxmempattern = 20000 -- Maximum memory for pattern matching
@@ -198,7 +180,6 @@ opt.pumblend = 10 -- Popup menu transparency
 
 -- Command line
 opt.cmdheight = 1 -- Command line height
-opt.showcmd = true -- Show partial commands in status line
 opt.showmode = false -- Don't show mode (handled by statusline)
 
 -- Session handling
@@ -235,12 +216,10 @@ opt.wildignore:append({
 	"*.pyc",
 	"*.pyo",
 	"*.class",
-	"*.class",
 	"*.cache",
 })
 
 -- Diff options
-opt.diffopt:append({ "iwhite", "algorithm:patience", "indent-heuristic" })
 opt.diffopt:append({ "iwhite", "algorithm:patience", "indent-heuristic" })
 
 -- Lsp signs

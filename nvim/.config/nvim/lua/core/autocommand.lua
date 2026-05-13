@@ -7,8 +7,9 @@ M.setup = function()
     group = augroup,
     pattern = "*",
     callback = function()
-      -- Remove ^M (carriage return) characters before saving
-      vim.cmd("%s/\\r//ge")
+      if vim.fn.search("\r", "nw") ~= 0 then
+        vim.cmd("%s/\\r//ge")
+      end
     end,
   })
 

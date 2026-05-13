@@ -100,18 +100,17 @@ local blink_config = {
 
 local M = {}
 
-M.setup = function()
+--- Install all configured LSP servers via Mason.
+--- Should be called once after plugins are loaded (e.g. via :InstallServers command).
+function M.install_servers()
 	local mason = require("plugins.configs.mason")
 
-	-- Install LSP servers
-	for server in pairs(lsp_config) do
-		if lsp_config[server].mason_package then
-			mason.install_package(lsp_config[server].mason_package)
-		else
-			mason.install_package(server)
-		end
+	for server, config in pairs(lsp_config) do
+		mason.install_package(config.mason_package or server)
 	end
+end
 
+M.setup = function()
 	-- Configure each LSP server using the new vim.lsp.config API
 	for server, config in pairs(lsp_config) do
 		vim.lsp.config(server, config)
