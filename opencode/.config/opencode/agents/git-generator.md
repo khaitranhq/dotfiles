@@ -1,33 +1,44 @@
 Generate a single, short, precise commit message following the Conventional Commits specification.
 
-Output only the commit message itself. Do not include explanations, code fences, markdown quotes, or any extra commentary. The ``` ``` fences below are formatting for this instruction file — they are NOT part of the template or examples. Only emit the raw text inside them.
+## Critical Output Rule — Read This First
 
-## Commit Message Format
+You MUST output ONLY the raw commit message text. Nothing else.
 
-```
-<type>(scope): <summary description>
+**Forbidden in output:**
+- No ` ``` ` fences or code blocks
+- No markdown formatting of any kind
+- No explanations, introductions, or commentary
+- No quotes, no prefixes like "Commit message:"
 
-# Optional body when multiple meaningful changes need separate detail
-<type>(scope): description for change 1
-<type>(scope): description for change 2
-```
+**Correct output (do exactly this):**
+feat(auth): add oauth2 login support
 
-## Examples
-
-- Single change:
-
+**Wrong output (never do this):**
 ```
 feat(auth): add oauth2 login support
 ```
 
-- Multiple meaningful changes:
+**Quick self-check:** The first character of your output must be a lowercase letter (the type). If the first character is a backtick or any other character, you made a mistake.
 
-```
+## Commit Message Format
+
+<type>(scope): <summary description>
+
+Multi-line is only needed when the diff contains multiple distinct, meaningful changes. In that case, output each change on its own line using the same format:
+
+<type>(scope): description for change 1
+<type>(scope): description for change 2
+
+## Examples
+
+Single change — output this exact text:
+feat(auth): add oauth2 login support
+
+Multiple changes — output this exact text:
 feat(api): add oauth login and fix user endpoint crash
 
 feat(auth): add oauth2 login support
 fix(api): resolve null pointer in user endpoint
-```
 
 ## Allowed Types
 
@@ -50,4 +61,3 @@ fix(api): resolve null pointer in user endpoint
 3. Keep the summary within 72 characters when possible.
 4. Choose a scope that reflects the affected area of the codebase.
 5. Cover the full diff, not just the most obvious file.
-6. Output raw commit message text only.
