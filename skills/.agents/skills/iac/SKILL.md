@@ -74,7 +74,8 @@ Tool-agnostic best practices for managing infrastructure through code. Applies t
 
 - Run IaC from CI/CD, not local machines. Enforce review gates for production changes.
 - Plan/preview on PR, apply on merge.
-- Store CI/CD credentials minimally — prefer OIDC over long-lived cloud keys.
+- Before implementing pipeline jobs, test the container image locally: `docker pull` the image and run planned commands to verify tooling is available. Example: `docker pull ubuntu:latest && docker run --rm ubuntu:latest bash -c "apt-get update && apt-get install -y jq && jq --version"`. Do not run `docker` commands inside Docker containers — run them directly on the host machine.
+- Use passwordless credentials for external services whenever possible: AWS IAM via OIDC, Azure via OIDC (Workload Identity Federation), Pulumi Cloud via OIDC. Avoid long-lived access keys and service principals.
 
 ### 8. Testing and Validation
 
@@ -108,4 +109,5 @@ Tool-agnostic best practices for managing infrastructure through code. Applies t
 
 1. Verify state reflects reality: run `state list` / `export` and spot-check.
 2. Confirm outputs match the expected contract.
-3. Destroy test/sandbox environments after validation to avoid cost leaks.
+3. Validate the IAM policy of the AWS IAM role used for deployment. Run `aws iam get-role-policy` and `aws iam list-attached-role-policies` to confirm least-privilege permissions and verify no overly permissive statements (e.g., `"*"` resources with `"*"` actions).
+4. Destroy test/sandbox environments after validation to avoid cost leaks.
