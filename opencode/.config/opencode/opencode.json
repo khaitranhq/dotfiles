@@ -6,6 +6,7 @@
       "*": "ask",
       "printf *": "allow",
       "ls *": "allow",
+      "diff *": "allow",
       "find *": "allow",
       "grep *": "allow",
       "go build *": "allow",
@@ -14,6 +15,7 @@
       "go list *": "allow",
       "go version*": "allow",
       "go vet *": "allow",
+      "go env *": "allow",
       "go test *": "allow",
       "gofmt *": "allow",
       "go fmt *": "allow",
@@ -109,7 +111,7 @@
     "build": {
       "tools": {
         "github*": true
-      },
+      }
     },
     "coder": {
       "mode": "subagent",
@@ -118,7 +120,7 @@
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
-      },
+      }
     },
     "code-reviewer": {
       "mode": "subagent",
