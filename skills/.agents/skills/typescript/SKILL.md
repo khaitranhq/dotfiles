@@ -1,6 +1,31 @@
+---
+name: typescript
+description: Provides specialized instructions and workflows for TypeScript development tasks including type checking, validation, and code quality.
+license: MIT
+metadata:
+  author: OpenCode
+  version: "1.0.0"
+  domain: frontend
+  triggers:
+    - TypeScript
+    - TS
+    - types
+    - tsc
+    - type checking
+  role: specialist
+  scope: implementation
+  output-format: code
+---
+
 # TypeScript Skill
 
-Provides specialized instructions and workflows for TypeScript development tasks including type checking, validation, and code quality.
+## Dependency Versioning
+
+When adding or updating dependencies in `package.json`, always pin exact versions:
+
+- Use exact versions (e.g., `"1.2.3"`) instead of caret ranges (e.g., `"^1.2.3"`)
+- Never use `"latest"` or `"*"` as a version specifier
+- This ensures reproducible builds and prevents unexpected breaking changes from semver-minor or patch updates
 
 ## Validation
 
