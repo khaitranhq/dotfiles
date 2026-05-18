@@ -203,6 +203,7 @@ export default function question(pi: ExtensionAPI) {
           let inputMode = false;
           let inputQuestionId: string | null = null;
           let cachedLines: string[] | undefined;
+          let cachedWidth: number | undefined;
 
           // Answers: questionId -> answer
           const answers = new Map<string, QuestionAnswer>();
@@ -236,6 +237,7 @@ export default function question(pi: ExtensionAPI) {
 
           function refresh() {
             cachedLines = undefined;
+            cachedWidth = undefined;
             tui.requestRender();
           }
 
@@ -392,6 +394,22 @@ export default function question(pi: ExtensionAPI) {
               // editor for cursor movement.
               if (isMulti) {
                 if (matchesKey(data, Key.tab)) {
+                  // Save editor content before navigating away
+                  if (inputQuestionId) {
+                    const editorValue = editor.getText();
+                    const q = questions.find((q) => q.id === inputQuestionId)!;
+                    const trimmed = editorValue.trim();
+                    if (q.type === "input" && trimmed) {
+                      saveInputAnswer(q.id, trimmed);
+                    } else if (q.type === "select" && trimmed) {
+                      saveSelectAnswer(q.id, trimmed, trimmed, true);
+                    } else if (q.type === "multi_select" && trimmed) {
+                      const selected = multiSelected.get(q.id) || new Set<string>();
+                      selected.add(`__custom__${trimmed}`);
+                      multiSelected.set(q.id, selected);
+                      saveMultiSelectAnswer(q.id);
+                    }
+                  }
                   inputMode = false;
                   inputQuestionId = null;
                   editor.setText("");
@@ -401,6 +419,22 @@ export default function question(pi: ExtensionAPI) {
                   return;
                 }
                 if (matchesKey(data, Key.shift("tab"))) {
+                  // Save editor content before navigating away
+                  if (inputQuestionId) {
+                    const editorValue = editor.getText();
+                    const q = questions.find((q) => q.id === inputQuestionId)!;
+                    const trimmed = editorValue.trim();
+                    if (q.type === "input" && trimmed) {
+                      saveInputAnswer(q.id, trimmed);
+                    } else if (q.type === "select" && trimmed) {
+                      saveSelectAnswer(q.id, trimmed, trimmed, true);
+                    } else if (q.type === "multi_select" && trimmed) {
+                      const selected = multiSelected.get(q.id) || new Set<string>();
+                      selected.add(`__custom__${trimmed}`);
+                      multiSelected.set(q.id, selected);
+                      saveMultiSelectAnswer(q.id);
+                    }
+                  }
                   inputMode = false;
                   inputQuestionId = null;
                   editor.setText("");
@@ -601,7 +635,9 @@ export default function question(pi: ExtensionAPI) {
           // ── Render ──────────────────────────────────────────────────
 
           function render(width: number): string[] {
-            if (cachedLines) return cachedLines;
+            if (cachedLines !== undefined && cachedWidth === width) {
+              return cachedLines;
+            }
 
             const lines: string[] = [];
             const add = (s: string) =>
@@ -636,7 +672,7 @@ export default function question(pi: ExtensionAPI) {
                 : theme.fg(canSubmit ? "success" : "dim", submitText);
               tabs.push(`${submitStyled} →`);
               add(` ${tabs.join("")}`);
-              lines.push("");
+              add("");
             }
 
             // ── Content by mode ───────────────────────────────────────
@@ -644,7 +680,7 @@ export default function question(pi: ExtensionAPI) {
             if (currentTab === questions.length) {
               // ── Confirm tab ──────────────────────────────────────────
               add(theme.fg("accent", theme.bold(" Review and confirm")));
-              lines.push("");
+              add("");
 
               for (const question of questions) {
                 const answer = answers.get(question.id);
@@ -681,7 +717,7 @@ export default function question(pi: ExtensionAPI) {
                 }
               }
 
-              lines.push("");
+              add("");
               if (allAnswered()) {
                 add(theme.fg("success", " Press Enter to submit"));
               } else {
@@ -695,7 +731,7 @@ export default function question(pi: ExtensionAPI) {
             } else if (inputMode && q) {
               // ── Editor mode (input type or "Type something") ─────────
               add(theme.fg("text", ` ${q.prompt}`));
-              lines.push("");
+              add("");
 
               // Show options for reference when in select/multi_select custom
               if (q.type === "select" || q.type === "multi_select") {
@@ -703,7 +739,7 @@ export default function question(pi: ExtensionAPI) {
                 for (let i = 0; i < q.options.length; i++) {
                   add(`   ${theme.fg("dim", `${i + 1}. ${q.options[i].label}`)}`);
                 }
-                lines.push("");
+                add("");
               }
 
               add(theme.fg("muted", " Your answer:"));
@@ -711,7 +747,7 @@ export default function question(pi: ExtensionAPI) {
                 add(` ${line}`);
               }
 
-              lines.push("");
+              add("");
               if (isMulti) {
                 add(
                   theme.fg(
@@ -727,7 +763,7 @@ export default function question(pi: ExtensionAPI) {
             } else if (q && q.type === "input") {
               // ── Input type (pre-editor) ─────────────────────────────
               add(theme.fg("text", ` ${q.prompt}`));
-              lines.push("");
+              add("");
 
               // Show current answer if exists
               const existing = answers.get(q.id);
@@ -735,7 +771,7 @@ export default function question(pi: ExtensionAPI) {
                 add(
                   `${theme.fg("success", "✓")} ${theme.fg("text", existing.values[0])}`,
                 );
-                lines.push("");
+                add("");
               }
 
               add(
@@ -744,7 +780,7 @@ export default function question(pi: ExtensionAPI) {
                   ` ${theme.bold("Click Enter to type your answer")} ✎`,
                 ),
               );
-              lines.push("");
+              add("");
               if (isMulti) {
                 add(
                   theme.fg(
@@ -765,7 +801,7 @@ export default function question(pi: ExtensionAPI) {
               const isMultiSelect = q.type === "multi_select";
 
               add(theme.fg("text", ` ${q.prompt}`));
-              lines.push("");
+              add("");
 
               for (let i = 0; i < opts.length; i++) {
                 const opt = opts[i];
@@ -835,7 +871,7 @@ export default function question(pi: ExtensionAPI) {
                 ).length;
 
                 if (checkedOpts.length > 0 || customCount > 0) {
-                  lines.push("");
+                  add("");
                   const parts: string[] = [];
                   for (const o of checkedOpts) {
                     parts.push(
@@ -851,7 +887,7 @@ export default function question(pi: ExtensionAPI) {
                 }
               }
 
-              lines.push("");
+              add("");
               if (isMultiSelect) {
                 if (isMulti) {
                   add(
@@ -891,6 +927,7 @@ export default function question(pi: ExtensionAPI) {
             add(theme.fg("accent", "─".repeat(width)));
 
             cachedLines = lines;
+            cachedWidth = width;
             return lines;
           }
 
@@ -898,6 +935,7 @@ export default function question(pi: ExtensionAPI) {
             render,
             invalidate: () => {
               cachedLines = undefined;
+              cachedWidth = undefined;
               editor.invalidate();
             },
             handleInput,
