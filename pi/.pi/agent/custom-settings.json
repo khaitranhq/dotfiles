@@ -17,7 +17,8 @@
       "read",
       "write",
       "edit",
-      "subagent"
+      "subagent",
+      "question"
     ]
   }
 }

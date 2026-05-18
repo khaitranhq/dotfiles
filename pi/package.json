@@ -11,7 +11,10 @@
   "license": "ISC",
   "packageManager": "pnpm@10.30.3",
   "dependencies": {
+    "@earendil-works/pi-agent-core": "^0.75.3",
+    "@earendil-works/pi-ai": "^0.75.3",
     "@earendil-works/pi-coding-agent": "^0.74.1",
-    "@earendil-works/pi-tui": "^0.75.3"
+    "@earendil-works/pi-tui": "^0.75.3",
+    "typebox": "^1.1.38"
   }
 }

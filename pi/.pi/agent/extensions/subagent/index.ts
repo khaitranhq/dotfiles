@@ -329,7 +329,7 @@ async function runSingleAgent(
   }
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
-  const modelToUse = agent.model || parentModel;
+  const modelToUse = parentModel || agent.model;
   if (modelToUse) args.push("--model", modelToUse);
   if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
 
