@@ -28,7 +28,7 @@ M.setup = function()
           "yaml",
         },
       }),
-      null_ls.builtins.formatting.yamlfmt,
+      -- null_ls.builtins.formatting.yamlfmt,
       null_ls.builtins.diagnostics.golangci_lint.with({
         timeout = 60000,
       }),
