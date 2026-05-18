@@ -1,20 +1,20 @@
 /**
  * Permission Request Extension
  *
- * Gates tool execution based on an auto-approve list in
+ * Gates tool execution based on an always-approve list in
  * ~/.pi/agent/custom-settings.json.
  *
  * Every tool and bash command defaults to "ask" — the approval prompt
- * is shown.  Add tools or commands to the `autoApprove` section to
+ * is shown.  Add tools or commands to the `always_approve` section to
  * skip the prompt permanently:
  *
- *   auto_approve.tools        – always allow these tools, no prompt
- *   auto_approve.bashCommands – always allow these commands, no prompt
+ *   always_approve.tools        – always allow these tools, no prompt
+ *   always_approve.bashCommands – always allow these commands, no prompt
  *
  * Example ~/.pi/agent/custom-settings.json:
  *
  *   {
- *     "auto_approve": {
+ *     "always_approve": {
  *       "tools":        ["read", "edit", "write"],
  *       "bashCommands": ["find", "grep", "ls", "cd", "rg", "cat"]
  *     }
@@ -22,74 +22,36 @@
  *
  * For compound bash commands (&&, ;, |, ||) the first segment is matched.
  *
- * When a call is not auto-approved, the user sees:
+ * When a call is not always-approved, the user sees:
  *
  *   [1] Allow                     – execute this one call
  *   [2] Deny (with reason)        – block, optionally providing a reason
- *   [3] Always approve            – allow and persist to autoApprove
+ *   [3] Always approve            – allow and persist to always_approve
  *   [4] Approve in this session   – allow for the rest of this session
  */
 
-import * as fs from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
-
-// ── Types ──────────────────────────────────────────────────────────────
-
-interface AutoApproveConfig {
-  tools?: string[];
-  bashCommands?: string[];
-}
-
-interface CustomSettings {
-  auto_approve?: AutoApproveConfig;
-}
-
-// ── Config helpers ────────────────────────────────────────────────────
-
-function configPath(): string {
-  const agentDir =
-    process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
-  return path.join(agentDir, "custom-settings.json");
-}
-
-function loadCustomSettings(): CustomSettings {
-  const p = configPath();
-  try {
-    if (fs.existsSync(p)) {
-      const raw = fs.readFileSync(p, "utf-8");
-      return JSON.parse(raw) as CustomSettings;
-    }
-  } catch (err) {
-    console.error(`[permission-request] Failed to load custom-settings.json: ${err}`);
-  }
-  return {};
-}
-
-function loadAutoApprove(): AutoApproveConfig {
-  return loadCustomSettings().auto_approve ?? {};
-}
-
-function saveCustomSettings(settings: CustomSettings): void {
-  const p = configPath();
-  try {
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, JSON.stringify(settings, null, 2), "utf-8");
-  } catch (err) {
-    console.error(`[permission-request] Failed to save custom-settings.json: ${err}`);
-  }
-}
+import {
+  loadAlwaysApprove,
+  updateCustomSettings,
+  type AlwaysApproveConfig,
+  type CustomSettings,
+} from "../shared/config";
 
 // ── Set helpers ───────────────────────────────────────────────────────
 
-function addToAutoApprove(settings: CustomSettings, category: "tools" | "bashCommands", name: string): CustomSettings {
-  const aa: AutoApproveConfig = settings.auto_approve ?? {};
+function addToAlwaysApprove(
+  settings: CustomSettings,
+  category: "tools" | "bashCommands",
+  name: string,
+): CustomSettings {
+  const aa: AlwaysApproveConfig = settings.always_approve ?? {};
   const list = aa[category] ?? [];
   if (!list.includes(name)) {
     aa[category] = [...list, name];
   }
-  return { ...settings, auto_approve: aa };
+  return { ...settings, always_approve: aa };
 }
 
 // ── Command extraction ────────────────────────────────────────────────
@@ -136,44 +98,44 @@ function sessionKey(toolName: string, event: ToolCallEvent): string {
 
 // ── Extension ─────────────────────────────────────────────────────────
 
-export default function (pi: ExtensionAPI) {
+export default function(pi: ExtensionAPI) {
   // Per-session overrides: tools/commands granted session-only approval
   const sessionApprovals = new Set<string>();
 
-  // Live auto-approve sets loaded from disk
-  let autoApproveTools = new Set<string>();
-  let autoApproveCommands = new Set<string>();
+  // Live always-approve sets loaded from disk
+  let alwaysApproveTools = new Set<string>();
+  let alwaysApproveCommands = new Set<string>();
 
-  function reloadAutoApprove(): void {
-    const aa = loadAutoApprove();
-    autoApproveTools = new Set(aa.tools ?? []);
-    autoApproveCommands = new Set(aa.bashCommands ?? []);
+  function reloadAlwaysApprove(): void {
+    const aa = loadAlwaysApprove();
+    alwaysApproveTools = new Set(aa.tools ?? []);
+    alwaysApproveCommands = new Set(aa.bashCommands ?? []);
   }
 
-  reloadAutoApprove();
+  reloadAlwaysApprove();
 
   // ── Reload config on session start ─────────────────────────────────
   pi.on("session_start", async (_event) => {
     sessionApprovals.clear();
-    reloadAutoApprove();
+    reloadAlwaysApprove();
   });
 
   // ── Gate every tool call ───────────────────────────────────────────
   pi.on("tool_call", async (event: ToolCallEvent, ctx) => {
     const toolName = event.toolName;
 
-    // Determine whether this call is auto-approved.
-    let autoApproved = false;
+    // Determine whether this call is always-approved.
+    let alwaysApproved = false;
 
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
       const base = extractBaseCommand(command);
-      if (base && autoApproveCommands.has(base)) {
-        autoApproved = true;
+      if (base && alwaysApproveCommands.has(base)) {
+        alwaysApproved = true;
       }
     } else {
-      if (autoApproveTools.has(toolName)) {
-        autoApproved = true;
+      if (alwaysApproveTools.has(toolName)) {
+        alwaysApproved = true;
       }
     }
 
@@ -181,8 +143,8 @@ export default function (pi: ExtensionAPI) {
     const key = sessionKey(toolName, event);
     if (sessionApprovals.has(key)) return undefined;
 
-    // ── auto-approve ────────────────────────────────────────────────
-    if (autoApproved) return undefined;
+    // ── always-approve ──────────────────────────────────────────────
+    if (alwaysApproved) return undefined;
 
     // ── ask ──────────────────────────────────────────────────────────
     if (!ctx.hasUI) {
@@ -196,15 +158,12 @@ export default function (pi: ExtensionAPI) {
     // Build a human-readable description of what's being requested
     const desc = describeCall(event);
 
-    const selected = await ctx.ui.select(
-      `🔐 Permission required — ${desc}`,
-      [
-        "✅ Allow",
-        "❌ Deny (with reason)",
-        "🔓 Always approve",
-        "🕐 Approve in this session only",
-      ],
-    );
+    const selected = await ctx.ui.select(`🔐 Permission required — ${desc}`, [
+      "✅ Allow",
+      "❌ Deny (with reason)",
+      "🔓 Always approve",
+      "🕐 Approve in this session only",
+    ]);
 
     if (selected === null || selected === undefined) {
       return { block: true, reason: "Cancelled by user." };
@@ -215,30 +174,25 @@ export default function (pi: ExtensionAPI) {
         return undefined; // execute this one call
 
       case "❌ Deny (with reason)": {
-        const reason = await ctx.ui.input(
-          "Reason for denial:",
-          "e.g., not needed, dangerous, ...",
-        );
+        const reason = await ctx.ui.input("Reason for denial:", "e.g., not needed, dangerous, ...");
         return { block: true, reason: reason || "Blocked by user." };
       }
 
       case "🔓 Always approve": {
-        // Persist to custom-settings.json under autoApprove
-        const settings = loadCustomSettings();
-
+        // Persist to custom-settings.json under always_approve
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const base = extractBaseCommand(command);
           if (base) {
-            saveCustomSettings(addToAutoApprove(settings, "bashCommands", base));
-            autoApproveCommands.add(base);
+            updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", base));
+            alwaysApproveCommands.add(base);
           } else {
-            saveCustomSettings(addToAutoApprove(settings, "tools", toolName));
-            autoApproveTools.add(toolName);
+            updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
+            alwaysApproveTools.add(toolName);
           }
         } else {
-          saveCustomSettings(addToAutoApprove(settings, "tools", toolName));
-          autoApproveTools.add(toolName);
+          updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
+          alwaysApproveTools.add(toolName);
         }
         return undefined;
       }

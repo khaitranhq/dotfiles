@@ -37,11 +37,8 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import {
-  type AgentConfig,
-  type AgentScope,
-  discoverAgents,
-} from "./agents";
+import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
+import { loadSubagentConfig } from "../shared/config";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -291,6 +288,7 @@ async function runSingleAgent(
   signal: AbortSignal | undefined,
   onUpdate: OnUpdateCallback | undefined,
   makeDetails: (results: SingleResult[]) => SubagentDetails,
+  parentModel?: string,
 ): Promise<SingleResult> {
   const agent = subagents.find((a) => a.name === agentName);
 
@@ -303,13 +301,22 @@ async function runSingleAgent(
       exitCode: 1,
       messages: [],
       stderr: `Unknown subagent: "${agentName}". Available subagents: ${available}.`,
-      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
+      usage: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        cost: 0,
+        contextTokens: 0,
+        turns: 0,
+      },
       step,
     };
   }
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
-  if (agent.model) args.push("--model", agent.model);
+  const modelToUse = agent.model || parentModel;
+  if (modelToUse) args.push("--model", modelToUse);
   if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
 
   let tmpPromptDir: string | null = null;
@@ -322,7 +329,15 @@ async function runSingleAgent(
     exitCode: 0,
     messages: [],
     stderr: "",
-    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
+    usage: {
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      cost: 0,
+      contextTokens: 0,
+      turns: 0,
+    },
     model: agent.model,
     step,
   };
@@ -330,9 +345,7 @@ async function runSingleAgent(
   const emitUpdate = () => {
     if (onUpdate) {
       onUpdate({
-        content: [
-          { type: "text", text: getFinalOutput(currentResult.messages) || "(running...)" },
-        ],
+        content: [{ type: "text", text: getFinalOutput(currentResult.messages) || "(running...)" }],
         details: makeDetails([currentResult]),
       });
     }
@@ -433,9 +446,17 @@ async function runSingleAgent(
     return currentResult;
   } finally {
     if (tmpPromptPath)
-      try { fs.unlinkSync(tmpPromptPath); } catch { /* ignore */ }
+      try {
+        fs.unlinkSync(tmpPromptPath);
+      } catch {
+        /* ignore */
+      }
     if (tmpPromptDir)
-      try { fs.rmdirSync(tmpPromptDir); } catch { /* ignore */ }
+      try {
+        fs.rmdirSync(tmpPromptDir);
+      } catch {
+        /* ignore */
+      }
   }
 }
 
@@ -462,7 +483,9 @@ const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
 });
 
 const SubagentParams = Type.Object({
-  agent: Type.Optional(Type.String({ description: "Name of the subagent to invoke (single mode)" })),
+  agent: Type.Optional(
+    Type.String({ description: "Name of the subagent to invoke (single mode)" }),
+  ),
   task: Type.Optional(Type.String({ description: "Task to delegate (single mode)" })),
   tasks: Type.Optional(
     Type.Array(TaskItem, { description: "Array of {agent, task} for parallel execution" }),
@@ -477,12 +500,14 @@ const SubagentParams = Type.Object({
       default: true,
     }),
   ),
-  cwd: Type.Optional(Type.String({ description: "Working directory for the subagent (single mode)" })),
+  cwd: Type.Optional(
+    Type.String({ description: "Working directory for the subagent (single mode)" }),
+  ),
 });
 
 // ── Extension entry point ──────────────────────────────────────────────
 
-export default function (pi: ExtensionAPI) {
+export default function(pi: ExtensionAPI) {
   // ── Tool: subagent ───────────────────────────────────────────────────
 
   pi.registerTool({
@@ -491,16 +516,19 @@ export default function (pi: ExtensionAPI) {
     description: [
       "Delegate tasks to specialized subagents with isolated context.",
       "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
-      'Default agent scope is "user" (from ~/.pi/agent/agents).',
+      'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.json to change defaults.',
       'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
     ].join(" "),
     parameters: SubagentParams,
 
     async execute(_toolCallId, params, signal, onUpdate, ctx) {
-      const agentScope: AgentScope = params.agentScope ?? "user";
+      const subagentCfg = loadSubagentConfig();
+      const agentScope: AgentScope = params.agentScope ?? subagentCfg.defaultScope ?? "user";
       const discovery = discoverAgents(ctx.cwd, agentScope);
       const subagents = discovery.subagents;
-      const confirmProjectAgents = params.confirmProjectAgents ?? true;
+      const confirmProjectAgents =
+        params.confirmProjectAgents ?? subagentCfg.confirmProjectAgents ?? true;
+      const parentModel = ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined;
 
       const hasChain = (params.chain?.length ?? 0) > 0;
       const hasTasks = (params.tasks?.length ?? 0) > 0;
@@ -509,16 +537,15 @@ export default function (pi: ExtensionAPI) {
 
       const makeDetails =
         (mode: "single" | "parallel" | "chain") =>
-        (results: SingleResult[]): SubagentDetails => ({
-          mode,
-          agentScope,
-          projectAgentsDir: discovery.projectAgentsDir,
-          results,
-        });
+          (results: SingleResult[]): SubagentDetails => ({
+            mode,
+            agentScope,
+            projectAgentsDir: discovery.projectAgentsDir,
+            results,
+          });
 
       if (modeCount !== 1) {
-        const available =
-          subagents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
+        const available = subagents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
         return {
           content: [
             {
@@ -554,9 +581,7 @@ export default function (pi: ExtensionAPI) {
           );
           if (!ok)
             return {
-              content: [
-                { type: "text", text: "Canceled: project-local agents not approved." },
-              ],
+              content: [{ type: "text", text: "Canceled: project-local agents not approved." }],
               details: makeDetails(hasChain ? "chain" : hasTasks ? "parallel" : "single")([]),
             };
         }
@@ -573,14 +598,14 @@ export default function (pi: ExtensionAPI) {
 
           const chainUpdate: OnUpdateCallback | undefined = onUpdate
             ? (partial) => {
-                const currentResult = partial.details?.results[0];
-                if (currentResult) {
-                  onUpdate({
-                    content: partial.content,
-                    details: makeDetails("chain")([...results, currentResult]),
-                  });
-                }
+              const currentResult = partial.details?.results[0];
+              if (currentResult) {
+                onUpdate({
+                  content: partial.content,
+                  details: makeDetails("chain")([...results, currentResult]),
+                });
               }
+            }
             : undefined;
 
           const result = await runSingleAgent(
@@ -593,6 +618,7 @@ export default function (pi: ExtensionAPI) {
             signal,
             chainUpdate,
             makeDetails("chain"),
+            parentModel,
           );
           results.push(result);
 
@@ -623,8 +649,7 @@ export default function (pi: ExtensionAPI) {
           content: [
             {
               type: "text",
-              text:
-                getFinalOutput(results[results.length - 1].messages) || "(no output)",
+              text: getFinalOutput(results[results.length - 1].messages) || "(no output)",
             },
           ],
           details: makeDetails("chain")(results),
@@ -653,7 +678,15 @@ export default function (pi: ExtensionAPI) {
             exitCode: -1,
             messages: [],
             stderr: "",
-            usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
+            usage: {
+              input: 0,
+              output: 0,
+              cacheRead: 0,
+              cacheWrite: 0,
+              cost: 0,
+              contextTokens: 0,
+              turns: 0,
+            },
           };
         }
 
@@ -692,6 +725,7 @@ export default function (pi: ExtensionAPI) {
                 }
               },
               makeDetails("parallel"),
+              parentModel,
             );
             allResults[index] = result;
             emitParallelUpdate();
@@ -728,11 +762,10 @@ export default function (pi: ExtensionAPI) {
           signal,
           onUpdate,
           makeDetails("single"),
+          parentModel,
         );
         const isError =
-          result.exitCode !== 0 ||
-          result.stopReason === "error" ||
-          result.stopReason === "aborted";
+          result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
         if (isError) {
           const errorMsg =
             result.errorMessage ||
@@ -761,12 +794,9 @@ export default function (pi: ExtensionAPI) {
         };
       }
 
-      const available =
-        subagents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
+      const available = subagents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
       return {
-        content: [
-          { type: "text", text: `Invalid parameters. Available subagents: ${available}` },
-        ],
+        content: [{ type: "text", text: `Invalid parameters. Available subagents: ${available}` }],
         details: makeDetails("single")([]),
       };
     },
@@ -774,7 +804,7 @@ export default function (pi: ExtensionAPI) {
     // ── renderCall ───────────────────────────────────────────────────────
 
     renderCall(args, theme, _context) {
-      const scope: AgentScope = args.agentScope ?? "user";
+      const scope: AgentScope = args.agentScope ?? loadSubagentConfig().defaultScope ?? "user";
       if (args.chain && args.chain.length > 0) {
         let text =
           theme.fg("toolTitle", theme.bold("subagent ")) +
@@ -840,9 +870,7 @@ export default function (pi: ExtensionAPI) {
         if (skipped > 0) text += theme.fg("muted", `... ${skipped} earlier items\n`);
         for (const item of toShow) {
           if (item.type === "text") {
-            const preview = expanded
-              ? item.text
-              : item.text.split("\n").slice(0, 3).join("\n");
+            const preview = expanded ? item.text : item.text.split("\n").slice(0, 3).join("\n");
             text += `${theme.fg("toolOutput", preview)}\n`;
           } else {
             text += `${theme.fg("muted", "→ ") + formatToolCall(item.name, item.args, theme.fg.bind(theme))}\n`;
@@ -854,8 +882,7 @@ export default function (pi: ExtensionAPI) {
       // ── Single result ────────────────────────────────────────────────
       if (details.mode === "single" && details.results.length === 1) {
         const r = details.results[0];
-        const isError =
-          r.exitCode !== 0 || r.stopReason === "error" || r.stopReason === "aborted";
+        const isError = r.exitCode !== 0 || r.stopReason === "error" || r.stopReason === "aborted";
         const icon = isError ? theme.fg("error", "✗") : theme.fg("success", "✓");
         const displayItems = getDisplayItems(r.messages);
         const finalOutput = getFinalOutput(r.messages);
@@ -880,7 +907,7 @@ export default function (pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -901,10 +928,8 @@ export default function (pi: ExtensionAPI) {
 
         let text = `${icon} ${theme.fg("toolTitle", theme.bold(r.agent))}${theme.fg("muted", ` (${r.agentSource})`)}`;
         if (isError && r.stopReason) text += ` ${theme.fg("error", `[${r.stopReason}]`)}`;
-        if (isError && r.errorMessage)
-          text += `\n${theme.fg("error", `Error: ${r.errorMessage}`)}`;
-        else if (displayItems.length === 0)
-          text += `\n${theme.fg("muted", "(no output)")}`;
+        if (isError && r.errorMessage) text += `\n${theme.fg("error", `Error: ${r.errorMessage}`)}`;
+        else if (displayItems.length === 0) text += `\n${theme.fg("muted", "(no output)")}`;
         else {
           text += `\n${renderDisplayItems(displayItems, COLLAPSED_ITEM_COUNT)}`;
           if (displayItems.length > COLLAPSED_ITEM_COUNT)
@@ -949,17 +974,16 @@ export default function (pi: ExtensionAPI) {
           container.addChild(
             new Text(
               icon +
-                " " +
-                theme.fg("toolTitle", theme.bold("chain ")) +
-                theme.fg("accent", `${successCount}/${details.results.length} steps`),
+              " " +
+              theme.fg("toolTitle", theme.bold("chain ")) +
+              theme.fg("accent", `${successCount}/${details.results.length} steps`),
               0,
               0,
             ),
           );
 
           for (const r of details.results) {
-            const rIcon =
-              r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
+            const rIcon = r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
             const displayItems = getDisplayItems(r.messages);
             const finalOutput = getFinalOutput(r.messages);
 
@@ -980,7 +1004,7 @@ export default function (pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -994,8 +1018,7 @@ export default function (pi: ExtensionAPI) {
             }
 
             const stepUsage = formatUsageStats(r.usage, r.model);
-            if (stepUsage)
-              container.addChild(new Text(theme.fg("dim", stepUsage), 0, 0));
+            if (stepUsage) container.addChild(new Text(theme.fg("dim", stepUsage), 0, 0));
           }
 
           const usageStr = formatUsageStats(aggregateUsage(details.results));
@@ -1012,12 +1035,10 @@ export default function (pi: ExtensionAPI) {
           theme.fg("toolTitle", theme.bold("chain ")) +
           theme.fg("accent", `${successCount}/${details.results.length} steps`);
         for (const r of details.results) {
-          const rIcon =
-            r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
+          const rIcon = r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
           const displayItems = getDisplayItems(r.messages);
           text += `\n\n${theme.fg("muted", `─── Step ${r.step}: `)}${theme.fg("accent", r.agent)} ${rIcon}`;
-          if (displayItems.length === 0)
-            text += `\n${theme.fg("muted", "(no output)")}`;
+          if (displayItems.length === 0) text += `\n${theme.fg("muted", "(no output)")}`;
           else text += `\n${renderDisplayItems(displayItems, 5)}`;
         }
         const usageStr = formatUsageStats(aggregateUsage(details.results));
@@ -1052,18 +1073,13 @@ export default function (pi: ExtensionAPI) {
           );
 
           for (const r of details.results) {
-            const rIcon =
-              r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
+            const rIcon = r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
             const displayItems = getDisplayItems(r.messages);
             const finalOutput = getFinalOutput(r.messages);
 
             container.addChild(new Spacer(1));
             container.addChild(
-              new Text(
-                `${theme.fg("muted", "─── ") + theme.fg("accent", r.agent)} ${rIcon}`,
-                0,
-                0,
-              ),
+              new Text(`${theme.fg("muted", "─── ") + theme.fg("accent", r.agent)} ${rIcon}`, 0, 0),
             );
             container.addChild(
               new Text(theme.fg("muted", "Task: ") + theme.fg("dim", r.task), 0, 0),
@@ -1074,7 +1090,7 @@ export default function (pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -1088,8 +1104,7 @@ export default function (pi: ExtensionAPI) {
             }
 
             const taskUsage = formatUsageStats(r.usage, r.model);
-            if (taskUsage)
-              container.addChild(new Text(theme.fg("dim", taskUsage), 0, 0));
+            if (taskUsage) container.addChild(new Text(theme.fg("dim", taskUsage), 0, 0));
           }
 
           const usageStr = formatUsageStats(aggregateUsage(details.results));
@@ -1159,10 +1174,7 @@ export default function (pi: ExtensionAPI) {
 
       if (!agent) {
         const available = primaryAgents.map((a) => `"${a.name}"`).join(", ") || "none";
-        ctx.ui.notify(
-          `Unknown primary agent: "${targetName}". Available: ${available}`,
-          "error",
-        );
+        ctx.ui.notify(`Unknown primary agent: "${targetName}". Available: ${available}`, "error");
         return;
       }
 
@@ -1185,10 +1197,7 @@ export default function (pi: ExtensionAPI) {
       // Update system prompt on the next turn
       activePrimaryAgent = targetName;
 
-      ctx.ui.notify(
-        `Switched to primary agent: ${agent.name} (${agent.source})`,
-        "info",
-      );
+      ctx.ui.notify(`Switched to primary agent: ${agent.name} (${agent.source})`, "info");
       ctx.ui.setStatus("agent", `agent: ${agent.name}`);
     },
   });
@@ -1258,12 +1267,8 @@ export default function (pi: ExtensionAPI) {
     }
 
     // Agent not found — show available subagents
-    const available =
-      discovery.subagents.map((a) => a.name).join(", ") || "none";
-    ctx.ui.notify(
-      `Unknown agent: "@${agentName}". Available subagents: ${available}`,
-      "error",
-    );
+    const available = discovery.subagents.map((a) => a.name).join(", ") || "none";
+    ctx.ui.notify(`Unknown agent: "@${agentName}". Available subagents: ${available}`, "error");
     return { action: "handled" };
   });
 }

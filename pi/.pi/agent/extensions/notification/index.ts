@@ -1,12 +1,11 @@
 /**
  * Pi Windows Notification Extension
  *
- * Sends Windows toast notifications for agent lifecycle events.
- * Windows only — uses PowerShell to invoke the Windows.UI.Notifications API.
+ * Sends Windows toast notifications when the agent needs user approval
+ * (permission level "ask"). Tool/command notifies only when it is NOT
+ * in the auto-approve list defined in custom-settings.json.
  *
- * Notifications are only sent for tool calls whose permission level is "ask" —
- * i.e. the user needs to approve them. Tools/commands set to "allow" or "deny"
- * silently skip notifications.
+ * Windows only — uses PowerShell to invoke the Windows.UI.Notifications API.
  *
  * Ref: opencode-plugins/plugins/notification.ts
  */
@@ -16,31 +15,34 @@ import * as path from "node:path";
 import * as os from "node:os";
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
 
-// ── Permission types ──────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────
 
-type PermissionLevel = "allow" | "ask" | "deny";
+interface AutoApproveConfig {
+  tools?: string[];
+  bashCommands?: string[];
+}
 
-interface PermissionsConfig {
-  tools?: Record<string, PermissionLevel>;
-  bashCommands?: Record<string, PermissionLevel>;
+interface CustomSettings {
+  auto_approve?: AutoApproveConfig;
 }
 
 const TITLE = "Pi";
 
-// ── Permission helpers ────────────────────────────────────────────────
+// ── Config helpers ────────────────────────────────────────────────────
 
 function configPath(): string {
   const agentDir =
     process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
-  return path.join(agentDir, "permissions.json");
+  return path.join(agentDir, "custom-settings.json");
 }
 
-function loadConfig(): PermissionsConfig {
+function loadAutoApprove(): AutoApproveConfig {
   const p = configPath();
   try {
     if (fs.existsSync(p)) {
       const raw = fs.readFileSync(p, "utf-8");
-      return JSON.parse(raw) as PermissionsConfig;
+      const settings = JSON.parse(raw) as CustomSettings;
+      return settings.auto_approve ?? {};
     }
   } catch {
     // Silently fall back to empty config
@@ -77,38 +79,32 @@ function extractBaseCommand(fullCommand: string): string {
 }
 
 /**
- * Match a bash command against `bashCommands` rules.
- * Returns the permission level, or null if no specific rule matches.
+ * Determine whether the given tool call requires user approval ("ask").
+ * Returns true when the tool/command is NOT in the auto-approve list —
+ * meaning the agent will prompt the user before executing.
  */
-function matchBashCommand(
-  command: string,
-  bashCommands: Record<string, PermissionLevel>,
-): PermissionLevel | null {
-  const base = extractBaseCommand(command);
-  if (base && base in bashCommands) {
-    return bashCommands[base];
-  }
-  return null;
-}
-
-/** Determine whether the given tool call is at "ask" permission level. */
 function isPermissionAsk(event: ToolCallEvent): boolean {
-  const config = loadConfig();
+  const autoApprove = loadAutoApprove();
   const toolName = event.toolName;
 
-  // Determine the effective permission level for this call.
-  // Everything defaults to "ask" unless the user config specifies an
-  // explicit override for the tool or bash command.
-  let level: PermissionLevel = config.tools?.[toolName] ?? "ask";
-
-  // For bash, a per-command rule overrides the tool-level rule
   if (toolName === "bash") {
     const command = (event.input as { command: string }).command;
-    const cmdLevel = matchBashCommand(command, config.bashCommands ?? {});
-    if (cmdLevel !== null) level = cmdLevel;
+    const base = extractBaseCommand(command);
+    // If the base command is in auto-approve, it's allowed → no notification
+    if (base && (autoApprove.bashCommands ?? []).includes(base)) {
+      return false;
+    }
+    // Not in auto-approve → will "ask" the user → notify
+    return true;
   }
 
-  return level === "ask";
+  // Non-bash tools: auto-approved if listed in tools → no notification
+  if ((autoApprove.tools ?? []).includes(toolName)) {
+    return false;
+  }
+
+  // Not in auto-approve → will "ask" the user → notify
+  return true;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -178,14 +174,9 @@ function notify(title: string, message: string): void {
 }
 
 export default function (pi: ExtensionAPI) {
-  // Notify when agent finishes a turn and is waiting for user input
-  pi.on("agent_end", async () => {
-    notify(TITLE, "Session completed!");
-  });
-
   // Notify on tool calls only when the user needs to approve them
-  // (permission level is "ask"). Tools/commands set to "allow" or "deny"
-  // are silently skipped.
+  // (permission level is "ask" — not in the auto-approve list).
+  // Auto-approved tools/commands silently skip notifications.
   pi.on("tool_call", async (event) => {
     if (!isPermissionAsk(event)) return;
     notify(TITLE, describeToolCall(event));
