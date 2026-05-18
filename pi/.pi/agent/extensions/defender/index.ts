@@ -86,13 +86,36 @@ function isPathAllowed(rawPath: string): boolean {
   });
 }
 
-/** Extract target file paths from an rm command, skipping flags/options. */
+/**
+ * Check if a command is an rm invocation (rm as the primary command,
+ * optionally prefixed by sudo / env / nice / ionice / nohup / etc.).
+ * Returns the index of the "rm" token, or -1 if not found.
+ */
+function findRmIndex(tokens: string[]): number {
+  // Allow common prefixes like env, nice, nohup, sudo before rm.
+  // sudo is handled separately by DANGEROUS_PATTERNS, but we still
+  // want to do path-aware checks for rm even with these prefixes.
+  const prefixes = new Set([
+    'env', 'nice', 'ionice', 'nohup', 'sudo', 'pkexec', 'doas',
+  ]);
+  for (let i = 0; i < tokens.length; i++) {
+    // Strip leading variable assignments like FOO=bar
+    const token = tokens[i].replace(/^\w+=\S+/, '');
+    if (token === 'rm') return i;
+    if (!prefixes.has(token)) return -1;
+  }
+  return -1;
+}
+
+/** Extract target file paths from tokens after the rm command, skipping flags/options. */
 function extractRmPaths(command: string): string[] {
   const tokens = command.match(/\S+/g) || [];
-  let i = 1; // skip 'rm'
+  const rmIdx = findRmIndex(tokens);
+  if (rmIdx === -1) return [];
+
   const paths: string[] = [];
   let pastDoubleDash = false;
-  for (; i < tokens.length; i++) {
+  for (let i = rmIdx + 1; i < tokens.length; i++) {
     let token = tokens[i];
     token = token.replace(/^["']|["']$/g, ''); // strip quotes
     if (token === '--') {
@@ -121,9 +144,10 @@ export default function (pi: ExtensionAPI) {
 
       // --- Path-aware rm check ---
       // Allow rm if all target paths are within $HOME or /tmp.
-      if (/\brm\b/i.test(command)) {
-        const paths = extractRmPaths(command);
-        const outsidePaths = paths.filter(p => !isPathAllowed(p));
+      // Only triggers when rm is the primary command (not in a pipe or string).
+      const rmPaths = extractRmPaths(command);
+      if (rmPaths.length > 0) {
+        const outsidePaths = rmPaths.filter(p => !isPathAllowed(p));
         if (outsidePaths.length > 0) {
           if (ctx.hasUI) {
             ctx.ui.notify(

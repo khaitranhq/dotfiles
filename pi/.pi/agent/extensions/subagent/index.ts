@@ -40,10 +40,6 @@ import {
   Markdown,
   Spacer,
   Text,
-  type AutocompleteItem,
-  type AutocompleteProvider,
-  type AutocompleteSuggestions,
-  fuzzyFilter,
 } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
@@ -91,6 +87,15 @@ function formatUsageStats(
   }
   if (model) parts.push(model);
   return parts.join(" ");
+}
+
+function getModelRef(
+  model: { provider: string; id: string } | undefined,
+  thinkingLevel?: string,
+): string | undefined {
+  if (!model) return undefined;
+  const ref = `${model.provider}/${model.id}`;
+  return thinkingLevel && thinkingLevel !== "off" ? `${ref}:${thinkingLevel}` : ref;
 }
 
 function formatToolCall(
@@ -347,7 +352,7 @@ async function runSingleAgent(
       contextTokens: 0,
       turns: 0,
     },
-    model: agent.model,
+    model: modelToUse,
     step,
   };
 
@@ -547,7 +552,7 @@ export default function(pi: ExtensionAPI) {
       const subagents = discovery.subagents;
       const confirmProjectAgents =
         params.confirmProjectAgents ?? subagentCfg.confirmProjectAgents ?? true;
-      const parentModel = ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined;
+      const parentModel = getModelRef(ctx.model, pi.getThinkingLevel());
 
       const hasChain = (params.chain?.length ?? 0) > 0;
       const hasTasks = (params.tasks?.length ?? 0) > 0;
@@ -1259,139 +1264,11 @@ export default function(pi: ExtensionAPI) {
     };
   });
 
-  // ── Event: Restore agent status & register autocomplete ──────────────
+  // ── Event: Restore active primary-agent status ──────────────────────
 
   pi.on("session_start", async (_event, ctx) => {
     if (activePrimaryAgent) {
       ctx.ui.setStatus("agent", `agent: ${activePrimaryAgent}`);
     }
-
-    // Register autocomplete provider for @agentName syntax
-    const cwd = ctx.cwd;
-    let cachedAgents: AgentConfig[] | null = null;
-    let cacheTime = 0;
-    const CACHE_TTL = 30_000; // 30 seconds
-
-    const getAgents = (): AgentConfig[] => {
-      const now = Date.now();
-      if (cachedAgents && now - cacheTime < CACHE_TTL) return cachedAgents;
-      const discovery = discoverAgents(cwd, "both");
-      cachedAgents = [...discovery.subagents, ...discovery.primaryAgents];
-      cacheTime = now;
-      return cachedAgents;
-    };
-
-    ctx.ui.addAutocompleteProvider(
-      (current: AutocompleteProvider): AutocompleteProvider => ({
-        async getSuggestions(
-          lines,
-          cursorLine,
-          cursorCol,
-          options,
-        ): Promise<AutocompleteSuggestions | null> {
-          const line = lines[cursorLine] ?? "";
-          const beforeCursor = line.slice(0, cursorCol);
-
-          // Match @ at the very start of input (before any non-whitespace content)
-          const match = beforeCursor.match(/^@([\w.-]*)$/);
-          if (!match) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
-          }
-
-          // Only trigger when cursor is at the end of the agent name
-          // (next char is space, end-of-line, or cursor is at end-of-input)
-          const afterCursor = line.slice(cursorCol);
-          if (afterCursor !== "" && !afterCursor.startsWith(" ")) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
-          }
-
-          const prefix = match[1] ?? "";
-          const agents = getAgents();
-          if (agents.length === 0) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
-          }
-
-          let items: AutocompleteItem[];
-          if (prefix === "") {
-            items = agents.slice(0, 20).map((a) => ({
-              value: `@${a.name} `,
-              label: `@${a.name}`,
-              description: `${a.description} (${a.source}, ${a.mode})`,
-            }));
-          } else {
-            items = fuzzyFilter(
-              agents,
-              prefix,
-              (a) => `${a.name} ${a.description}`,
-            )
-              .slice(0, 20)
-              .map((a) => ({
-                value: `@${a.name} `,
-                label: `@${a.name}`,
-                description: `${a.description} (${a.source}, ${a.mode})`,
-              }));
-          }
-
-          if (items.length === 0) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
-          }
-
-          return { prefix: `@${prefix}`, items };
-        },
-
-        applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
-          return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
-        },
-
-        shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
-          return (
-            current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ??
-            true
-          );
-        },
-      }),
-    );
-  });
-
-  // ── Event: @agentName input delegation ──────────────────────────────
-
-  pi.on("input", async (event, ctx) => {
-    // Only transform interactive user input (not RPC or extension-injected messages)
-    if (event.source !== "interactive") return;
-
-    // Match @agentName prefix at the start of input
-    const match = event.text.match(/^@([\w.-]+)\s+(.*)/);
-    if (!match) return;
-
-    const [, agentName, task] = match;
-    const trimmedTask = task.trim();
-    if (!trimmedTask) return;
-
-    // Discover available agents (both user and project scopes)
-    const discovery = discoverAgents(ctx.cwd, "both");
-
-    // Check if it's a subagent
-    const subagent = discovery.subagents.find((a) => a.name === agentName);
-    if (subagent) {
-      return {
-        action: "transform",
-        text: `Use the subagent tool to delegate the following task to the "${agentName}" agent: ${trimmedTask}`,
-      };
-    }
-
-    // Check if it's a primary agent (misuse)
-    const primaryAgent = discovery.primaryAgents.find((a) => a.name === agentName);
-    if (primaryAgent) {
-      ctx.ui.notify(
-        `"${agentName}" is a primary agent. Use /agent ${agentName} to switch.`,
-        "warning",
-      );
-      return { action: "handled" };
-    }
-
-    // Agent not found — show available subagents
-    const available = discovery.subagents.map((a) => a.name).join(", ") || "none";
-    ctx.ui.notify(`Unknown agent: "@${agentName}". Available subagents: ${available}`, "error");
-    return { action: "handled" };
   });
 }
