@@ -1220,4 +1220,50 @@ export default function (pi: ExtensionAPI) {
       ctx.ui.setStatus("agent", `agent: ${activePrimaryAgent}`);
     }
   });
+
+  // ── Event: @agentName input delegation ──────────────────────────────
+
+  pi.on("input", async (event, ctx) => {
+    // Only transform interactive user input (not RPC or extension-injected messages)
+    if (event.source !== "interactive") return;
+
+    // Match @agentName prefix at the start of input
+    const match = event.text.match(/^@([\w.-]+)\s+(.*)/);
+    if (!match) return;
+
+    const [, agentName, task] = match;
+    const trimmedTask = task.trim();
+    if (!trimmedTask) return;
+
+    // Discover available agents (both user and project scopes)
+    const discovery = discoverAgents(ctx.cwd, "both");
+
+    // Check if it's a subagent
+    const subagent = discovery.subagents.find((a) => a.name === agentName);
+    if (subagent) {
+      return {
+        action: "transform",
+        text: `Use the subagent tool to delegate the following task to the "${agentName}" agent: ${trimmedTask}`,
+      };
+    }
+
+    // Check if it's a primary agent (misuse)
+    const primaryAgent = discovery.primaryAgents.find((a) => a.name === agentName);
+    if (primaryAgent) {
+      ctx.ui.notify(
+        `"${agentName}" is a primary agent. Use /agent ${agentName} to switch.`,
+        "warning",
+      );
+      return { action: "handled" };
+    }
+
+    // Agent not found — show available subagents
+    const available =
+      discovery.subagents.map((a) => a.name).join(", ") || "none";
+    ctx.ui.notify(
+      `Unknown agent: "@${agentName}". Available subagents: ${available}`,
+      "error",
+    );
+    return { action: "handled" };
+  });
 }

@@ -3,3 +3,4 @@ node_modules
 .oxlintrc.json
 package.json
 pnpm-lock.yaml
+TODO.md

@@ -215,10 +215,10 @@ export default function (pi: ExtensionAPI) {
     const selected = await ctx.ui.select(
       `🔐 Permission required — ${desc}`,
       [
-        "Allow",
-        "Deny (with reason)",
-        "Always approve",
-        "Approve in this session only",
+        "✅ Allow",
+        "❌ Deny (with reason)",
+        "🔓 Always approve",
+        "🕐 Approve in this session only",
       ],
       // ctx.ui.select options — no timeout, user must decide
     );
@@ -228,10 +228,10 @@ export default function (pi: ExtensionAPI) {
     }
 
     switch (selected) {
-      case "Allow":
+      case "✅ Allow":
         return undefined; // execute this one call
 
-      case "Deny (with reason)": {
+      case "❌ Deny (with reason)": {
         const reason = await ctx.ui.input(
           "Reason for denial:",
           "e.g., not needed, dangerous, ...",
@@ -239,7 +239,7 @@ export default function (pi: ExtensionAPI) {
         return { block: true, reason: reason || "Blocked by user." };
       }
 
-      case "Always approve": {
+      case "🔓 Always approve": {
         // Persist to config so future calls skip the prompt
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
@@ -259,7 +259,7 @@ export default function (pi: ExtensionAPI) {
         return undefined;
       }
 
-      case "Approve in this session only": {
+      case "🕐 Approve in this session only": {
         sessionApprovals.add(key);
         return undefined;
       }

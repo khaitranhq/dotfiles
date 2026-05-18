@@ -1,0 +1,14 @@
+{
+  "tools": {
+    "read": "allow",
+    "edit": "allow",
+    "write": "allow"
+  },
+  "bashCommands": {
+    "find": "allow",
+    "grep": "allow",
+    "ls": "allow",
+    "cd": "allow",
+    "rg": "allow"
+  }
+}
