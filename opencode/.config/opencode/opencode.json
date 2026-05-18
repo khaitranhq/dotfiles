@@ -78,7 +78,7 @@
   "tools": {
     "ticktick*": false,
     "github*": false,
-    "eraser*": false,
+    // "eraser*": false,
     "jira*": false
   },
   "agent": {
@@ -103,10 +103,10 @@
         "todowrite": "allow",
         "todoread": "allow",
         "question": "allow"
-      },
-      "tools": {
-        "eraser*": true
       }
+      // "tools": {
+      //   "eraser*": true
+      // }
     },
     "build": {
       "tools": {
@@ -188,10 +188,10 @@
         "Authorization": "Bearer {env:GITHUB_MCP_TOKEN}"
       }
     },
-    "eraser": {
-      "type": "remote",
-      "url": "https://app.eraser.io/api/mcp"
-    },
+    // "eraser": {
+    //   "type": "remote",
+    //   "url": "https://app.eraser.io/api/mcp"
+    // },
     "jira": {
       "type": "remote",
       "url": "https://mcp.atlassian.com/v1/mcp"
