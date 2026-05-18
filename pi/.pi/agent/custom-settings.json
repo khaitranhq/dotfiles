@@ -10,7 +10,8 @@
       "fd",
       "cd",
       "pwd",
-      "rg"
+      "rg",
+      "mkdir"
     ],
     "tools": [
       "read",
