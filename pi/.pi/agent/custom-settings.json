@@ -1,0 +1,45 @@
+{
+  "auto_approve": {
+    "tools": ["read", "edit", "write"],
+    "bashCommands": ["find", "grep", "ls", "cd", "rg", "cat"]
+  },
+  "mcp": {
+    "toolPrefix": "mcp",
+    "maxResultBytes": 10240,
+    "maxResultLines": 500,
+    "reconnectEnabled": true,
+    "reconnectMaxRetries": 3,
+    "servers": [
+      {
+        "name": "filesystem",
+        "transport": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/dir"],
+        "env": {},
+        "enabled": false,
+        "timeout": 30000
+      },
+      {
+        "name": "github",
+        "transport": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        },
+        "enabled": false,
+        "timeout": 30000
+      },
+      {
+        "name": "remote-api",
+        "transport": "sse",
+        "url": "http://localhost:3000/sse",
+        "headers": {
+          "Authorization": "Bearer ${API_TOKEN}"
+        },
+        "enabled": false,
+        "timeout": 30000
+      }
+    ]
+  }
+}

@@ -1,32 +1,32 @@
 /**
  * Permission Request Extension
  *
- * Gates tool execution based on a permission config at
- * ~/.pi/agent/permissions.json.
+ * Gates tool execution based on an auto-approve list in
+ * ~/.pi/agent/custom-settings.json.
  *
- * The DEFAULT for every tool and every bash command is "ask" —
- * i.e. show the approval prompt.  The config file only needs to list
- * deviations from that default:
+ * Every tool and bash command defaults to "ask" — the approval prompt
+ * is shown.  Add tools or commands to the `autoApprove` section to
+ * skip the prompt permanently:
  *
- *   "allow" – always approve, no prompt
- *   "deny"  – block silently; the tool is removed from the active set
+ *   auto_approve.tools        – always allow these tools, no prompt
+ *   auto_approve.bashCommands – always allow these commands, no prompt
  *
- * Example ~/.pi/agent/permissions.json:
+ * Example ~/.pi/agent/custom-settings.json:
  *
  *   {
- *     "tools":        { "read": "allow", "bash": "deny" },
- *     "bashCommands": { "rm": "deny", "ls": "allow" }
+ *     "auto_approve": {
+ *       "tools":        ["read", "edit", "write"],
+ *       "bashCommands": ["find", "grep", "ls", "cd", "rg", "cat"]
+ *     }
  *   }
  *
- * The "bash" tool supports per-command fine-tuning via `bashCommands`.
- * For compound commands (&&, ;, |, ||) the first segment is matched.
- * A per-command rule overrides the tool-level rule for "bash".
+ * For compound bash commands (&&, ;, |, ||) the first segment is matched.
  *
- * When level is "ask", the user is shown a prompt with these options:
+ * When a call is not auto-approved, the user sees:
  *
  *   [1] Allow                     – execute this one call
  *   [2] Deny (with reason)        – block, optionally providing a reason
- *   [3] Always approve            – allow and persist to the config file
+ *   [3] Always approve            – allow and persist to autoApprove
  *   [4] Approve in this session   – allow for the rest of this session
  */
 
@@ -37,47 +37,59 @@ import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agen
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-type PermissionLevel = "allow" | "ask" | "deny";
-
-interface PermissionsConfig {
-  tools?: Record<string, PermissionLevel>;
-  bashCommands?: Record<string, PermissionLevel>;
+interface AutoApproveConfig {
+  tools?: string[];
+  bashCommands?: string[];
 }
 
-// ── Default rule (expressed in code, not a const) ────────────────────
-
-/** The default permission level for any tool or command not in the config. */
-const DEFAULT_LEVEL: PermissionLevel = "ask";
+interface CustomSettings {
+  auto_approve?: AutoApproveConfig;
+}
 
 // ── Config helpers ────────────────────────────────────────────────────
 
 function configPath(): string {
   const agentDir =
     process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
-  return path.join(agentDir, "permissions.json");
+  return path.join(agentDir, "custom-settings.json");
 }
 
-function loadConfig(): PermissionsConfig {
+function loadCustomSettings(): CustomSettings {
   const p = configPath();
   try {
     if (fs.existsSync(p)) {
       const raw = fs.readFileSync(p, "utf-8");
-      return JSON.parse(raw) as PermissionsConfig;
+      return JSON.parse(raw) as CustomSettings;
     }
   } catch (err) {
-    console.error(`[permission-request] Failed to load config: ${err}`);
+    console.error(`[permission-request] Failed to load custom-settings.json: ${err}`);
   }
   return {};
 }
 
-function saveConfig(cfg: PermissionsConfig): void {
+function loadAutoApprove(): AutoApproveConfig {
+  return loadCustomSettings().auto_approve ?? {};
+}
+
+function saveCustomSettings(settings: CustomSettings): void {
   const p = configPath();
   try {
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, JSON.stringify(cfg, null, 2), "utf-8");
+    fs.writeFileSync(p, JSON.stringify(settings, null, 2), "utf-8");
   } catch (err) {
-    console.error(`[permission-request] Failed to save config: ${err}`);
+    console.error(`[permission-request] Failed to save custom-settings.json: ${err}`);
   }
+}
+
+// ── Set helpers ───────────────────────────────────────────────────────
+
+function addToAutoApprove(settings: CustomSettings, category: "tools" | "bashCommands", name: string): CustomSettings {
+  const aa: AutoApproveConfig = settings.auto_approve ?? {};
+  const list = aa[category] ?? [];
+  if (!list.includes(name)) {
+    aa[category] = [...list, name];
+  }
+  return { ...settings, auto_approve: aa };
 }
 
 // ── Command extraction ────────────────────────────────────────────────
@@ -110,21 +122,6 @@ function extractBaseCommand(fullCommand: string): string {
   return path.basename(first);
 }
 
-/**
- * Match a bash command against `bashCommands` rules.
- * Returns the permission level, or null if no specific rule matches.
- */
-function matchBashCommand(
-  command: string,
-  bashCommands: Record<string, PermissionLevel>,
-): PermissionLevel | null {
-  const base = extractBaseCommand(command);
-  if (base && base in bashCommands) {
-    return bashCommands[base];
-  }
-  return null;
-}
-
 // ── Session key ───────────────────────────────────────────────────────
 
 /** Build a session approval key. For bash, include the base command. */
@@ -143,62 +140,49 @@ export default function (pi: ExtensionAPI) {
   // Per-session overrides: tools/commands granted session-only approval
   const sessionApprovals = new Set<string>();
 
-  let config = loadConfig();
+  // Live auto-approve sets loaded from disk
+  let autoApproveTools = new Set<string>();
+  let autoApproveCommands = new Set<string>();
 
-  // ── Remove denied tools from the active set on startup ──────────────
+  function reloadAutoApprove(): void {
+    const aa = loadAutoApprove();
+    autoApproveTools = new Set(aa.tools ?? []);
+    autoApproveCommands = new Set(aa.bashCommands ?? []);
+  }
+
+  reloadAutoApprove();
+
+  // ── Reload config on session start ─────────────────────────────────
   pi.on("session_start", async (_event) => {
     sessionApprovals.clear();
-    config = loadConfig();
-
-    // Only remove tools explicitly set to "deny" in user config.
-    // Tools not in the config fall back to DEFAULT_LEVEL ("ask"),
-    // so they remain active and will prompt on use.
-    const deniedToolNames = new Set<string>();
-    if (config.tools) {
-      for (const [toolName, level] of Object.entries(config.tools)) {
-        if (level === "deny") deniedToolNames.add(toolName);
-      }
-    }
-
-    if (deniedToolNames.size > 0) {
-      const activeNames = pi
-        .getAllTools()
-        .map((t) => t.name)
-        .filter((name) => !deniedToolNames.has(name));
-      pi.setActiveTools(activeNames);
-    }
+    reloadAutoApprove();
   });
 
   // ── Gate every tool call ───────────────────────────────────────────
   pi.on("tool_call", async (event: ToolCallEvent, ctx) => {
     const toolName = event.toolName;
 
-    // Determine the effective permission level for this call.
-    // Everything defaults to DEFAULT_LEVEL unless the user config
-    // specifies an explicit override for the tool or bash command.
-    let level: PermissionLevel = config.tools?.[toolName] ?? DEFAULT_LEVEL;
+    // Determine whether this call is auto-approved.
+    let autoApproved = false;
 
-    // For bash, a per-command rule overrides the tool-level rule
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
-      const cmdLevel = matchBashCommand(command, config.bashCommands ?? {});
-      if (cmdLevel !== null) level = cmdLevel;
+      const base = extractBaseCommand(command);
+      if (base && autoApproveCommands.has(base)) {
+        autoApproved = true;
+      }
+    } else {
+      if (autoApproveTools.has(toolName)) {
+        autoApproved = true;
+      }
     }
 
     // Check session-only approvals (granted earlier this session)
     const key = sessionKey(toolName, event);
     if (sessionApprovals.has(key)) return undefined;
 
-    // ── allow ────────────────────────────────────────────────────────
-    if (level === "allow") return undefined;
-
-    // ── deny ─────────────────────────────────────────────────────────
-    if (level === "deny") {
-      return {
-        block: true,
-        reason: `Tool "${toolName}" is denied by permission config.`,
-      };
-    }
+    // ── auto-approve ────────────────────────────────────────────────
+    if (autoApproved) return undefined;
 
     // ── ask ──────────────────────────────────────────────────────────
     if (!ctx.hasUI) {
@@ -220,7 +204,6 @@ export default function (pi: ExtensionAPI) {
         "🔓 Always approve",
         "🕐 Approve in this session only",
       ],
-      // ctx.ui.select options — no timeout, user must decide
     );
 
     if (selected === null || selected === undefined) {
@@ -240,22 +223,23 @@ export default function (pi: ExtensionAPI) {
       }
 
       case "🔓 Always approve": {
-        // Persist to config so future calls skip the prompt
+        // Persist to custom-settings.json under autoApprove
+        const settings = loadCustomSettings();
+
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const base = extractBaseCommand(command);
           if (base) {
-            config.bashCommands ??= {};
-            config.bashCommands[base] = "allow";
+            saveCustomSettings(addToAutoApprove(settings, "bashCommands", base));
+            autoApproveCommands.add(base);
           } else {
-            config.tools ??= {};
-            config.tools[toolName] = "allow";
+            saveCustomSettings(addToAutoApprove(settings, "tools", toolName));
+            autoApproveTools.add(toolName);
           }
         } else {
-          config.tools ??= {};
-          config.tools[toolName] = "allow";
+          saveCustomSettings(addToAutoApprove(settings, "tools", toolName));
+          autoApproveTools.add(toolName);
         }
-        saveConfig(config);
         return undefined;
       }
 
