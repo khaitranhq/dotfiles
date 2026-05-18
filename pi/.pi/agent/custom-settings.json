@@ -1,13 +1,6 @@
 {
   "always_approve": {
-    "bashCommands": [
-      "find",
-      "ls"
-    ],
-    "tools": [
-      "read",
-      "write",
-      "edit"
-    ]
+    "bashCommands": ["find", "ls", "grep", "cat", "npx tsc", "wc"],
+    "tools": ["read", "write", "edit"]
   }
 }

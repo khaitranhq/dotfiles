@@ -17,13 +17,13 @@ import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agen
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-interface AutoApproveConfig {
+interface AlwaysApproveConfig {
   tools?: string[];
   bashCommands?: string[];
 }
 
 interface CustomSettings {
-  auto_approve?: AutoApproveConfig;
+  always_approve?: AlwaysApproveConfig;
 }
 
 const TITLE = "Pi";
@@ -31,18 +31,17 @@ const TITLE = "Pi";
 // ── Config helpers ────────────────────────────────────────────────────
 
 function configPath(): string {
-  const agentDir =
-    process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
+  const agentDir = process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
   return path.join(agentDir, "custom-settings.json");
 }
 
-function loadAutoApprove(): AutoApproveConfig {
+function loadAlwaysApprove(): AlwaysApproveConfig {
   const p = configPath();
   try {
     if (fs.existsSync(p)) {
       const raw = fs.readFileSync(p, "utf-8");
       const settings = JSON.parse(raw) as CustomSettings;
-      return settings.auto_approve ?? {};
+      return settings.always_approve ?? {};
     }
   } catch {
     // Silently fall back to empty config
@@ -84,26 +83,26 @@ function extractBaseCommand(fullCommand: string): string {
  * meaning the agent will prompt the user before executing.
  */
 function isPermissionAsk(event: ToolCallEvent): boolean {
-  const autoApprove = loadAutoApprove();
+  const alwaysApprove = loadAlwaysApprove();
   const toolName = event.toolName;
 
   if (toolName === "bash") {
     const command = (event.input as { command: string }).command;
     const base = extractBaseCommand(command);
-    // If the base command is in auto-approve, it's allowed → no notification
-    if (base && (autoApprove.bashCommands ?? []).includes(base)) {
+    // If the base command is in always-approve, it's allowed → no notification
+    if (base && (alwaysApprove.bashCommands ?? []).includes(base)) {
       return false;
     }
-    // Not in auto-approve → will "ask" the user → notify
+    // Not in always-approve → will "ask" the user → notify
     return true;
   }
 
-  // Non-bash tools: auto-approved if listed in tools → no notification
-  if ((autoApprove.tools ?? []).includes(toolName)) {
+  // Non-bash tools: always-approved if listed in tools → no notification
+  if ((alwaysApprove.tools ?? []).includes(toolName)) {
     return false;
   }
 
-  // Not in auto-approve → will "ask" the user → notify
+  // Not in always-approve → will "ask" the user → notify
   return true;
 }
 
@@ -162,18 +161,14 @@ function createToastScript(title: string, message: string): string {
 function notify(title: string, message: string): void {
   const { execFile } = require("child_process");
   const script = createToastScript(title, message);
-  execFile(
-    "powershell.exe",
-    ["-NoProfile", "-Command", script],
-    (err: Error | null) => {
-      if (err) {
-        // Silently ignore — notification is best-effort
-      }
-    },
-  );
+  execFile("powershell.exe", ["-NoProfile", "-Command", script], (err: Error | null) => {
+    if (err) {
+      // Silently ignore — notification is best-effort
+    }
+  });
 }
 
-export default function (pi: ExtensionAPI) {
+export default function(pi: ExtensionAPI) {
   // Notify on tool calls only when the user needs to approve them
   // (permission level is "ask" — not in the auto-approve list).
   // Auto-approved tools/commands silently skip notifications.

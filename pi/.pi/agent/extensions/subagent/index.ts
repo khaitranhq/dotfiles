@@ -35,7 +35,16 @@ import {
   getMarkdownTheme,
   withFileMutationQueue,
 } from "@earendil-works/pi-coding-agent";
-import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
+import {
+  Container,
+  Markdown,
+  Spacer,
+  Text,
+  type AutocompleteItem,
+  type AutocompleteProvider,
+  type AutocompleteSuggestions,
+  fuzzyFilter,
+} from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
 import { loadSubagentConfig } from "../shared/config";
@@ -463,13 +472,19 @@ async function runSingleAgent(
 // ── Schema for subagent tool parameters ────────────────────────────────
 
 const TaskItem = Type.Object({
-  agent: Type.String({ description: "Name of the subagent to invoke" }),
+  agent: Type.String({
+    description:
+      "Name of the subagent to invoke. See ## Available subagents in the system prompt for the list.",
+  }),
   task: Type.String({ description: "Task to delegate to the subagent" }),
   cwd: Type.Optional(Type.String({ description: "Working directory for the subagent process" })),
 });
 
 const ChainItem = Type.Object({
-  agent: Type.String({ description: "Name of the subagent to invoke" }),
+  agent: Type.String({
+    description:
+      "Name of the subagent to invoke. See ## Available subagents in the system prompt for the list.",
+  }),
   task: Type.String({
     description: "Task with optional {previous} placeholder for the output of the prior step",
   }),
@@ -484,7 +499,10 @@ const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
 
 const SubagentParams = Type.Object({
   agent: Type.Optional(
-    Type.String({ description: "Name of the subagent to invoke (single mode)" }),
+    Type.String({
+      description:
+        "Name of the subagent to invoke (single mode). See ## Available subagents in the system prompt for the list.",
+    }),
   ),
   task: Type.Optional(Type.String({ description: "Task to delegate (single mode)" })),
   tasks: Type.Optional(
@@ -519,6 +537,7 @@ export default function(pi: ExtensionAPI) {
       'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.json to change defaults.',
       'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
     ].join(" "),
+    promptSnippet: "Delegate task to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
     parameters: SubagentParams,
 
     async execute(_toolCallId, params, signal, onUpdate, ctx) {
@@ -1202,6 +1221,24 @@ export default function(pi: ExtensionAPI) {
     },
   });
 
+  // ── Event: Inject available subagent names into system prompt ────────
+
+  pi.on("before_agent_start", async (event, ctx) => {
+    const discovery = discoverAgents(ctx.cwd, "both");
+    const subagents = discovery.subagents;
+    if (subagents.length === 0) return;
+
+    const agentList = subagents
+      .map((a) => `- **${a.name}** (${a.source}): ${a.description}`)
+      .join("\n");
+
+    return {
+      systemPrompt:
+        event.systemPrompt +
+        `\n\n## Available subagents\n${agentList}\n\nUse the subagent tool to delegate tasks to these agents.`,
+    };
+  });
+
   // ── Event: Inject primary agent system prompt ────────────────────────
 
   pi.on("before_agent_start", async (event, ctx) => {
@@ -1222,12 +1259,98 @@ export default function(pi: ExtensionAPI) {
     };
   });
 
-  // ── Event: Restore agent status on session start ─────────────────────
+  // ── Event: Restore agent status & register autocomplete ──────────────
 
   pi.on("session_start", async (_event, ctx) => {
     if (activePrimaryAgent) {
       ctx.ui.setStatus("agent", `agent: ${activePrimaryAgent}`);
     }
+
+    // Register autocomplete provider for @agentName syntax
+    const cwd = ctx.cwd;
+    let cachedAgents: AgentConfig[] | null = null;
+    let cacheTime = 0;
+    const CACHE_TTL = 30_000; // 30 seconds
+
+    const getAgents = (): AgentConfig[] => {
+      const now = Date.now();
+      if (cachedAgents && now - cacheTime < CACHE_TTL) return cachedAgents;
+      const discovery = discoverAgents(cwd, "both");
+      cachedAgents = [...discovery.subagents, ...discovery.primaryAgents];
+      cacheTime = now;
+      return cachedAgents;
+    };
+
+    ctx.ui.addAutocompleteProvider(
+      (current: AutocompleteProvider): AutocompleteProvider => ({
+        async getSuggestions(
+          lines,
+          cursorLine,
+          cursorCol,
+          options,
+        ): Promise<AutocompleteSuggestions | null> {
+          const line = lines[cursorLine] ?? "";
+          const beforeCursor = line.slice(0, cursorCol);
+
+          // Match @ at the very start of input (before any non-whitespace content)
+          const match = beforeCursor.match(/^@([\w.-]*)$/);
+          if (!match) {
+            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          }
+
+          // Only trigger when cursor is at the end of the agent name
+          // (next char is space, end-of-line, or cursor is at end-of-input)
+          const afterCursor = line.slice(cursorCol);
+          if (afterCursor !== "" && !afterCursor.startsWith(" ")) {
+            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          }
+
+          const prefix = match[1] ?? "";
+          const agents = getAgents();
+          if (agents.length === 0) {
+            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          }
+
+          let items: AutocompleteItem[];
+          if (prefix === "") {
+            items = agents.slice(0, 20).map((a) => ({
+              value: `@${a.name} `,
+              label: `@${a.name}`,
+              description: `${a.description} (${a.source}, ${a.mode})`,
+            }));
+          } else {
+            items = fuzzyFilter(
+              agents,
+              prefix,
+              (a) => `${a.name} ${a.description}`,
+            )
+              .slice(0, 20)
+              .map((a) => ({
+                value: `@${a.name} `,
+                label: `@${a.name}`,
+                description: `${a.description} (${a.source}, ${a.mode})`,
+              }));
+          }
+
+          if (items.length === 0) {
+            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          }
+
+          return { prefix: `@${prefix}`, items };
+        },
+
+        applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
+          return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
+        },
+
+        shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
+          return (
+            current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ??
+            true
+          );
+        },
+      }),
+    );
   });
 
   // ── Event: @agentName input delegation ──────────────────────────────
