@@ -1,10 +1,11 @@
 /**
  * Input UX Extension
  *
- * Unified `@...` input experience for:
+ * Unified input experience for:
  * - agent mentions (`@coder ...`)
  * - fuzzy file search
  * - fuzzy folder search
+ * - per-directory prompt history on ↑/↓
  *
  * This replaces the migrated `fuzzy-search` autocomplete/input handling and the
  * `@agent` autocomplete/input handling that previously lived in `subagent`.
@@ -16,6 +17,8 @@ import * as path from "node:path";
 import {
   CustomEditor,
   type ExtensionAPI,
+  type KeybindingsManager,
+  getAgentDir,
 } from "@earendil-works/pi-coding-agent";
 import {
   fuzzyMatch,
@@ -31,6 +34,8 @@ const PATH_LIST_LIMIT = 10_000;
 const MAX_AUTOCOMPLETE_RESULTS = 100;
 const AUTOCOMPLETE_MAX_VISIBLE = 20;
 const MIN_FUZZY_RESOLUTION_SCORE = 520;
+const INPUT_HISTORY_FILE = "input-history.json";
+const INPUT_HISTORY_LIMIT = 100;
 
 const FIND_PRUNE = String.raw`\( \
   -path './node_modules' -o -path '*/node_modules' -o -path '*/node_modules/*' -o \
@@ -62,6 +67,11 @@ interface MentionContext {
   prefix: string;
 }
 
+interface PersistedInputHistoryFile {
+  version: 1;
+  histories: Record<string, string[]>;
+}
+
 type CandidateKind = "agent" | "file" | "directory";
 
 interface BaseCandidate {
@@ -89,8 +99,19 @@ interface RankedCandidate {
   score: number;
 }
 
+interface EditorHistoryAdapter {
+  handleInput(data: string): void;
+  setText(text: string): void;
+  getText(): string;
+  getLines(): string[];
+  getCursor(): { line: number; col: number };
+  addToHistory?: (value: string) => void;
+  __inputUxHistoryPatched?: boolean;
+}
+
 let projectPathCache: ProjectPathCache | null = null;
 let agentCache: AgentCache | null = null;
+let runtimeInputHistories: Record<string, string[]> | null = null;
 
 function isGitRepo(cwd: string): boolean {
   try {
@@ -458,6 +479,102 @@ function maybeNotifyMatch(
   );
 }
 
+function getInputHistoryFilePath(): string {
+  return path.join(getAgentDir(), INPUT_HISTORY_FILE);
+}
+
+function normalizeHistoryText(text: string): string {
+  return text.replace(/\r\n?/g, "\n").trim();
+}
+
+function loadPersistedInputHistories(): Record<string, string[]> {
+  const historyFilePath = getInputHistoryFilePath();
+
+  try {
+    if (!fs.existsSync(historyFilePath)) {
+      return {};
+    }
+
+    const raw = fs.readFileSync(historyFilePath, "utf-8");
+    const parsed = JSON.parse(raw) as Partial<PersistedInputHistoryFile>;
+    if (!parsed || typeof parsed !== "object" || typeof parsed.histories !== "object") {
+      return {};
+    }
+
+    const histories: Record<string, string[]> = {};
+    for (const [cwd, entries] of Object.entries(parsed.histories)) {
+      if (!Array.isArray(entries)) continue;
+
+      const normalizedEntries = entries
+        .map((entry) => (typeof entry === "string" ? normalizeHistoryText(entry) : ""))
+        .filter(Boolean)
+        .slice(0, INPUT_HISTORY_LIMIT);
+
+      if (normalizedEntries.length > 0) {
+        histories[cwd] = normalizedEntries;
+      }
+    }
+
+    return histories;
+  } catch (error) {
+    console.error(`[input-ux] Failed to load persisted input history: ${error}`);
+    return {};
+  }
+}
+
+function getRuntimeInputHistories(): Record<string, string[]> {
+  if (runtimeInputHistories === null) {
+    runtimeInputHistories = loadPersistedInputHistories();
+  }
+
+  return runtimeInputHistories;
+}
+
+function savePersistedInputHistories(histories: Record<string, string[]>) {
+  const historyFilePath = getInputHistoryFilePath();
+  const tempFilePath = `${historyFilePath}.${process.pid}.${Date.now()}.tmp`;
+
+  try {
+    fs.mkdirSync(path.dirname(historyFilePath), { recursive: true });
+    const payload: PersistedInputHistoryFile = {
+      version: 1,
+      histories,
+    };
+    fs.writeFileSync(tempFilePath, `${JSON.stringify(payload, null, 2)}\n`, "utf-8");
+    fs.renameSync(tempFilePath, historyFilePath);
+  } catch (error) {
+    console.error(`[input-ux] Failed to save persisted input history: ${error}`);
+    try {
+      fs.rmSync(tempFilePath, { force: true });
+    } catch {
+      // Ignore temp cleanup failures.
+    }
+  }
+}
+
+function getPersistedInputHistory(cwd: string): string[] {
+  const histories = getRuntimeInputHistories();
+  const normalizedCwd = path.resolve(cwd);
+  if (!histories[normalizedCwd]) {
+    histories[normalizedCwd] = [];
+  }
+  return histories[normalizedCwd];
+}
+
+function rememberSubmittedInput(cwd: string, text: string) {
+  const normalizedText = normalizeHistoryText(text);
+  if (!normalizedText) return;
+
+  const normalizedCwd = path.resolve(cwd);
+  const histories = getRuntimeInputHistories();
+  const existingHistory = histories[normalizedCwd] ?? [];
+  const nextHistory = [normalizedText, ...existingHistory.filter((entry) => entry !== normalizedText)]
+    .slice(0, INPUT_HISTORY_LIMIT);
+
+  histories[normalizedCwd] = nextHistory;
+  savePersistedInputHistories(histories);
+}
+
 function applyAutocompleteSize(editor: unknown) {
   if (!editor || typeof editor !== "object") return;
 
@@ -465,6 +582,101 @@ function applyAutocompleteSize(editor: unknown) {
   if (typeof maybeEditor.setAutocompleteMaxVisible === "function") {
     maybeEditor.setAutocompleteMaxVisible(AUTOCOMPLETE_MAX_VISIBLE);
   }
+}
+
+function canPatchEditorHistory(editor: unknown): editor is EditorHistoryAdapter {
+  if (!editor || typeof editor !== "object") return false;
+
+  const maybeEditor = editor as Partial<EditorHistoryAdapter>;
+  return (
+    typeof maybeEditor.handleInput === "function" &&
+    typeof maybeEditor.setText === "function" &&
+    typeof maybeEditor.getText === "function" &&
+    typeof maybeEditor.getLines === "function" &&
+    typeof maybeEditor.getCursor === "function"
+  );
+}
+
+function attachScopedInputHistory(
+  editor: unknown,
+  cwd: string,
+  keybindings: KeybindingsManager,
+) {
+  if (!canPatchEditorHistory(editor) || editor.__inputUxHistoryPatched) {
+    return;
+  }
+
+  const historyEditor: EditorHistoryAdapter = editor;
+  const historyEntries = getPersistedInputHistory(cwd);
+  const originalHandleInput = historyEditor.handleInput.bind(historyEditor);
+  let browseIndex = -1;
+  let draftText = "";
+
+  function isOnFirstInputLine(): boolean {
+    return historyEditor.getCursor().line === 0;
+  }
+
+  function isOnLastInputLine(): boolean {
+    const lines = historyEditor.getLines();
+    return historyEditor.getCursor().line >= Math.max(0, lines.length - 1);
+  }
+
+  function navigateHistory(direction: -1 | 1): boolean {
+    if (direction === -1) {
+      if (historyEntries.length === 0) return false;
+
+      if (browseIndex === -1) {
+        draftText = historyEditor.getText();
+      }
+
+      const nextIndex = Math.min(historyEntries.length - 1, browseIndex + 1);
+      if (nextIndex === browseIndex) return false;
+
+      browseIndex = nextIndex;
+      historyEditor.setText(historyEntries[browseIndex]!);
+      return true;
+    }
+
+    if (browseIndex === -1) return false;
+
+    const nextIndex = browseIndex - 1;
+    if (nextIndex >= 0) {
+      browseIndex = nextIndex;
+      historyEditor.setText(historyEntries[browseIndex]!);
+      return true;
+    }
+
+    browseIndex = -1;
+    historyEditor.setText(draftText);
+    draftText = "";
+    return true;
+  }
+
+  historyEditor.handleInput = (data: string) => {
+    if (keybindings.matches(data, "tui.editor.cursorUp") && isOnFirstInputLine()) {
+      if (navigateHistory(-1)) {
+        return;
+      }
+    }
+
+    if (keybindings.matches(data, "tui.editor.cursorDown") && isOnLastInputLine()) {
+      if (navigateHistory(1)) {
+        return;
+      }
+    }
+
+    if (browseIndex !== -1) {
+      browseIndex = -1;
+      draftText = "";
+    }
+
+    originalHandleInput(data);
+  };
+
+  historyEditor.addToHistory = () => {
+    // Ignore pi's session-populated editor history. We use cwd-scoped history instead.
+  };
+  historyEditor.__inputUxHistoryPatched = true;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -488,6 +700,7 @@ export default function (pi: ExtensionAPI) {
         ? currentEditorFactory(tui, theme, keybindings)
         : new CustomEditor(tui, theme, keybindings);
       applyAutocompleteSize(editor);
+      attachScopedInputHistory(editor, ctx.cwd, keybindings);
       return editor;
     });
 
@@ -533,6 +746,8 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("input", async (event, ctx) => {
     if (event.source !== "interactive") return;
+
+    rememberSubmittedInput(ctx.cwd, event.text);
 
     const match = event.text.match(/^@(\S+)(?:\s+(.*))?$/);
     if (!match) return;
