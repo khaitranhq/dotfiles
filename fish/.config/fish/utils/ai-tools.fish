@@ -1,9 +1,9 @@
 # AI-powered git commit message generator
 function ai_commit -d "Generate AI-powered commit messages from staged changes"
     # Validate required dependencies
-    if not command -v opencode >/dev/null 2>&1
-        echo "❌ Error: opencode command not found" >&2
-        echo "   Please install opencode first" >&2
+    if not command -v pi >/dev/null 2>&1
+        echo "❌ Error: pi command not found" >&2
+        echo "   Please install pi first" >&2
         return 1
     end
 
@@ -30,9 +30,8 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        opencode run \
-        --agent="git-generator" \
-        "$diff_content")"
+        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --model opencode-go/deepseek-v4-flash "Generate a short but concise conventional commit message from this staged diff. Output only the commit message, no explanation, no markdown."' \
+        _ "$diff_content")"
 
     set generate_message_exit_code $status
 
