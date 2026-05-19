@@ -1,9 +1,11 @@
 /**
  * Pi Windows Notification Extension
  *
- * Sends Windows toast notifications when the agent needs user approval
- * (permission level "ask"). Tool/command notifies only when it is NOT
- * in the auto-approve list defined in custom-settings.json.
+ * Sends Windows toast notifications for:
+ * 1. Tool calls that need user approval (permission "ask") when the
+ *    tool/command is NOT in the auto-approve list.
+ * 2. Agent completion — when the agent finishes processing a prompt and
+ *    is idle, with a snippet of the last assistant response.
  *
  * Windows only — uses PowerShell to invoke the Windows.UI.Notifications API.
  *
@@ -175,5 +177,25 @@ export default function(pi: ExtensionAPI) {
   pi.on("tool_call", async (event) => {
     if (!isPermissionAsk(event)) return;
     notify(TITLE, describeToolCall(event));
+  });
+
+  // Notify when the agent finishes processing a prompt.
+  // Lets users know pi is idle and ready for the next input.
+  pi.on("agent_end", async (event) => {
+    const msgCount = event.messages?.length ?? 0;
+    if (msgCount === 0) return; // nothing happened
+    const lastMsg = event.messages[msgCount - 1];
+    // Extract a short snippet from the last assistant message
+    let preview = "";
+    if (lastMsg && lastMsg.role === "assistant" && Array.isArray(lastMsg.content)) {
+      for (const block of lastMsg.content) {
+        if (block.type === "text" && typeof block.text === "string") {
+          preview = block.text.slice(0, 80).replace(/\n/g, " ");
+          break;
+        }
+      }
+    }
+    const body = preview ? `Done: ${preview}…` : "Done — ready for you.";
+    notify(TITLE, body);
   });
 }
