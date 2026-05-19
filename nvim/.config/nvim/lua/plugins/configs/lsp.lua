@@ -25,6 +25,9 @@ local lsp_config = {
 	oxfmt = {},
 	oxlint = {},
 	golangci_lint_ls = {},
+	just = {
+		mason_package = "just-lsp",
+	},
 	roslyn_ls = {},
 	gopls = {
 		settings = {
