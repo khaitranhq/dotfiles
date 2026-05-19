@@ -2,13 +2,19 @@
 
 ## Start Here
 
-### ⚠️ MANDATORY: Load Related Skills First
+### ⚠️ MANDATORY: Load Skills After Context Gathering
 
-**Before taking ANY other action, agents MUST load relevant skills using the `skill` tool.**
+**After understanding the task and gathering enough context, agents MUST load relevant skills using the `skill` tool.**
 
-This is a hard requirement, not optional. If a task matches any available skill (golang, github-action, aws-diagrams, d2, terraform-diagrams, etc.), you MUST load that skill immediately. Do not proceed with implementation until skills are loaded.
+This is a hard requirement, not optional. Once you have a clear picture of the task, evaluate which available skills (golang, github-action, aws-iam-policies, d2, slidev, diagnose, etc.) match the request and load them before proceeding.
 
-**Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Skipping this step leads to incomplete, suboptimal solutions.
+**Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Loading skill too early (before understanding the task) leads to irrelevant context. Loading them after context gathering ensures you pick the right skills for the actual work.
+
+**How to choose which skills to load**:
+- Parse the user's request for key terms (language, tool, domain, problem type)
+- Cross-reference against the available skills listed in your system prompt
+- When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output
+- For compound tasks, load multiple skills (e.g., golang + tdd + coding for a Go project with tests)
 
 ---
 
@@ -16,12 +22,12 @@ This is a hard requirement, not optional. If a task matches any available skill 
 
 Before executing any task or prompt, agents must:
 
-1. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.) - **THIS IS MANDATORY**
-2. **Analyze Requirements** - Carefully read and understand what the user is asking for
-3. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
+1. **Analyze Requirements** - Carefully read and understand what the user is asking for
+2. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
+3. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.) - **THIS IS MANDATORY**
 4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
 
-This ensures that agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
+**Why this order**: You cannot know which skills are relevant until you understand the request and have context. Loading skills too early may load irrelevant ones; loading them after context ensures precision. This ensures agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
 
 ### Goal-Driven Execution
 

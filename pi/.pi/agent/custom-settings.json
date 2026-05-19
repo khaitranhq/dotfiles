@@ -35,7 +35,8 @@
       "git pull",
       "diff",
       "stat",
-      "head"
+      "head",
+      "d2"
     ],
     "tools": [
       "read",

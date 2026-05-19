@@ -92,9 +92,14 @@ function isPathAllowed(rawPath: string, cwd?: string): boolean {
   );
 }
 
+/** Shell command separators that introduce a new command in a chain. */
+const COMMAND_SEPARATORS = new Set(['&&', '||', ';', '|', '&']);
+
 /**
  * Check if a command is an rm invocation (rm as the primary command,
  * optionally prefixed by sudo / env / nice / ionice / nohup / etc.).
+ * Handles chained commands (&&, ||, ;, |) by looking for rm after each
+ * separator.
  * Returns the index of the "rm" token, or -1 if not found.
  */
 function findRmIndex(tokens: string[]): number {
@@ -105,10 +110,16 @@ function findRmIndex(tokens: string[]): number {
     'env', 'nice', 'ionice', 'nohup', 'sudo', 'pkexec', 'doas',
   ]);
   for (let i = 0; i < tokens.length; i++) {
+    // Skip shell command separators — they start a new command
+    if (COMMAND_SEPARATORS.has(tokens[i])) continue;
     // Strip leading variable assignments like FOO=bar
     const token = tokens[i].replace(/^\w+=\S+/, '');
     if (token === 'rm') return i;
-    if (!prefixes.has(token)) return -1;
+    if (!prefixes.has(token)) {
+      // Skip tokens that belong to the current command (args, etc.)
+      // until we hit a separator or "rm"
+      continue;
+    }
   }
   return -1;
 }
@@ -123,6 +134,8 @@ function extractRmPaths(command: string): string[] {
   let pastDoubleDash = false;
   for (let i = rmIdx + 1; i < tokens.length; i++) {
     let token = tokens[i];
+    // Stop at shell command separators — the rm command ends here
+    if (COMMAND_SEPARATORS.has(token)) break;
     token = token.replace(/^["']|["']$/g, ''); // strip quotes
     if (token === '--') {
       pastDoubleDash = true;
