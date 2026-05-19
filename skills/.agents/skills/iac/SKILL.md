@@ -1,6 +1,6 @@
 ---
 name: iac
-description: Provides tool-agnostic best practices for Infrastructure as Code (Pulumi, CDK, Terraform, CloudFormation, etc.). Use when provisioning, managing, or refactoring infrastructure via code.
+description: Provides baseline Infrastructure as Code guardrails that apply across Pulumi, CDK, Terraform, CloudFormation, and similar tools. Use for any IaC task—analysis, planning, review, debugging, generation, or updates—even when a tool-specific skill like Pulumi also applies.
 license: MIT
 metadata:
   author: OpenCode
@@ -15,12 +15,22 @@ metadata:
     - CloudFormation
     - provisioning
     - infrastructure
+    - analyze infrastructure
+    - review iac
+    - update terraform
+    - update pulumi
+    - update cdk
+    - infrastructure review
   role: specialist
   scope: implementation
   output-format: code
 ---
 
 # IaC Skill
+
+## Activation
+
+Load this skill for any action involving infrastructure as code: analysis, planning, review, debugging, generation, refactoring, or updates. Treat it as the baseline IaC skill, and combine it with tool-specific or language-specific skills when relevant (for example, Pulumi plus Go or TypeScript).
 
 ## Purpose
 

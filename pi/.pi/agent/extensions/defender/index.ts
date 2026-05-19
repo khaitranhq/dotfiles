@@ -2,6 +2,7 @@
  * Defender Extension
  *
  * Blocks dangerous bash commands and prevents reading/writing outside $HOME.
+ * Relative paths are resolved against the current working directory.
  * When a command is blocked, also sends a steering instruction telling the agent
  * NOT to try workarounds — just inform the user that the operation is not allowed.
  *
@@ -14,6 +15,8 @@
  *  - Reading any .env or .*.env file (e.g., .env, .env.local, .env.production)
  *  - Writing/editing any .env or .*.env file
  */
+
+import * as path from "node:path";
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -50,40 +53,43 @@ const BLOCK_INSTRUCTION =
 // ── Path Helpers ─────────────────────────────────────────────────────
 
 const HOME_DIR = process.env.HOME || '/home/' + (process.env.USER || 'user');
-const ALLOWED_PREFIXES = [HOME_DIR, '/tmp'];
+const ALLOWED_PREFIXES = [HOME_DIR, '/tmp'].map((prefix) => path.resolve(prefix));
 
-/** Normalize a path: expand ~ and $HOME, resolve . and .. */
-function normalizePath(path: string): string {
-  if (!path) return path;
-  // Expand ~ and ~user
-  if (path === '~' || path.startsWith('~/')) {
-    path = HOME_DIR + path.slice(1);
+/** Expand ~ and $HOME in a path string. */
+function expandPath(rawPath: string): string {
+  if (!rawPath) return rawPath;
+
+  if (rawPath === '~') {
+    return HOME_DIR;
   }
-  // Expand $HOME / ${HOME}
-  path = path.replace(/\$HOME\b|\$\{HOME\}/g, HOME_DIR);
-  // Resolve . and ..
-  const parts = path.split('/');
-  const result: string[] = [];
-  for (const part of parts) {
-    if (part === '..') {
-      result.pop();
-    } else if (part !== '.' && part !== '') {
-      result.push(part);
-    }
+
+  if (rawPath.startsWith('~/')) {
+    return path.join(HOME_DIR, rawPath.slice(2));
   }
-  return '/' + result.join('/');
+
+  return rawPath.replace(/\$HOME\b|\$\{HOME\}/g, HOME_DIR);
+}
+
+/** Normalize a path, resolving relative paths against cwd. */
+function normalizePath(rawPath: string, cwd?: string): string {
+  if (!rawPath) return rawPath;
+
+  const expandedPath = expandPath(rawPath);
+  const baseDir = path.isAbsolute(expandedPath)
+    ? path.parse(expandedPath).root
+    : (cwd || process.cwd());
+
+  return path.resolve(baseDir, expandedPath);
 }
 
 /** Check whether a path is within an allowed prefix ($HOME or /tmp). */
-function isPathAllowed(rawPath: string): boolean {
+function isPathAllowed(rawPath: string, cwd?: string): boolean {
   if (!rawPath) return true;
-  const resolved = normalizePath(rawPath);
-  // Relative paths (no leading /) — we cannot determine location, so allow.
-  if (!resolved.startsWith('/')) return true;
-  return ALLOWED_PREFIXES.some(prefix => {
-    const p = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
-    return resolved === p || resolved.startsWith(p + '/');
-  });
+
+  const resolved = normalizePath(rawPath, cwd);
+  return ALLOWED_PREFIXES.some((prefix) =>
+    resolved === prefix || resolved.startsWith(prefix + path.sep),
+  );
 }
 
 /**
@@ -147,7 +153,7 @@ export default function (pi: ExtensionAPI) {
       // Only triggers when rm is the primary command (not in a pipe or string).
       const rmPaths = extractRmPaths(command);
       if (rmPaths.length > 0) {
-        const outsidePaths = rmPaths.filter(p => !isPathAllowed(p));
+        const outsidePaths = rmPaths.filter((p) => !isPathAllowed(p, ctx.cwd));
         if (outsidePaths.length > 0) {
           if (ctx.hasUI) {
             ctx.ui.notify(
@@ -207,8 +213,9 @@ export default function (pi: ExtensionAPI) {
         return { block: true, reason: `Reading "${path}" is blocked — it looks like an env file` };
       }
 
-      // Block reading files outside $HOME (except /tmp)
-      if (!isPathAllowed(path)) {
+      // Block reading files outside $HOME (except /tmp).
+      // Resolve relative paths against the current working directory.
+      if (!isPathAllowed(path, ctx.cwd)) {
         if (ctx.hasUI) {
           ctx.ui.notify(
             `Blocked read outside safe paths: ${path}`,
@@ -239,8 +246,9 @@ export default function (pi: ExtensionAPI) {
         };
       }
 
-      // Block writing files outside $HOME (except /tmp)
-      if (!isPathAllowed(path)) {
+      // Block writing files outside $HOME (except /tmp).
+      // Resolve relative paths against the current working directory.
+      if (!isPathAllowed(path, ctx.cwd)) {
         if (ctx.hasUI) {
           ctx.ui.notify(
             `Blocked write outside safe paths: ${path}`,

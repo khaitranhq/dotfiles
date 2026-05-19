@@ -1,6 +1,6 @@
 ---
 name: coding
-description: Provides coding principles, best practices, and design guidelines including SOLID, DRY, KISS, YAGNI, and other foundational software engineering patterns for writing clean, maintainable code.
+description: Provides baseline coding guardrails and design principles for safe, maintainable code changes across languages. Use whenever the agent will create, modify, refactor, review, or delete code; when behavior changes and tests are practical, pair it with the tdd skill and work test-first.
 license: MIT
 metadata:
   author: OpenCode
@@ -14,20 +14,37 @@ metadata:
     - KISS
     - YAGNI
     - clean code
+    - clean up
+    - clean
+    - tidy
+    - format
+    - reformat
+    - fmt
+    - lint
     - code review
     - design patterns
     - refactoring
     - code quality
+    - implement feature
+    - bug fix
+    - create code
+    - modify code
+    - edit code
+    - code change
   role: advisor
-  scope: design
+  scope: implementation
   output-format: text
 ---
 
 # Coding Principles & Best Practices Skill
 
+## Activation
+
+Load this skill for every task that creates, modifies, refactors, reviews, or deletes code. Treat it as the baseline skill for code changes, and combine it with language- or framework-specific skills when relevant. When the task changes behavior and automated tests are practical, also load the `tdd` skill and follow a red-green-refactor loop.
+
 ## Purpose
 
-This skill provides a reference for foundational coding principles and best practices that apply across languages and domains. Use it to guide design decisions, refactoring, code reviews, and implementation. These principles complement language-specific skills (e.g., golang, typescript) by providing the overarching philosophy.
+This skill provides a reference for foundational coding principles and best practices that apply across languages and domains. Use it to guide design decisions, refactoring, code reviews, and implementation. These principles complement language-specific skills (e.g., golang, typescript) by providing the overarching philosophy, while also setting the default expectation that code stays testable and behavior changes are verified with tests whenever practical.
 
 ## Core Principles
 
@@ -450,7 +467,19 @@ func process(order *Order) error {
 }
 ```
 
-### 9. Naming Conventions
+### 9. Testability & TDD
+
+> Code should be easy to verify, and behavior changes should be driven by tests whenever practical.
+
+**Rules:**
+- Prefer test-driven development for new behavior, bug fixes, and refactors that can be verified through automated tests
+- Follow **red → green → refactor** in small vertical slices when TDD is practical
+- Write tests against public interfaces and observable behavior, not private implementation details
+- Design code for testability: explicit dependencies, narrow interfaces, deterministic behavior, and small seams around I/O
+- Add or update automated tests for behavior changes unless there is a concrete reason they are not practical
+- If tests are not added, explicitly document why in the handoff, PR, or final response and describe what validation was performed instead
+
+### 10. Naming Conventions
 
 > Names should reveal intent. Good names save hours of documentation.
 
@@ -462,7 +491,7 @@ func process(order *Order) error {
 - **Use domain language**: If the business calls it a "Policy", don't name it `InsuranceRule`
 - **Length vs. scope**: Short names for short scopes, descriptive names for wide scopes
 
-### 10. Code Smells (Recognize & Avoid)
+### 11. Code Smells (Recognize & Avoid)
 
 | Smell | Description | Fix |
 |-------|-------------|-----|
@@ -481,16 +510,18 @@ func process(order *Order) error {
 
 ### When Starting a New Feature
 
-1. **Define the contract first** — What does it do? Inputs? Outputs?
-2. **Apply SOLID** — Identify responsibilities; design interfaces; plan dependencies
-3. **Keep it simple** (KISS) — What's the simplest thing that works?
-4. **Avoid speculative generality** (YAGNI) — Only build what's needed now
-5. **Name everything well** — Good names clarify intent before implementation
+1. **Define the behavior first** — What should the system do, and how will you prove it?
+2. **Write the first test first when practical** — Prefer a small red → green → refactor cycle for behavior changes
+3. **Define the contract** — What are the inputs, outputs, and public interfaces?
+4. **Apply SOLID** — Identify responsibilities; design interfaces; plan dependencies
+5. **Keep it simple** (KISS) — What's the simplest thing that works?
+6. **Avoid speculative generality** (YAGNI) — Only build what's needed now
+7. **Name everything well** — Good names clarify intent before implementation
 
 ### When Refactoring
 
 1. **Identify the smell** — What's wrong? Use the smell table above
-2. **Ensure tests exist** — Refactor under the safety net of passing tests
+2. **Ensure tests exist** — Refactor under the safety net of passing tests; add characterization tests first when needed
 3. **Apply the appropriate principle** — SOLID, DRY, KISS, etc.
 4. **Take small steps** — Extract one method/class at a time; verify tests still pass
 5. **Review against principles** — Is the result simpler? More testable? Better named?
@@ -507,6 +538,7 @@ Use this checklist:
 - [ ] **Error handling**: Are errors caught early? Are they descriptive?
 - [ ] **Coupling**: Are high-level modules protected from low-level changes?
 - [ ] **Testability**: Can this be tested in isolation?
+- [ ] **Tests**: Are behavior changes covered by automated tests, or is there a clear explanation for why they are not?
 - [ ] **Comments**: Does the code explain itself, or are comments masking complexity?
 - [ ] **No smells**: Does the code pass the smell checklist?
 
@@ -520,6 +552,10 @@ Use this checklist:
 - **Keep it simple** — Choose the simplest solution that satisfies current requirements
 - **Use meaningful names** — Names must reveal intent and use domain language
 - **Validate early** — Check preconditions at function boundaries; fail fast
+- **Follow TDD when practical** — Prefer red → green → refactor for behavior changes, bug fixes, and non-trivial refactors
+- **Keep code testable** — Structure code so behavior can be exercised through stable public interfaces and isolated seams around I/O
+- **Add or update tests** — Behavior changes should ship with automated coverage when practical
+- **Explain missing tests** — If automated tests are not added, explicitly state why and what validation replaced them
 - **Separate concerns** — Business logic, presentation, persistence, and infrastructure must be in separate layers
 - **Prefer composition** — Use composition over inheritance for behavior reuse (limit inheritance depth)
 - **Apply Law of Demeter** — Methods should only talk to immediate dependencies; avoid method chaining
@@ -535,6 +571,7 @@ Use this checklist:
 - **Write "clever" code** — Don't sacrifice readability for cleverness or micro-optimization
 - **Deep inheritance** — Don't create inheritance hierarchies deeper than 2 levels
 - **Leak abstractions** — Low-level details (DB queries, HTTP status codes) should not leak into business logic
+- **Skip tests silently** — Don't ship behavior changes without automated tests or an explicit explanation
 - **Rewrite without tests** — Don't refactor code without adequate test coverage
 - **Ignore code smells** — Address smells when you encounter them; don't leave them for later
 
