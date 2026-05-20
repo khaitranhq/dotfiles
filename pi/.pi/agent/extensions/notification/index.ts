@@ -1,55 +1,46 @@
 /**
- * Pi Windows Notification Extension
+ * Pi Desktop Notification Extension
  *
- * Sends Windows toast notifications for:
+ * Sends desktop toast notifications for:
  * 1. Tool calls that need user approval (permission "ask") when the
  *    tool/command is NOT in the auto-approve list.
  * 2. Agent completion — when the agent finishes processing a prompt and
  *    is idle, with a snippet of the last assistant response.
  *
- * Windows only — uses PowerShell to invoke the Windows.UI.Notifications API.
+ * The notification command is configured in ~/.pi/agent/custom-settings.json
+ * under `notification`.  Defaults to PowerShell on Windows.
  *
- * Ref: opencode-plugins/plugins/notification.ts
+ *   // custom-settings.json
+ *   {
+ *     "notification": {
+ *       "command": "powershell.exe",
+ *       "args": ["-NoProfile", "-Command"]
+ *     }
+ *   }
+ *
+ * On non-Windows systems the extension is skipped unless a custom
+ * `notification.command` is configured.
  */
 
-import * as fs from "node:fs";
+import { execFile } from "node:child_process";
 import * as path from "node:path";
-import * as os from "node:os";
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
+import {
+  loadAlwaysApprove,
+  loadNotificationConfig,
+  type AlwaysApproveConfig,
+  type NotificationConfig,
+} from "../shared/config";
 
-// ── Types ──────────────────────────────────────────────────────────────
-
-interface AlwaysApproveConfig {
-  tools?: string[];
-  bashCommands?: string[];
-}
-
-interface CustomSettings {
-  always_approve?: AlwaysApproveConfig;
-}
+// ── Constants ─────────────────────────────────────────────────────────
 
 const TITLE = "Pi";
 
+/** Default notification command (Windows PowerShell). */
+const DEFAULT_COMMAND = "powershell.exe";
+const DEFAULT_ARGS: string[] = ["-NoProfile", "-Command"];
+
 // ── Config helpers ────────────────────────────────────────────────────
-
-function configPath(): string {
-  const agentDir = process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
-  return path.join(agentDir, "custom-settings.json");
-}
-
-function loadAlwaysApprove(): AlwaysApproveConfig {
-  const p = configPath();
-  try {
-    if (fs.existsSync(p)) {
-      const raw = fs.readFileSync(p, "utf-8");
-      const settings = JSON.parse(raw) as CustomSettings;
-      return settings.always_approve ?? {};
-    }
-  } catch {
-    // Silently fall back to empty config
-  }
-  return {};
-}
 
 /**
  * Extract the first "word" of a bash command for matching.
@@ -84,8 +75,7 @@ function extractBaseCommand(fullCommand: string): string {
  * Returns true when the tool/command is NOT in the auto-approve list —
  * meaning the agent will prompt the user before executing.
  */
-function isPermissionAsk(event: ToolCallEvent): boolean {
-  const alwaysApprove = loadAlwaysApprove();
+function isPermissionAsk(event: ToolCallEvent, alwaysApprove: AlwaysApproveConfig): boolean {
   const toolName = event.toolName;
 
   if (toolName === "bash") {
@@ -160,10 +150,18 @@ function createToastScript(title: string, message: string): string {
   ].join("\n");
 }
 
-function notify(title: string, message: string): void {
-  const { execFile } = require("child_process");
+function notify(
+  title: string,
+  message: string,
+  config: NotificationConfig,
+): void {
+  const command = config.command ?? DEFAULT_COMMAND;
+  const args = [...(config.args ?? DEFAULT_ARGS)];
   const script = createToastScript(title, message);
-  execFile("powershell.exe", ["-NoProfile", "-Command", script], (err: Error | null) => {
+
+  // If the command is powershell, embed the script as a -Command arg.
+  // For other commands, pass the script via stdin or let args handle it.
+  execFile(command, [...args, script], (err) => {
     if (err) {
       // Silently ignore — notification is best-effort
     }
@@ -171,12 +169,24 @@ function notify(title: string, message: string): void {
 }
 
 export default function(pi: ExtensionAPI) {
+  const notifyCfg = loadNotificationConfig();
+
+  // Skip if no notification command is configured AND we're not on Windows.
+  // On Windows the default powershell command works out of the box.
+  if (process.platform !== "win32" && !notifyCfg.command) return;
+
+  // Reload config on session start so changes take effect without restart.
+  let alwaysApprove = loadAlwaysApprove();
+  pi.on("session_start", async () => {
+    alwaysApprove = loadAlwaysApprove();
+  });
+
   // Notify on tool calls only when the user needs to approve them
   // (permission level is "ask" — not in the auto-approve list).
   // Auto-approved tools/commands silently skip notifications.
   pi.on("tool_call", async (event) => {
-    if (!isPermissionAsk(event)) return;
-    notify(TITLE, describeToolCall(event));
+    if (!isPermissionAsk(event, alwaysApprove)) return;
+    notify(TITLE, describeToolCall(event), notifyCfg);
   });
 
   // Notify when the agent finishes processing a prompt.
@@ -196,6 +206,6 @@ export default function(pi: ExtensionAPI) {
       }
     }
     const body = preview ? `Done: ${preview}…` : "Done — ready for you.";
-    notify(TITLE, body);
+    notify(TITLE, body, notifyCfg);
   });
 }
