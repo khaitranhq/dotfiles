@@ -1,12 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as path from "node:path";
-import {
-  expandPath,
-  normalizePath,
-  isPathAllowed,
-  isEnvFile,
-  HOME_DIR,
-} from "./path-guard";
+import { expandPath, normalizePath, isPathAllowed, isEnvFile, HOME_DIR } from "./path-guard";
 
 // ── expandPath ────────────────────────────────────────────────────────
 
@@ -16,11 +10,11 @@ describe("expandPath", () => {
     expect(expandPath(undefined as unknown as string)).toBeUndefined();
   });
 
-  it('expands bare ~ to HOME_DIR', () => {
+  it("expands bare ~ to HOME_DIR", () => {
     expect(expandPath("~")).toBe(HOME_DIR);
   });
 
-  it('expands ~/foo to HOME_DIR/foo', () => {
+  it("expands ~/foo to HOME_DIR/foo", () => {
     expect(expandPath("~/foo")).toBe(path.join(HOME_DIR, "foo"));
     expect(expandPath("~/foo/bar")).toBe(path.join(HOME_DIR, "foo/bar"));
   });
@@ -48,9 +42,7 @@ describe("normalizePath", () => {
 
   it("resolves relative path against given cwd", () => {
     const cwd = "/home/user/project";
-    expect(normalizePath("foo/bar", cwd)).toBe(
-      path.resolve(cwd, "foo/bar"),
-    );
+    expect(normalizePath("foo/bar", cwd)).toBe(path.resolve(cwd, "foo/bar"));
   });
 
   it("expands ~ before resolving", () => {

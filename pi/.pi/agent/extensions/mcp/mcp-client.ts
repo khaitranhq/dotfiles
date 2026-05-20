@@ -297,9 +297,7 @@ class SseTransport extends EventEmitter implements Transport {
     });
 
     if (!response.ok) {
-      throw new McpError(
-        `SSE connection failed: ${response.status} ${response.statusText}`,
-      );
+      throw new McpError(`SSE connection failed: ${response.status} ${response.statusText}`);
     }
 
     const reader = response.body?.getReader();
@@ -330,10 +328,7 @@ class SseTransport extends EventEmitter implements Transport {
             } else if (line === "") {
               // Empty line = event boundary
               if (eventType === "endpoint") {
-                this.messageEndpoint = new URL(
-                  data.trim(),
-                  baseUrl,
-                ).toString();
+                this.messageEndpoint = new URL(data.trim(), baseUrl).toString();
                 this.endpointReceived = true;
                 this.endpointResolve();
                 this.emit("ready");
@@ -428,18 +423,12 @@ interface OAuthClientRegistration {
 
 /** Generate PKCE code verifier (43 random URL-safe chars). */
 function generateCodeVerifier(): string {
-  return crypto
-    .randomBytes(32)
-    .toString("base64url")
-    .slice(0, 43);
+  return crypto.randomBytes(32).toString("base64url").slice(0, 43);
 }
 
 /** Generate PKCE code challenge from verifier (S256 method). */
 function generateCodeChallenge(verifier: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(verifier)
-    .digest("base64url");
+  return crypto.createHash("sha256").update(verifier).digest("base64url");
 }
 
 /** Generate a random state parameter for CSRF protection. */
@@ -455,8 +444,7 @@ class OAuthTokenManager {
 
   constructor(storePath?: string) {
     this.storePath =
-      storePath ??
-      path.join(os.homedir(), ".pi", "agent", "mcp-tokens", "default.json");
+      storePath ?? path.join(os.homedir(), ".pi", "agent", "mcp-tokens", "default.json");
   }
 
   /** Load tokens from disk. */
@@ -501,10 +489,7 @@ class OAuthTokenManager {
     if (!this.tokens) return null;
 
     // Check if token is still valid (5s buffer)
-    if (
-      this.tokens.expires_at &&
-      Date.now() < this.tokens.expires_at - 5000
-    ) {
+    if (this.tokens.expires_at && Date.now() < this.tokens.expires_at - 5000) {
       return this.tokens.access_token;
     }
 
@@ -565,18 +550,13 @@ async function discoverOAuthMetadata(
     const metaUrl = config.authorizationServer.replace(/\/$/, "");
     const resp = await fetch(metaUrl);
     if (!resp.ok) {
-      throw new McpError(
-        `OAuth metadata discovery failed (${resp.status}): ${metaUrl}`,
-      );
+      throw new McpError(`OAuth metadata discovery failed (${resp.status}): ${metaUrl}`);
     }
     return (await resp.json()) as OAuthMetadata;
   }
 
   // Try to discover from the MCP server's well-known endpoint
-  const wellKnownUrl = new URL(
-    "/.well-known/oauth-authorization-server",
-    serverUrl,
-  ).toString();
+  const wellKnownUrl = new URL("/.well-known/oauth-authorization-server", serverUrl).toString();
 
   try {
     const resp = await fetch(wellKnownUrl);
@@ -618,18 +598,17 @@ async function registerOAuthClient(
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => "");
-    throw new McpError(
-      `OAuth client registration failed (${resp.status}): ${errText}`,
-    );
+    throw new McpError(`OAuth client registration failed (${resp.status}): ${errText}`);
   }
 
   return (await resp.json()) as OAuthClientRegistration;
 }
 
 /** Start a local HTTP server to receive the OAuth redirect callback. */
-function startRedirectServer(
-  port: number,
-): { server: http.Server; callbackPromise: Promise<string> } {
+function startRedirectServer(port: number): {
+  server: http.Server;
+  callbackPromise: Promise<string>;
+} {
   let server: http.Server;
 
   const callbackPromise = new Promise<string>((resolve, reject) => {
@@ -724,9 +703,7 @@ async function exchangeCodeForTokens(
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => "");
-    throw new McpError(
-      `Token exchange failed (${resp.status}): ${errText}`,
-    );
+    throw new McpError(`Token exchange failed (${resp.status}): ${errText}`);
   }
 
   const data = (await resp.json()) as {
@@ -773,9 +750,7 @@ async function refreshAccessToken(
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => "");
-    throw new McpError(
-      `Token refresh failed (${resp.status}): ${errText}`,
-    );
+    throw new McpError(`Token refresh failed (${resp.status}): ${errText}`);
   }
 
   const data = (await resp.json()) as {
@@ -812,8 +787,7 @@ async function runOAuthFlow(
     redirectPort = await findAvailablePort();
   }
 
-  const redirectUri =
-    oauth.redirectUri ?? `http://localhost:${redirectPort}/callback`;
+  const redirectUri = oauth.redirectUri ?? `http://localhost:${redirectPort}/callback`;
 
   const scopes = oauth.scopes ?? [];
 
@@ -833,9 +807,7 @@ async function runOAuthFlow(
       clientSecret = registration.client_secret;
       log?.(`Registered client: ${clientId}`);
     } catch (err) {
-      log?.(
-        `Dynamic client registration failed (${err}), will try without it`,
-      );
+      log?.(`Dynamic client registration failed (${err}), will try without it`);
     }
   }
 
@@ -905,10 +877,7 @@ async function runOAuthFlow(
     const codePromise: Promise<string> = Promise.race([
       callbackPromise,
       new Promise<string>((_, reject) =>
-        setTimeout(
-          () => reject(new McpError("OAuth authorization timed out (5 min)")),
-          timeoutMs,
-        ),
+        setTimeout(() => reject(new McpError("OAuth authorization timed out (5 min)")), timeoutMs),
       ),
     ]);
 
@@ -1004,12 +973,7 @@ class HttpTransport extends EventEmitter implements Transport {
     }
 
     // 3. Run the full authorization flow
-    const tokens = await runOAuthFlow(
-      oauth,
-      this.oauthMetadata,
-      this.tokenManager!,
-      log,
-    );
+    const tokens = await runOAuthFlow(oauth, this.oauthMetadata, this.tokenManager!, log);
 
     this.accessToken = tokens.access_token;
     this.oauthClientId = oauth.clientId ?? "";
@@ -1083,11 +1047,7 @@ class HttpTransport extends EventEmitter implements Transport {
         // receives a proper JSON-RPC error instead of a transport error.
         try {
           const errMsg = JSON.parse(errText);
-          if (
-            errMsg &&
-            typeof errMsg === "object" &&
-            errMsg.jsonrpc === "2.0"
-          ) {
+          if (errMsg && typeof errMsg === "object" && errMsg.jsonrpc === "2.0") {
             if ("id" in errMsg && errMsg.id !== undefined && "method" in errMsg) {
               this.emit("request", errMsg);
               return;
@@ -1116,11 +1076,7 @@ class HttpTransport extends EventEmitter implements Transport {
         }
 
         // Check for OAuth errors
-        if (
-          response.status === 401 &&
-          this.isOAuth &&
-          this.config.oauth
-        ) {
+        if (response.status === 401 && this.isOAuth && this.config.oauth) {
           // Token may have expired — try to refresh and retry once.
           // Clear session ID: a new token may need a fresh session.
           this.oauthReady = false;
@@ -1158,11 +1114,7 @@ class HttpTransport extends EventEmitter implements Transport {
           const retryErrText = await retryResp.text().catch(() => "");
           try {
             const retryErrMsg = JSON.parse(retryErrText);
-            if (
-              retryErrMsg &&
-              typeof retryErrMsg === "object" &&
-              retryErrMsg.jsonrpc === "2.0"
-            ) {
+            if (retryErrMsg && typeof retryErrMsg === "object" && retryErrMsg.jsonrpc === "2.0") {
               if ("id" in retryErrMsg && retryErrMsg.id !== undefined) {
                 this.emit("response", retryErrMsg as JsonRpcResponse);
                 return;
@@ -1190,10 +1142,7 @@ class HttpTransport extends EventEmitter implements Transport {
 
         // MCP auth-required check: if server returns 401/403 with JSON-RPC error
         // containing auth info, try to discover and run OAuth if not already done
-        if (
-          [401, 403].includes(response.status) &&
-          !this.isOAuth
-        ) {
+        if ([401, 403].includes(response.status) && !this.isOAuth) {
           try {
             const errorBody = JSON.parse(errText);
             // Check for MCP auth required pattern
@@ -1213,9 +1162,7 @@ class HttpTransport extends EventEmitter implements Transport {
           }
         }
 
-        throw new McpError(
-          `HTTP request failed (${response.status}): ${errText.slice(0, 200)}`,
-        );
+        throw new McpError(`HTTP request failed (${response.status}): ${errText.slice(0, 200)}`);
       }
 
       await this.handleResponse(response, message);
@@ -1291,11 +1238,7 @@ class HttpTransport extends EventEmitter implements Transport {
             if (eventType === "message" || eventType === "" || !eventType) {
               try {
                 const msg = JSON.parse(data.trim()) as JsonRpcMessage;
-                if (
-                  "id" in msg &&
-                  msg.id !== undefined &&
-                  "method" in msg
-                ) {
+                if ("id" in msg && msg.id !== undefined && "method" in msg) {
                   this.emit("request", msg);
                 } else if ("id" in msg && msg.id !== undefined) {
                   this.emit("response", msg as JsonRpcResponse);
@@ -1306,10 +1249,7 @@ class HttpTransport extends EventEmitter implements Transport {
                 // Ignore parse errors
               }
             } else if (eventType === "error") {
-              this.emit(
-                "error",
-                new McpError(`SSE error event: ${data.trim()}`),
-              );
+              this.emit("error", new McpError(`SSE error event: ${data.trim()}`));
             }
             eventType = "";
             data = "";
@@ -1424,9 +1364,7 @@ export class McpClient {
         clearTimeout(pending.timer);
 
         if (msg.error) {
-          pending.reject(
-            new McpError(msg.error.message, msg.error.code, msg.error.data),
-          );
+          pending.reject(new McpError(msg.error.message, msg.error.code, msg.error.data));
         } else {
           pending.resolve(msg.result);
         }
@@ -1475,9 +1413,7 @@ export class McpClient {
       this.connected = true;
       this.logInfo(
         `Connected (v${initResult.protocolVersion})${
-          this.serverInfo
-            ? ` — ${this.serverInfo.name} v${this.serverInfo.version}`
-            : ""
+          this.serverInfo ? ` — ${this.serverInfo.name} v${this.serverInfo.version}` : ""
         }`,
       );
     } catch (err) {
@@ -1496,18 +1432,12 @@ export class McpClient {
       case "http":
         return new HttpTransport(this.config);
       default:
-        throw new McpError(
-          `Unsupported transport: ${(this.config as any).transport}`,
-        );
+        throw new McpError(`Unsupported transport: ${(this.config as any).transport}`);
     }
   }
 
   /** Send a JSON-RPC request and wait for the response. */
-  async request<T = unknown>(
-    method: string,
-    params?: unknown,
-    timeout?: number,
-  ): Promise<T> {
+  async request<T = unknown>(method: string, params?: unknown, timeout?: number): Promise<T> {
     if (!this.transport) throw new McpError("Not connected");
 
     const id = this.nextId++;
@@ -1564,11 +1494,21 @@ export class McpClient {
     args: Record<string, unknown>,
     _signal?: AbortSignal,
   ): Promise<{
-    content: Array<{ type: "text" | "image" | "resource"; text?: string; data?: string; mimeType?: string }>;
+    content: Array<{
+      type: "text" | "image" | "resource";
+      text?: string;
+      data?: string;
+      mimeType?: string;
+    }>;
     isError?: boolean;
   }> {
     const result = await this.request<{
-      content: Array<{ type: "text" | "image" | "resource"; text?: string; data?: string; mimeType?: string }>;
+      content: Array<{
+        type: "text" | "image" | "resource";
+        text?: string;
+        data?: string;
+        mimeType?: string;
+      }>;
       isError?: boolean;
     }>("tools/call", {
       name,
@@ -1601,8 +1541,7 @@ export class McpClient {
   /** Whether this server is configured with OAuth. */
   get hasOAuth(): boolean {
     return (
-      this.config.transport === "http" &&
-      (this.config as HttpServerConfig).oauth?.enabled === true
+      this.config.transport === "http" && (this.config as HttpServerConfig).oauth?.enabled === true
     );
   }
 

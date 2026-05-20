@@ -74,3 +74,22 @@ repos:
       # TOML validation
       - id: check-toml
         name: "✅ Validate TOML syntax"
+
+  # =============================================================================
+  # 📦 PI PROJECT - TypeScript Linting & Formatting
+  # =============================================================================
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v0.15.0
+    hooks:
+      - id: oxlint
+        name: "🦀 Lint TypeScript (oxlint)"
+        files: ^pi/
+        args: []
+
+  - repo: https://github.com/oxc-project/mirrors-oxfmt
+    rev: v0.15.0
+    hooks:
+      - id: oxfmt
+        name: "🦀 Format TypeScript (oxfmt)"
+        files: ^pi/
+        args: []

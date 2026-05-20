@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DANGEROUS_PATTERNS, BLOCK_INSTRUCTION } from "./patterns";
+import { BLOCK_INSTRUCTION } from "./patterns";
 
 // ── DANGEROUS_PATTERNS ────────────────────────────────────────────────
 
@@ -115,10 +115,14 @@ describe("DANGEROUS_PATTERNS", () => {
       expect(/\bperl\b.*\bunlink\b/i.test("perl -e 'unlink(\"file\")'")).toBe(true);
     });
     it("matches python os.remove", () => {
-      expect(/\bpython\b.*\bos\.remove\b/i.test("python -c 'import os; os.remove(\"file\")'")).toBe(true);
+      expect(/\bpython\b.*\bos\.remove\b/i.test("python -c 'import os; os.remove(\"file\")'")).toBe(
+        true,
+      );
     });
     it("matches python shutil.rmtree", () => {
-      expect(/\bpython\b.*\bshutil\.rmtree\b/i.test("python -c 'shutil.rmtree(\"/dir\")'")).toBe(true);
+      expect(/\bpython\b.*\bshutil\.rmtree\b/i.test("python -c 'shutil.rmtree(\"/dir\")'")).toBe(
+        true,
+      );
     });
     it("matches ruby FileUtils.rm", () => {
       expect(/\bruby\b.*\bFileUtils\.rm/i.test("ruby -e 'FileUtils.rm(\"file\")'")).toBe(true);

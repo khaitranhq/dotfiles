@@ -40,10 +40,7 @@ export default function (pi: ExtensionAPI) {
 
       if (result.blocked) {
         if (ctx.hasUI) {
-          ctx.ui.notify(
-            `Blocked dangerous command: ${command.slice(0, 80)}`,
-            "warning",
-          );
+          ctx.ui.notify(`Blocked dangerous command: ${command.slice(0, 80)}`, "warning");
         }
         if (!blockedThisTurn) {
           blockedThisTurn = true;
@@ -62,10 +59,7 @@ export default function (pi: ExtensionAPI) {
 
       if (result.blocked) {
         if (ctx.hasUI) {
-          ctx.ui.notify(
-            `Blocked read outside safe paths: ${filePath}`,
-            "warning",
-          );
+          ctx.ui.notify(`Blocked read outside safe paths: ${filePath}`, "warning");
         }
         return { block: true, reason: result.reason };
       }
@@ -80,10 +74,7 @@ export default function (pi: ExtensionAPI) {
 
       if (result.blocked) {
         if (ctx.hasUI) {
-          ctx.ui.notify(
-            `Blocked write outside safe paths: ${filePath}`,
-            "warning",
-          );
+          ctx.ui.notify(`Blocked write outside safe paths: ${filePath}`, "warning");
         }
         return { block: true, reason: result.reason };
       }

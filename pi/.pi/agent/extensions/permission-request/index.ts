@@ -43,10 +43,7 @@ import {
   type AlwaysApproveConfig,
   type CustomSettings,
 } from "../shared/config";
-import {
-  extractAllCommandSegments,
-  isCommandApproved,
-} from "../shared/command-utils";
+import { extractAllCommandSegments, isCommandApproved } from "../shared/command-utils";
 import { notifyPermissionRequired } from "../notification/index";
 
 // ── Set helpers ───────────────────────────────────────────────────────
@@ -66,7 +63,7 @@ function addToAlwaysApprove(
 
 // ── Extension ─────────────────────────────────────────────────────────
 
-export default function(pi: ExtensionAPI) {
+export default function (pi: ExtensionAPI) {
   // Per-session overrides: tools/commands granted session-only approval
   const sessionApprovals = new Set<string>();
 
@@ -101,7 +98,10 @@ export default function(pi: ExtensionAPI) {
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
       const segments = extractAllCommandSegments(command);
-      if (segments.length > 0 && segments.every((s) => isCommandApproved(s, alwaysApproveCommands))) {
+      if (
+        segments.length > 0 &&
+        segments.every((s) => isCommandApproved(s, alwaysApproveCommands))
+      ) {
         alwaysApproved = true;
       }
     } else {

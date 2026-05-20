@@ -24,12 +24,10 @@ function createMockPi(): {
     on: vi.fn((event: string, handler: (...args: any[]) => any) => {
       registrations.push({ event, handler });
     }),
-    sendUserMessage: vi.fn(
-      (content: string, options?: Record<string, unknown>) => {
-        sentMessages.push({ content, options });
-        return Promise.resolve();
-      },
-    ),
+    sendUserMessage: vi.fn((content: string, options?: Record<string, unknown>) => {
+      sentMessages.push({ content, options });
+      return Promise.resolve();
+    }),
     registerTool: vi.fn(),
     registerCommand: vi.fn(),
     registerShortcut: vi.fn(),
@@ -49,10 +47,12 @@ function getHandler(
   return registrations.find((r) => r.event === event)?.handler;
 }
 
-function mockCtx(overrides: {
-  hasUI?: boolean;
-  cwd?: string;
-} = {}) {
+function mockCtx(
+  overrides: {
+    hasUI?: boolean;
+    cwd?: string;
+  } = {},
+) {
   return {
     hasUI: overrides.hasUI ?? true,
     cwd: overrides.cwd ?? HOME_DIR,
@@ -173,10 +173,7 @@ describe("defender extension", () => {
     it("notifies via UI when hasUI is true", async () => {
       const ctx = mockCtx({ hasUI: true });
       await toolCallHandler(bashEvent("sudo rm /etc/hosts"), ctx);
-      expect(ctx.ui.notify).toHaveBeenCalledWith(
-        expect.stringContaining("Blocked"),
-        "warning",
-      );
+      expect(ctx.ui.notify).toHaveBeenCalledWith(expect.stringContaining("Blocked"), "warning");
     });
 
     it("does not call ui.notify when hasUI is false", async () => {
@@ -206,10 +203,7 @@ describe("defender extension", () => {
     });
 
     it("blocks reading .env files", async () => {
-      const result = await toolCallHandler(
-        readEvent(path.join(HOME_DIR, ".env")),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(readEvent(path.join(HOME_DIR, ".env")), mockCtx());
       expect(result).toEqual({
         block: true,
         reason: expect.stringContaining("env file"),
@@ -217,10 +211,7 @@ describe("defender extension", () => {
     });
 
     it("blocks reading .env.local", async () => {
-      const result = await toolCallHandler(
-        readEvent(path.join(HOME_DIR, ".env.local")),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(readEvent(path.join(HOME_DIR, ".env.local")), mockCtx());
       expect(result).toEqual({
         block: true,
         reason: expect.stringContaining("env file"),
@@ -254,10 +245,7 @@ describe("defender extension", () => {
     });
 
     it("blocks writing .env files", async () => {
-      const result = await toolCallHandler(
-        writeEvent(path.join(HOME_DIR, ".env")),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(writeEvent(path.join(HOME_DIR, ".env")), mockCtx());
       expect(result).toEqual({
         block: true,
         reason: expect.stringContaining("env file"),
@@ -269,18 +257,12 @@ describe("defender extension", () => {
 
   describe("edit tool", () => {
     it("allows editing files inside HOME_DIR", async () => {
-      const result = await toolCallHandler(
-        editEvent(path.join(HOME_DIR, "file.ts")),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(editEvent(path.join(HOME_DIR, "file.ts")), mockCtx());
       expect(result).toBeUndefined();
     });
 
     it("blocks editing files outside HOME_DIR", async () => {
-      const result = await toolCallHandler(
-        editEvent("/etc/nginx/nginx.conf"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(editEvent("/etc/nginx/nginx.conf"), mockCtx());
       expect(result).toEqual({
         block: true,
         reason: expect.stringContaining("blocked"),

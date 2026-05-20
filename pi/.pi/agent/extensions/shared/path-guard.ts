@@ -16,9 +16,7 @@ import * as path from "node:path";
 const HOME_DIR = process.env.HOME || "/home/" + (process.env.USER || "user");
 
 /** Default safe prefixes — $HOME and /tmp (both resolved to absolute). */
-const DEFAULT_ALLOWED_PREFIXES = [HOME_DIR, "/tmp"].map((prefix) =>
-  path.resolve(prefix),
-);
+const DEFAULT_ALLOWED_PREFIXES = [HOME_DIR, "/tmp"].map((prefix) => path.resolve(prefix));
 
 /** Regex matching .env file paths (bare filename or path component). */
 const ENV_FILE_RE = /(?:^|[\\/])\.env(?:\..*)?$|(?:^|[\\/])\..*\.env(?:\..*)?$/;
@@ -42,7 +40,7 @@ export function normalizePath(rawPath: string, cwd?: string): string {
   const expandedPath = expandPath(rawPath);
   const baseDir = path.isAbsolute(expandedPath)
     ? path.parse(expandedPath).root
-    : (cwd || process.cwd());
+    : cwd || process.cwd();
 
   return path.resolve(baseDir, expandedPath);
 }
@@ -57,8 +55,7 @@ export function isPathAllowed(
 
   const resolved = normalizePath(rawPath, cwd);
   return allowedPrefixes.some(
-    (prefix) =>
-      resolved === prefix || resolved.startsWith(prefix + path.sep),
+    (prefix) => resolved === prefix || resolved.startsWith(prefix + path.sep),
   );
 }
 

@@ -11,6 +11,7 @@ This is a hard requirement, not optional. Once you have a clear picture of the t
 **Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Loading skill too early (before understanding the task) leads to irrelevant context. Loading them after context gathering ensures you pick the right skills for the actual work.
 
 **How to choose which skills to load**:
+
 - Parse the user's request for key terms (language, tool, domain, problem type)
 - Cross-reference against the available skills listed in your system prompt
 - When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output

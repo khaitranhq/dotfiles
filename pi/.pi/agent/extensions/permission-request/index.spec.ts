@@ -130,26 +130,17 @@ describe("permission-request extension", () => {
     });
 
     it("allows simple command with env assignments", async () => {
-      const result = await toolCallHandler(
-        bashEvent("FOO=bar cd /tmp"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("FOO=bar cd /tmp"), mockCtx());
       expect(result).toBeUndefined();
     });
 
     it("allows multi-word always-approved subcommand", async () => {
-      const result = await toolCallHandler(
-        bashEvent("git diff --cached"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("git diff --cached"), mockCtx());
       expect(result).toBeUndefined();
     });
 
     it("allows multi-word approved subcommand without extra flags", async () => {
-      const result = await toolCallHandler(
-        bashEvent("git log"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("git log"), mockCtx());
       expect(result).toBeUndefined();
     });
 
@@ -158,10 +149,7 @@ describe("permission-request extension", () => {
       uiCtx.ui.select.mockResolvedValue("✅ Allow");
 
       // git push is NOT in always_approve, only git diff / git log
-      const result = await toolCallHandler(
-        bashEvent("git push origin main"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("git push origin main"), uiCtx);
       expect(result).toBeUndefined();
       expect(uiCtx.ui.select).toHaveBeenCalled();
     });
@@ -173,26 +161,17 @@ describe("permission-request extension", () => {
     beforeEach(() => initExtension());
 
     it("allows compound command when all bases are always-approved", async () => {
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && ls -la"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && ls -la"), mockCtx());
       expect(result).toBeUndefined();
     });
 
     it("allows pipe chain with all-approved bases", async () => {
-      const result = await toolCallHandler(
-        bashEvent("cat file | grep foo"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("cat file | grep foo"), mockCtx());
       expect(result).toBeUndefined();
     });
 
     it("allows semicolon chain with all-approved bases", async () => {
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp; ls -la; cat file.txt"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp; ls -la; cat file.txt"), mockCtx());
       expect(result).toBeUndefined();
     });
 
@@ -214,10 +193,7 @@ describe("permission-request extension", () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("✅ Allow");
 
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx);
       expect(result).toBeUndefined(); // allowed after user approval
       expect(uiCtx.ui.select).toHaveBeenCalled();
     });
@@ -226,10 +202,7 @@ describe("permission-request extension", () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("✅ Allow");
 
-      const result = await toolCallHandler(
-        bashEvent("pnpm install && ls -la"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("pnpm install && ls -la"), uiCtx);
       expect(result).toBeUndefined();
       expect(uiCtx.ui.select).toHaveBeenCalled();
     });
@@ -238,10 +211,7 @@ describe("permission-request extension", () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("✅ Allow");
 
-      const result = await toolCallHandler(
-        bashEvent("pnpm install && npm test"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("pnpm install && npm test"), uiCtx);
       expect(result).toBeUndefined();
       expect(uiCtx.ui.select).toHaveBeenCalled();
     });
@@ -251,10 +221,7 @@ describe("permission-request extension", () => {
       uiCtx.ui.select.mockResolvedValue("❌ Deny (with reason)");
       uiCtx.ui.input.mockResolvedValue("not needed");
 
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx);
       expect(result).toEqual({
         block: true,
         reason: "not needed",
@@ -290,7 +257,7 @@ describe("permission-request extension", () => {
       expect(aa.bashCommands).toContain("pnpm install");
     });
 
-    it('persists to disk via updateCustomSettings for compound commands', async () => {
+    it("persists to disk via updateCustomSettings for compound commands", async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
 
@@ -300,14 +267,11 @@ describe("permission-request extension", () => {
       // After persistence, the compound command should pass without prompt
       vi.clearAllMocks();
 
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), mockCtx());
       expect(result).toBeUndefined();
     });
 
-    it('persists subcommand as full segment text', async () => {
+    it("persists subcommand as full segment text", async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
 
@@ -333,10 +297,7 @@ describe("permission-request extension", () => {
 
       // Second call: same chain should now pass without prompt
       vi.clearAllMocks();
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), mockCtx());
       expect(result).toBeUndefined();
     });
 
@@ -353,10 +314,7 @@ describe("permission-request extension", () => {
       // Now it should require approval again
       vi.clearAllMocks();
       uiCtx.ui.select.mockResolvedValue("✅ Allow");
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        uiCtx,
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx);
       expect(result).toBeUndefined();
       expect(uiCtx.ui.select).toHaveBeenCalled();
     });
@@ -381,10 +339,7 @@ describe("permission-request extension", () => {
       const uiCtx2 = mockCtx();
       uiCtx2.ui.select.mockResolvedValue("✅ Allow");
 
-      const result = await toolCallHandler(
-        bashEvent("cd /tmp && pnpm install"),
-        uiCtx2,
-      );
+      const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx2);
       // The handler should prompt because pnpm is not approved
       expect(uiCtx2.ui.select).toHaveBeenCalled();
       expect(result).toBeUndefined();
@@ -397,10 +352,7 @@ describe("permission-request extension", () => {
     beforeEach(() => initExtension());
 
     it("allows always-approved tools without prompt", async () => {
-      const result = await toolCallHandler(
-        readEvent("/home/user/file.txt"),
-        mockCtx(),
-      );
+      const result = await toolCallHandler(readEvent("/home/user/file.txt"), mockCtx());
       expect(result).toBeUndefined();
     });
 

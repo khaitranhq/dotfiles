@@ -76,8 +76,7 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 
     if (!frontmatter.name || !frontmatter.description) continue;
 
-    const mode: AgentMode =
-      frontmatter.mode === "primary" ? "primary" : "subagent";
+    const mode: AgentMode = frontmatter.mode === "primary" ? "primary" : "subagent";
 
     const tools = frontmatter.tools
       ?.split(",")
@@ -151,14 +150,15 @@ export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryRe
 
 // ── Formatting ─────────────────────────────────────────────────────────
 
-export function formatAgentList(agents: AgentConfig[], maxItems: number): { text: string; remaining: number } {
+export function formatAgentList(
+  agents: AgentConfig[],
+  maxItems: number,
+): { text: string; remaining: number } {
   if (agents.length === 0) return { text: "none", remaining: 0 };
   const listed = agents.slice(0, maxItems);
   const remaining = agents.length - listed.length;
   return {
-    text: listed
-      .map((a) => `${a.name} (${a.source}, ${a.mode}): ${a.description}`)
-      .join("; "),
+    text: listed.map((a) => `${a.name} (${a.source}, ${a.mode}): ${a.description}`).join("; "),
     remaining,
   };
 }

@@ -18,10 +18,7 @@ const MAX_DEPTH = 10;
  * Convert a JSON Schema object to a TypeBox schema.
  * Returns Type.Any() for schemas that can't be cleanly converted.
  */
-export function jsonSchemaToTypeBox(
-  schema: unknown,
-  depth = 0,
-): TSchema {
+export function jsonSchemaToTypeBox(schema: unknown, depth = 0): TSchema {
   if (depth > MAX_DEPTH) return Type.Any();
   if (!schema || typeof schema !== "object") return Type.Any();
 
@@ -59,17 +56,13 @@ export function jsonSchemaToTypeBox(
   // ── Array ───────────────────────────────────────────────────────────
   if (type === "array") {
     const items = s.items;
-    return Type.Array(
-      items ? jsonSchemaToTypeBox(items, depth + 1) : Type.Any(),
-    );
+    return Type.Array(items ? jsonSchemaToTypeBox(items, depth + 1) : Type.Any());
   }
 
   // ── Object ──────────────────────────────────────────────────────────
   if (type === "object") {
     const properties = s.properties as Record<string, unknown> | undefined;
-    const required = new Set<string>(
-      Array.isArray(s.required) ? (s.required as string[]) : [],
-    );
+    const required = new Set<string>(Array.isArray(s.required) ? (s.required as string[]) : []);
 
     if (!properties) return Type.Object({});
 
@@ -119,9 +112,7 @@ export function describeSchema(schema: unknown, indent = ""): string {
     const props = s.properties as Record<string, unknown> | undefined;
     if (!props) return "{}";
 
-    const required = new Set(
-      Array.isArray(s.required) ? (s.required as string[]) : [],
-    );
+    const required = new Set(Array.isArray(s.required) ? (s.required as string[]) : []);
 
     const lines = Object.entries(props).map(([k, v]) => {
       const req = required.has(k) ? "" : "?";

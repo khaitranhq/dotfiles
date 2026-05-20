@@ -84,11 +84,7 @@ describe("checkWritePath", () => {
   });
 
   it("blocks writing .env files even inside HOME_DIR", () => {
-    const result = checkWritePath(
-      path.join(HOME_DIR, ".env"),
-      HOME_DIR,
-      ALLOWED_PREFIXES,
-    );
+    const result = checkWritePath(path.join(HOME_DIR, ".env"), HOME_DIR, ALLOWED_PREFIXES);
     expect(result.blocked).toBe(true);
     expect(result.reason).toContain("env file");
   });

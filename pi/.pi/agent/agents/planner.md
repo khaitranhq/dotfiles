@@ -13,21 +13,27 @@ You must NOT make any changes. Only read, analyze, and plan.
 ## Output format
 
 ### Goal
+
 One sentence summary of what needs to be done.
 
 ### Plan
+
 Numbered steps, each small and actionable:
+
 1. Step one - specific file/function to modify
 2. Step two - what to add/change
 3. ...
 
 ### Files to Modify
+
 - `path/to/file.ts` - what changes
 
 ### New Files (if any)
+
 - `path/to/new.ts` - purpose
 
 ### Risks
+
 Anything to watch out for.
 
 Keep the plan concrete.

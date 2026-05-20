@@ -18,16 +18,16 @@ The shared config module (`.pi/agent/extensions/shared/config.ts`) provides a ce
 
 ## Extension Overview
 
-| Extension | Purpose | Settings | Commands |
-|-----------|---------|----------|----------|
-| [permission-request](#permission-request) | Tool execution gates | `always_approve` | — |
-| [defender](#defender) | Block dangerous ops | — (hardcoded) | — |
-| [subagent](#subagent) | Subagent & primary agent orchestration | `subagent`, `tools`, `always_approve.subagent` | `/agent` |
-| [mcp](#mcp) | MCP server integration | `mcp` | `/mcp-status`, `/mcp-reload`, `/mcp-auth` |
-| [input-ux](#input-ux) | `@` mention autocomplete & input history | — | — |
-| [question](#question) | Interactive questions tool | — | — |
-| [notification](#notification) | Desktop toast notifications | — | — |
-| [shared](#shared) | Shared utilities (config, path-guard, command-utils) | — | — |
+| Extension                                 | Purpose                                              | Settings                                       | Commands                                  |
+| ----------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| [permission-request](#permission-request) | Tool execution gates                                 | `always_approve`                               | —                                         |
+| [defender](#defender)                     | Block dangerous ops                                  | — (hardcoded)                                  | —                                         |
+| [subagent](#subagent)                     | Subagent & primary agent orchestration               | `subagent`, `tools`, `always_approve.subagent` | `/agent`                                  |
+| [mcp](#mcp)                               | MCP server integration                               | `mcp`                                          | `/mcp-status`, `/mcp-reload`, `/mcp-auth` |
+| [input-ux](#input-ux)                     | `@` mention autocomplete & input history             | —                                              | —                                         |
+| [question](#question)                     | Interactive questions tool                           | —                                              | —                                         |
+| [notification](#notification)             | Desktop toast notifications                          | —                                              | —                                         |
+| [shared](#shared)                         | Shared utilities (config, path-guard, command-utils) | —                                              | —                                         |
 
 ---
 
@@ -75,9 +75,9 @@ always_approve:
     - yamllint
 ```
 
-| Key | Type | Description |
-|-----|------|-------------|
-| `always_approve.tools` | `string[]` | Tool names always allowed without prompt |
+| Key                           | Type       | Description                                         |
+| ----------------------------- | ---------- | --------------------------------------------------- |
+| `always_approve.tools`        | `string[]` | Tool names always allowed without prompt            |
 | `always_approve.bashCommands` | `string[]` | Bash commands always allowed (word-prefix matching) |
 
 ### Commands
@@ -93,6 +93,7 @@ None. The extension works transparently — no slash commands needed.
 Blocks dangerous bash commands and prevents reading/writing files outside `$HOME`. Relative paths are resolved against the current working directory. When a command is blocked, also sends a steering instruction telling the agent NOT to try workarounds.
 
 **Protected operations:**
+
 - `rm` targeting files outside `$HOME` (except `/tmp` — always allowed)
 - `sudo`, `chmod`, `chown`, `dd`, `mkfs`, `fdisk`, `shutdown`, `reboot`
 - Workaround patterns: `find ... -delete`, `find ... -exec rm`, `xargs rm`
@@ -121,11 +122,13 @@ None.
 **File:** `.pi/agent/extensions/subagent/index.ts`
 
 Spawns separate `pi` processes for subagent invocation with isolated context. Supports three modes:
+
 - **Single:** `{ agent: "name", task: "..." }`
 - **Parallel:** `{ tasks: [{ agent: "name", task: "..." }, ...] }` (max 8 tasks, 4 concurrent)
 - **Chain:** `{ chain: [{ agent: "name", task: "... {previous} ..." }, ...] }`
 
 Agent definitions live in markdown files with YAML frontmatter:
+
 - `~/.pi/agent/agents/*.md` (user-level)
 - `.pi/agents/*.md` (project-level, travelled up from cwd)
 
@@ -151,15 +154,15 @@ always_approve:
     confirmProjectAgents: false
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `subagent.defaultScope` | `"user"` \| `"project"` \| `"both"` | `"user"` | Which agent directories to use |
-| `subagent.confirmProjectAgents` | `boolean` | `true` | Prompt before running project-local agents |
-| `tools.global.allow` | `string[]` | — | Whitelist: only these tools for primary agent + all subagents |
-| `tools.global.deny` | `string[]` | — | Blacklist: block these tools globally (`allow` takes precedence) |
-| `tools.agents.<name>.allow` | `string[]` | — | Per-agent whitelist (overrides agent's default tools from .md frontmatter) |
-| `tools.agents.<name>.deny` | `string[]` | — | Per-agent blacklist |
-| `always_approve.subagent` | `object` | — | Defaults for the `subagent` tool when called by the LLM (same shape as `subagent`) |
+| Key                             | Type                                | Default  | Description                                                                        |
+| ------------------------------- | ----------------------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `subagent.defaultScope`         | `"user"` \| `"project"` \| `"both"` | `"user"` | Which agent directories to use                                                     |
+| `subagent.confirmProjectAgents` | `boolean`                           | `true`   | Prompt before running project-local agents                                         |
+| `tools.global.allow`            | `string[]`                          | —        | Whitelist: only these tools for primary agent + all subagents                      |
+| `tools.global.deny`             | `string[]`                          | —        | Blacklist: block these tools globally (`allow` takes precedence)                   |
+| `tools.agents.<name>.allow`     | `string[]`                          | —        | Per-agent whitelist (overrides agent's default tools from .md frontmatter)         |
+| `tools.agents.<name>.deny`      | `string[]`                          | —        | Per-agent blacklist                                                                |
+| `always_approve.subagent`       | `object`                            | —        | Defaults for the `subagent` tool when called by the LLM (same shape as `subagent`) |
 
 ### Commands
 
@@ -202,13 +205,13 @@ tools: read,bash,write,edit,grep,find,ls
 System prompt body here. This is the agent's instructions.
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | ✅ | Agent name (used in `@agent` and tool calls) |
-| `description` | ✅ | Short description (shown in agent lists) |
-| `mode` | ❌ | `subagent` (default) or `primary` |
-| `model` | ❌ | Model override (`provider/model-id`) |
-| `tools` | ❌ | Comma-separated tool list (default: all tools) |
+| Field         | Required | Description                                    |
+| ------------- | -------- | ---------------------------------------------- |
+| `name`        | ✅       | Agent name (used in `@agent` and tool calls)   |
+| `description` | ✅       | Short description (shown in agent lists)       |
+| `mode`        | ❌       | `subagent` (default) or `primary`              |
+| `model`       | ❌       | Model override (`provider/model-id`)           |
+| `tools`       | ❌       | Comma-separated tool list (default: all tools) |
 
 ---
 
@@ -245,39 +248,39 @@ mcp:
       enabled: true
 ```
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `mcp.toolPrefix` | `string` | `"mcp"` | Prefix for registered tool names |
-| `mcp.maxResultBytes` | `number` | `10240` | Max result bytes before truncation (10 KB) |
-| `mcp.maxResultLines` | `number` | `500` | Max result lines before truncation |
-| `mcp.reconnectEnabled` | `boolean` | `true` | Attempt reconnection on failure |
-| `mcp.reconnectMaxRetries` | `number` | `3` | Max reconnection attempts |
-| `mcp.servers` | `array` | `[]` | MCP server configurations |
+| Key                       | Type      | Default | Description                                |
+| ------------------------- | --------- | ------- | ------------------------------------------ |
+| `mcp.toolPrefix`          | `string`  | `"mcp"` | Prefix for registered tool names           |
+| `mcp.maxResultBytes`      | `number`  | `10240` | Max result bytes before truncation (10 KB) |
+| `mcp.maxResultLines`      | `number`  | `500`   | Max result lines before truncation         |
+| `mcp.reconnectEnabled`    | `boolean` | `true`  | Attempt reconnection on failure            |
+| `mcp.reconnectMaxRetries` | `number`  | `3`     | Max reconnection attempts                  |
+| `mcp.servers`             | `array`   | `[]`    | MCP server configurations                  |
 
 **Server config fields:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | `string` | ✅ | Unique server name |
-| `transport` | `"stdio"` \| `"http"` | ✅ | Transport type |
-| `enabled` | `boolean` | ❌ | Set to `false` to skip this server |
-| `timeout` | `number` | ❌ | Connection timeout in ms (default: 30000) |
+| Field       | Type                  | Required | Description                               |
+| ----------- | --------------------- | -------- | ----------------------------------------- |
+| `name`      | `string`              | ✅       | Unique server name                        |
+| `transport` | `"stdio"` \| `"http"` | ✅       | Transport type                            |
+| `enabled`   | `boolean`             | ❌       | Set to `false` to skip this server        |
+| `timeout`   | `number`              | ❌       | Connection timeout in ms (default: 30000) |
 
 **Stdio transport:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `command` | `string` | ✅ | Command to spawn |
-| `args` | `string[]` | ❌ | Command arguments |
+| Field     | Type       | Required | Description       |
+| --------- | ---------- | -------- | ----------------- |
+| `command` | `string`   | ✅       | Command to spawn  |
+| `args`    | `string[]` | ❌       | Command arguments |
 
 **HTTP (SSE) transport:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `url` | `string` | ✅ | MCP server URL |
-| `oauth.enabled` | `boolean` | ❌ | Enable OAuth authentication |
-| `oauth.scopes` | `string[]` | ❌ | OAuth scopes to request |
-| `oauth.tokenStorePath` | `string` | ❌ | Custom token storage path |
+| Field                  | Type       | Required | Description                 |
+| ---------------------- | ---------- | -------- | --------------------------- |
+| `url`                  | `string`   | ✅       | MCP server URL              |
+| `oauth.enabled`        | `boolean`  | ❌       | Enable OAuth authentication |
+| `oauth.scopes`         | `string[]` | ❌       | OAuth scopes to request     |
+| `oauth.tokenStorePath` | `string`   | ❌       | Custom token storage path   |
 
 ### Commands
 
@@ -314,6 +317,7 @@ For single-server setups, `<server-name>` can be omitted.
 ### Registered Tool Naming
 
 Tools from an MCP server named `jira` with prefix `mcp` become:
+
 - `mcp_jira_getissue`
 - `mcp_jira_searchissues`
 - etc.
@@ -327,6 +331,7 @@ The format is: `<prefix>_<server>_<tool>` (sanitized: lowercase, `[^a-zA-Z0-9_]`
 **File:** `.pi/agent/extensions/input-ux/index.ts`
 
 Provides unified input experience:
+
 - **`@mention` autocomplete** — fuzzy match agents, files, and directories
 - **`@mention` input transform** — `@codereview ...` → delegates to subagent, `@src/...` → reads/inspects
 - **Cwd-scoped input history** — per-directory prompt history on `↑`/`↓`
@@ -343,11 +348,11 @@ None.
 
 Type `@` in the input editor to trigger autocomplete with fuzzy matching:
 
-| Prefix | Matches | Inserted |
-|--------|---------|----------|
-| `@agent ` | Subagent names | Delegation instruction |
-| `@file ` | File paths | Read instruction |
-| `@dir ` | Directory paths | Inspect instruction |
+| Prefix    | Matches         | Inserted               |
+| --------- | --------------- | ---------------------- |
+| `@agent ` | Subagent names  | Delegation instruction |
+| `@file `  | File paths      | Read instruction       |
+| `@dir `   | Directory paths | Inspect instruction    |
 
 History is per-directory — each project has its own prompt history stored in `~/.pi/agent/input-history.json`.
 
@@ -360,6 +365,7 @@ History is per-directory — each project has its own prompt history stored in `
 Registers a `question` tool that lets the LLM ask the user structured questions. Supports three question types with tab-based navigation for multi-question sets.
 
 **Question types:**
+
 - **input** — free text
 - **select** — single choice from options
 - **multi_select** — multiple choices from options
@@ -385,8 +391,8 @@ The LLM calls the `question` tool with:
       "prompt": "What scope should this change have?",
       "type": "select",
       "options": [
-        {"value": "full", "label": "Full refactor"},
-        {"value": "partial", "label": "Targeted fix"}
+        { "value": "full", "label": "Full refactor" },
+        { "value": "partial", "label": "Targeted fix" }
       ],
       "allowOther": true
     }
@@ -427,10 +433,10 @@ notifyPermissionRequired("bash: rm -rf /dangerous");
 
 Utility module — not a real extension (empty default export). Provides:
 
-| Module | Purpose |
-|--------|---------|
-| `config.ts` | Load/save `custom-settings.yaml`, `always_approve`, `subagent` config |
-| `path-guard.ts` | Path validation: `isPathAllowed()`, `isEnvFile()`, `expandPath()` |
+| Module             | Purpose                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| `config.ts`        | Load/save `custom-settings.yaml`, `always_approve`, `subagent` config                       |
+| `path-guard.ts`    | Path validation: `isPathAllowed()`, `isEnvFile()`, `expandPath()`                           |
 | `command-utils.ts` | Bash command parsing: `extractAllCommandSegments()`, `isCommandApproved()`, `findRmIndex()` |
 
 ### Settings
@@ -442,7 +448,7 @@ export interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
   tools?: ToolsConfig;
-  [key: string]: unknown;  // Extensible for other extensions (e.g., "mcp")
+  [key: string]: unknown; // Extensible for other extensions (e.g., "mcp")
 }
 
 export interface AlwaysApproveConfig {
@@ -582,11 +588,11 @@ See [keybindings.md](https://github.com/earendil-works/pi-mono/blob/main/docs/ke
 
 ## Slash Commands Reference
 
-| Command | Extension | Description |
-|---------|-----------|-------------|
-| `/agent <name>` | subagent | Switch primary agent |
-| `/mcp-status` | mcp | Show MCP server status |
-| `/mcp-reload` | mcp | Reload MCP config and reconnect |
-| `/mcp-auth [status\|login\|logout]` | mcp | Manage MCP OAuth authentication |
+| Command                             | Extension | Description                     |
+| ----------------------------------- | --------- | ------------------------------- |
+| `/agent <name>`                     | subagent  | Switch primary agent            |
+| `/mcp-status`                       | mcp       | Show MCP server status          |
+| `/mcp-reload`                       | mcp       | Reload MCP config and reconnect |
+| `/mcp-auth [status\|login\|logout]` | mcp       | Manage MCP OAuth authentication |
 
 Built-in pi commands (not from these extensions): `/model`, `/settings`, `/reload`, `/new`, `/resume`, `/fork`, `/clone`, `/compact`, `/tree`, `/skill:name`, `/template`.

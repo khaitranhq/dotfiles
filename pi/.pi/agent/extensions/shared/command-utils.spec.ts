@@ -67,7 +67,11 @@ describe("extractAllBaseCommands", () => {
 
   it("extracts all base commands from && chain", () => {
     expect(extractAllBaseCommands("cd /tmp && pnpm install")).toEqual(["cd", "pnpm"]);
-    expect(extractAllBaseCommands("cd /tmp && ls -la && pnpm install")).toEqual(["cd", "ls", "pnpm"]);
+    expect(extractAllBaseCommands("cd /tmp && ls -la && pnpm install")).toEqual([
+      "cd",
+      "ls",
+      "pnpm",
+    ]);
   });
 
   it("extracts all base commands from ; chain", () => {
@@ -87,15 +91,26 @@ describe("extractAllBaseCommands", () => {
   });
 
   it("handles mixed separators", () => {
-    expect(extractAllBaseCommands("echo hello; cat file | grep foo && ls")).toEqual(["echo", "cat", "grep", "ls"]);
+    expect(extractAllBaseCommands("echo hello; cat file | grep foo && ls")).toEqual([
+      "echo",
+      "cat",
+      "grep",
+      "ls",
+    ]);
   });
 
   it("skips leading env assignments in each segment", () => {
-    expect(extractAllBaseCommands("FOO=bar ls -la && BAZ=qux pnpm install")).toEqual(["ls", "pnpm"]);
+    expect(extractAllBaseCommands("FOO=bar ls -la && BAZ=qux pnpm install")).toEqual([
+      "ls",
+      "pnpm",
+    ]);
   });
 
   it("returns basename for full-path commands", () => {
-    expect(extractAllBaseCommands("/usr/bin/git status && /usr/local/bin/node -v")).toEqual(["git", "node"]);
+    expect(extractAllBaseCommands("/usr/bin/git status && /usr/local/bin/node -v")).toEqual([
+      "git",
+      "node",
+    ]);
   });
 
   it("returns empty array for empty input", () => {
@@ -127,10 +142,7 @@ describe("extractAllCommandSegments", () => {
       "cd /tmp",
       "pnpm install",
     ]);
-    expect(extractAllCommandSegments("git diff | cat")).toEqual([
-      "git diff",
-      "cat",
-    ]);
+    expect(extractAllCommandSegments("git diff | cat")).toEqual(["git diff", "cat"]);
   });
 
   it("strips leading env assignments from each segment", () => {
@@ -147,9 +159,7 @@ describe("extractAllCommandSegments", () => {
   });
 
   it("preserves full path commands", () => {
-    expect(extractAllCommandSegments("/usr/bin/git status")).toEqual([
-      "/usr/bin/git status",
-    ]);
+    expect(extractAllCommandSegments("/usr/bin/git status")).toEqual(["/usr/bin/git status"]);
   });
 });
 
@@ -264,7 +274,7 @@ describe("extractRmPaths", () => {
   it("strips surrounding quotes from each token", () => {
     // Note: match(/\S+/g) splits on whitespace, so "file with spaces"
     // is tokenised as separate tokens. Quote stripping is per-token.
-    const paths = extractRmPaths('rm "file1" \'file2\'');
+    const paths = extractRmPaths("rm \"file1\" 'file2'");
     expect(paths).toEqual(["file1", "file2"]);
   });
 

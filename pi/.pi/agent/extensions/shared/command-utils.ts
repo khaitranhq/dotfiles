@@ -109,10 +109,7 @@ export function extractAllCommandSegments(fullCommand: string): string[] {
  *   isCommandApproved("ls -la",            Set(["ls"]))         → true
  *   isCommandApproved("npx tsc --noEmit",  Set(["npx tsc"]))    → true
  */
-export function isCommandApproved(
-  segment: string,
-  approved: Set<string>,
-): boolean {
+export function isCommandApproved(segment: string, approved: Set<string>): boolean {
   const segmentWords = segment.split(/\s+/);
 
   for (const entry of approved) {
@@ -137,12 +134,7 @@ export function isCommandApproved(
 /**
  * Node types whose children can contain top-level commands we care about.
  */
-const COMMAND_CONTAINER_TYPES = new Set([
-  "program",
-  "list",
-  "pipeline",
-  "redirected_statement",
-]);
+const COMMAND_CONTAINER_TYPES = new Set(["program", "list", "pipeline", "redirected_statement"]);
 
 /**
  * Recursively walk the tree-sitter AST and collect base command names.
@@ -151,10 +143,7 @@ const COMMAND_CONTAINER_TYPES = new Set([
  * This naturally skips command_substitution, subshell, process_substitution,
  * if/while/for/case/function bodies, and other nested contexts.
  */
-function collectCommandNodes(
-  node: Parser.SyntaxNode,
-  commands: string[],
-): void {
+function collectCommandNodes(node: Parser.SyntaxNode, commands: string[]): void {
   if (node.type === "command") {
     const name = extractCommandName(node);
     if (name) commands.push(name);
@@ -226,9 +215,7 @@ function extractCommandName(commandNode: Parser.SyntaxNode): string {
  * Allowed command prefixes that can appear before rm in a command chain
  * (e.g., `sudo rm -rf /foo`, `env VAR=1 rm file`).
  */
-const RM_PREFIXES = new Set([
-  "env", "nice", "ionice", "nohup", "sudo", "pkexec", "doas",
-]);
+const RM_PREFIXES = new Set(["env", "nice", "ionice", "nohup", "sudo", "pkexec", "doas"]);
 
 /**
  * Find the index of the "rm" token in a tokenised command.

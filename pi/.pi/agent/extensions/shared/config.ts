@@ -97,13 +97,9 @@ function migrateJsonToYaml(): void {
     // Write as YAML
     fs.mkdirSync(path.dirname(yamlPath), { recursive: true });
     fs.writeFileSync(yamlPath, stringifyYaml(settings), "utf-8");
-    console.error(
-      `[config] Migrated custom-settings.json → custom-settings.yaml`,
-    );
+    console.error(`[config] Migrated custom-settings.json → custom-settings.yaml`);
   } catch (err) {
-    console.error(
-      `[config] Failed to migrate custom-settings.json: ${err}`,
-    );
+    console.error(`[config] Failed to migrate custom-settings.json: ${err}`);
   }
 }
 
@@ -142,9 +138,7 @@ export function saveCustomSettings(settings: CustomSettings): void {
  * Usage:
  *   updateCustomSettings(s => ({ ...s, always_approve: { ...s.always_approve, tools: ["ls"] } }))
  */
-export function updateCustomSettings(
-  updater: (settings: CustomSettings) => CustomSettings,
-): void {
+export function updateCustomSettings(updater: (settings: CustomSettings) => CustomSettings): void {
   saveCustomSettings(updater(loadCustomSettings()));
 }
 
@@ -161,4 +155,3 @@ export function loadSubagentConfig(): SubagentConfig {
 export function loadToolsConfig(): ToolsConfig {
   return loadCustomSettings().tools ?? {};
 }
-

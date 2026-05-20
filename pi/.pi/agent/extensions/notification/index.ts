@@ -67,7 +67,7 @@ export function notifyPermissionRequired(description: string): void {
   notify(TITLE, description);
 }
 
-export default function(pi: ExtensionAPI) {
+export default function (pi: ExtensionAPI) {
   // Skip on non-Windows — powershell toast notifications are Windows-only.
   if (process.platform !== "win32") return;
 

@@ -35,12 +35,7 @@ import {
   getMarkdownTheme,
   withFileMutationQueue,
 } from "@earendil-works/pi-coding-agent";
-import {
-  Container,
-  Markdown,
-  Spacer,
-  Text,
-} from "@earendil-works/pi-tui";
+import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
 import { loadSubagentConfig, loadToolsConfig } from "../shared/config";
@@ -257,15 +252,17 @@ async function mapWithConcurrencyLimit<TIn, TOut>(
 ): Promise<TOut[]> {
   if (items.length === 0) return [];
   const limit = Math.max(1, Math.min(concurrency, items.length));
-  const results: TOut[] = new Array(items.length);
+  const results: TOut[] = Array.from({ length: items.length });
   let nextIndex = 0;
-  const workers = new Array(limit).fill(null).map(async () => {
-    while (true) {
-      const current = nextIndex++;
-      if (current >= items.length) return;
-      results[current] = await fn(items[current], current);
-    }
-  });
+  const workers = Array.from({ length: limit })
+    .fill(null)
+    .map(async () => {
+      while (true) {
+        const current = nextIndex++;
+        if (current >= items.length) return;
+        results[current] = await fn(items[current], current);
+      }
+    });
   await Promise.all(workers);
   return results;
 }
@@ -550,7 +547,7 @@ const SubagentParams = Type.Object({
 
 // ── Extension entry point ──────────────────────────────────────────────
 
-export default function(pi: ExtensionAPI) {
+export default function (pi: ExtensionAPI) {
   // ── Resolve effective tools for a subagent ──────────────────────────
 
   /**
@@ -566,9 +563,7 @@ export default function(pi: ExtensionAPI) {
     agentDefaultTools?: string[],
   ): string[] | undefined {
     // Start with agent's default tools or undefined (meaning all tools)
-    let effective: string[] | undefined = agentDefaultTools
-      ? [...agentDefaultTools]
-      : undefined;
+    let effective: string[] | undefined = agentDefaultTools ? [...agentDefaultTools] : undefined;
 
     // Helper: resolve effective to full tool list when undefined but deny needs it
     const resolveAll = () => pi.getAllTools().map((t) => t.name);
@@ -580,9 +575,7 @@ export default function(pi: ExtensionAPI) {
         effective = [...agentOverride.tools];
       } else {
         // deny: filter out denied tools
-        effective = (effective ?? resolveAll()).filter(
-          (t) => !agentOverride.tools.includes(t),
-        );
+        effective = (effective ?? resolveAll()).filter((t) => !agentOverride.tools.includes(t));
       }
     }
 
@@ -614,7 +607,8 @@ export default function(pi: ExtensionAPI) {
       'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.yaml to change defaults.',
       'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
     ].join(" "),
-    promptSnippet: "Delegate task to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
+    promptSnippet:
+      "Delegate task to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
     parameters: SubagentParams,
 
     async execute(_toolCallId, params, signal, onUpdate, ctx) {
@@ -633,12 +627,12 @@ export default function(pi: ExtensionAPI) {
 
       const makeDetails =
         (mode: "single" | "parallel" | "chain") =>
-          (results: SingleResult[]): SubagentDetails => ({
-            mode,
-            agentScope,
-            projectAgentsDir: discovery.projectAgentsDir,
-            results,
-          });
+        (results: SingleResult[]): SubagentDetails => ({
+          mode,
+          agentScope,
+          projectAgentsDir: discovery.projectAgentsDir,
+          results,
+        });
 
       if (modeCount !== 1) {
         const available = subagents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
@@ -694,14 +688,14 @@ export default function(pi: ExtensionAPI) {
 
           const chainUpdate: OnUpdateCallback | undefined = onUpdate
             ? (partial) => {
-              const currentResult = partial.details?.results[0];
-              if (currentResult) {
-                onUpdate({
-                  content: partial.content,
-                  details: makeDetails("chain")([...results, currentResult]),
-                });
+                const currentResult = partial.details?.results[0];
+                if (currentResult) {
+                  onUpdate({
+                    content: partial.content,
+                    details: makeDetails("chain")([...results, currentResult]),
+                  });
+                }
               }
-            }
             : undefined;
 
           const result = await runSingleAgent(
@@ -766,7 +760,7 @@ export default function(pi: ExtensionAPI) {
             details: makeDetails("parallel")([]),
           };
 
-        const allResults: SingleResult[] = new Array(params.tasks.length);
+        const allResults: SingleResult[] = Array.from({ length: params.tasks.length });
         for (let i = 0; i < params.tasks.length; i++) {
           allResults[i] = {
             agent: params.tasks[i].agent,
@@ -1006,7 +1000,7 @@ export default function(pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -1073,9 +1067,9 @@ export default function(pi: ExtensionAPI) {
           container.addChild(
             new Text(
               icon +
-              " " +
-              theme.fg("toolTitle", theme.bold("chain ")) +
-              theme.fg("accent", `${successCount}/${details.results.length} steps`),
+                " " +
+                theme.fg("toolTitle", theme.bold("chain ")) +
+                theme.fg("accent", `${successCount}/${details.results.length} steps`),
               0,
               0,
             ),
@@ -1103,7 +1097,7 @@ export default function(pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -1189,7 +1183,7 @@ export default function(pi: ExtensionAPI) {
                 container.addChild(
                   new Text(
                     theme.fg("muted", "→ ") +
-                    formatToolCall(item.name, item.args, theme.fg.bind(theme)),
+                      formatToolCall(item.name, item.args, theme.fg.bind(theme)),
                     0,
                     0,
                   ),
@@ -1349,9 +1343,7 @@ export default function(pi: ExtensionAPI) {
     // Load tool toggles from custom-settings.yaml
     const toolsCfg: ToolsConfig = loadToolsConfig();
 
-    function toToolOverride(
-      cfg: AgentToolOverride | undefined,
-    ): ToolOverride | null {
+    function toToolOverride(cfg: AgentToolOverride | undefined): ToolOverride | null {
       if (!cfg) return null;
       if (cfg.allow && cfg.allow.length > 0) {
         return { type: "allow", tools: cfg.allow };

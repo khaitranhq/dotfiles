@@ -32,9 +32,7 @@ export function checkBashCommand(
   // --- Path-aware rm check ---
   const rmPaths = extractRmPaths(command);
   if (rmPaths.length > 0) {
-    const outsidePaths = rmPaths.filter(
-      (p) => !isPathAllowed(p, cwd, allowedPrefixes),
-    );
+    const outsidePaths = rmPaths.filter((p) => !isPathAllowed(p, cwd, allowedPrefixes));
     if (outsidePaths.length > 0) {
       return {
         blocked: true,

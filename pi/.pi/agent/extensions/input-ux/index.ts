@@ -170,16 +170,13 @@ function listFindFiles(cwd: string): string[] {
   }
 
   try {
-    const output = execSync(
-      `find . ${FIND_PRUNE} -type f -print | head -n ${PATH_LIST_LIMIT}`,
-      {
-        cwd,
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-        maxBuffer: 10 * 1024 * 1024,
-        timeout: 10_000,
-      },
-    );
+    const output = execSync(`find . ${FIND_PRUNE} -type f -print | head -n ${PATH_LIST_LIMIT}`, {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 10 * 1024 * 1024,
+      timeout: 10_000,
+    });
 
     return output
       .split("\n")
@@ -217,16 +214,13 @@ function listFindDirectories(cwd: string): string[] {
   }
 
   try {
-    const output = execSync(
-      `find . ${FIND_PRUNE} -type d -print | head -n ${PATH_LIST_LIMIT}`,
-      {
-        cwd,
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-        maxBuffer: 10 * 1024 * 1024,
-        timeout: 10_000,
-      },
-    );
+    const output = execSync(`find . ${FIND_PRUNE} -type d -print | head -n ${PATH_LIST_LIMIT}`, {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 10 * 1024 * 1024,
+      timeout: 10_000,
+    });
 
     return output
       .split("\n")
@@ -263,7 +257,11 @@ function sortPaths(paths: string[]): string[] {
 
 function getProjectPaths(cwd: string): { files: string[]; directories: string[] } {
   const now = Date.now();
-  if (projectPathCache && projectPathCache.cwd === cwd && now - projectPathCache.timestamp < FILE_CACHE_TTL) {
+  if (
+    projectPathCache &&
+    projectPathCache.cwd === cwd &&
+    now - projectPathCache.timestamp < FILE_CACHE_TTL
+  ) {
     return {
       files: projectPathCache.files,
       directories: projectPathCache.directories,
@@ -397,7 +395,8 @@ function getDefaultCandidateScore(candidate: Candidate): number {
 function compareRankedCandidates(a: RankedCandidate, b: RankedCandidate): number {
   if (a.score !== b.score) return b.score - a.score;
 
-  const defaultScoreDiff = getDefaultCandidateScore(b.candidate) - getDefaultCandidateScore(a.candidate);
+  const defaultScoreDiff =
+    getDefaultCandidateScore(b.candidate) - getDefaultCandidateScore(a.candidate);
   if (defaultScoreDiff !== 0) return defaultScoreDiff;
 
   return a.candidate.key.localeCompare(b.candidate.key);
@@ -488,7 +487,11 @@ function formatCandidateReference(candidate: Candidate): string {
   }
 }
 
-function buildPathInstruction(kind: "file" | "directory", target: string, trailing: string): string {
+function buildPathInstruction(
+  kind: "file" | "directory",
+  target: string,
+  trailing: string,
+): string {
   if (kind === "file") {
     return trailing
       ? `Please read the file at ${target} and then ${trailing}`
@@ -515,9 +518,7 @@ function maybeNotifyMatch(
   const aliases = getCandidateAliases(best.candidate).map((alias) => alias.toLowerCase());
   if (aliases.includes(query.toLowerCase())) return;
 
-  const alternatives = ranked
-    .slice(1, 4)
-    .map((entry) => formatCandidateReference(entry.candidate));
+  const alternatives = ranked.slice(1, 4).map((entry) => formatCandidateReference(entry.candidate));
 
   notify(
     `Matched @${query} → ${formatCandidateReference(best.candidate)}${alternatives.length > 0 ? ` (also: ${alternatives.join(", ")})` : ""}`,
@@ -614,8 +615,10 @@ function rememberSubmittedInput(cwd: string, text: string) {
   const normalizedCwd = path.resolve(cwd);
   const histories = getRuntimeInputHistories();
   const existingHistory = histories[normalizedCwd] ?? [];
-  const nextHistory = [normalizedText, ...existingHistory.filter((entry) => entry !== normalizedText)]
-    .slice(0, INPUT_HISTORY_LIMIT);
+  const nextHistory = [
+    normalizedText,
+    ...existingHistory.filter((entry) => entry !== normalizedText),
+  ].slice(0, INPUT_HISTORY_LIMIT);
 
   histories[normalizedCwd] = nextHistory;
   savePersistedInputHistories(histories);
@@ -643,11 +646,7 @@ function canPatchEditorHistory(editor: unknown): editor is EditorHistoryAdapter 
   );
 }
 
-function attachScopedInputHistory(
-  editor: unknown,
-  cwd: string,
-  keybindings: KeybindingsManager,
-) {
+function attachScopedInputHistory(editor: unknown, cwd: string, keybindings: KeybindingsManager) {
   if (!canPatchEditorHistory(editor) || editor.__inputUxHistoryPatched) {
     return;
   }

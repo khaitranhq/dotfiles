@@ -18,19 +18,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import {
-  truncateHead,
-  formatSize,
-} from "@earendil-works/pi-coding-agent";
+import { truncateHead, formatSize } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type, type TSchema } from "typebox";
 
-import {
-  McpClient,
-  type McpTool,
-  type ServerConfig,
-  McpError,
-} from "./mcp-client";
+import { McpClient, type McpTool, type ServerConfig, McpError } from "./mcp-client";
 import { jsonSchemaToTypeBox, describeSchema } from "./schema";
 import { discoverAgents, type AgentConfig } from "../subagent/agents";
 import { loadCustomSettings, type CustomSettings } from "../shared/config";
@@ -66,7 +58,11 @@ const DEFAULTS: Required<McpConfig> = {
 
 /** Sanitize a name for use in tool identifiers: keep only [a-zA-Z0-9_]. */
 function sanitizeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").toLowerCase();
+  return name
+    .replace(/[^a-zA-Z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "")
+    .toLowerCase();
 }
 
 /** Build a prefixed tool name: "<prefix>_<server>_<tool>" */
@@ -126,16 +122,12 @@ function loadMcpConfig(): McpConfig {
       toolPrefix: mcp.toolPrefix ?? DEFAULTS.toolPrefix,
       maxResultBytes: mcp.maxResultBytes ?? DEFAULTS.maxResultBytes,
       maxResultLines: mcp.maxResultLines ?? DEFAULTS.maxResultLines,
-      reconnectEnabled:
-        mcp.reconnectEnabled ?? DEFAULTS.reconnectEnabled,
-      reconnectMaxRetries:
-        mcp.reconnectMaxRetries ?? DEFAULTS.reconnectMaxRetries,
+      reconnectEnabled: mcp.reconnectEnabled ?? DEFAULTS.reconnectEnabled,
+      reconnectMaxRetries: mcp.reconnectMaxRetries ?? DEFAULTS.reconnectMaxRetries,
       servers: mcp.servers ?? [],
     };
   } catch (err) {
-    console.error(
-      `[mcp] Failed to load config from custom-settings.yaml: ${err}`,
-    );
+    console.error(`[mcp] Failed to load config from custom-settings.yaml: ${err}`);
     return { ...DEFAULTS };
   }
 }
@@ -146,10 +138,7 @@ export default function (pi: ExtensionAPI) {
   // ── State ──────────────────────────────────────────────────────────
 
   /** Map: prefixed tool name → { client, originalToolName } */
-  const toolMap = new Map<
-    string,
-    { client: McpClient; originalName: string }
-  >();
+  const toolMap = new Map<string, { client: McpClient; originalName: string }>();
 
   /** All active MCP clients, keyed by server name. */
   const clients = new Map<string, McpClient>();
@@ -189,10 +178,7 @@ export default function (pi: ExtensionAPI) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (ctx?.hasUI) {
-        ctx.ui.notify(
-          `MCP server "${serverConfig.name}" connection failed: ${msg}`,
-          "warning",
-        );
+        ctx.ui.notify(`MCP server "${serverConfig.name}" connection failed: ${msg}`, "warning");
       }
       console.error(`[mcp] Failed to connect to "${serverConfig.name}": ${msg}`);
       client.disconnect();
@@ -211,10 +197,7 @@ export default function (pi: ExtensionAPI) {
   ): Promise<number> {
     if (!client.hasTools) {
       if (ctx?.hasUI) {
-        ctx.ui.notify(
-          `MCP server "${serverConfig.name}" connected (no tools)`,
-          "info",
-        );
+        ctx.ui.notify(`MCP server "${serverConfig.name}" connected (no tools)`, "info");
       }
       return 0;
     }
@@ -246,9 +229,7 @@ export default function (pi: ExtensionAPI) {
           // Look up the client — it may have disconnected
           const entry = toolMap.get(toolName);
           if (!entry) {
-            throw new Error(
-              `MCP tool "${toolName}" is no longer available (server disconnected)`,
-            );
+            throw new Error(`MCP tool "${toolName}" is no longer available (server disconnected)`);
           }
 
           // Check for cancellation
@@ -279,13 +260,9 @@ export default function (pi: ExtensionAPI) {
               if (item.type === "text" && item.text) {
                 textParts.push(item.text);
               } else if (item.type === "resource") {
-                textParts.push(
-                  `[Resource: ${item.mimeType ?? "unknown"} — not displayed]`,
-                );
+                textParts.push(`[Resource: ${item.mimeType ?? "unknown"} — not displayed]`);
               } else if (item.type === "image") {
-                textParts.push(
-                  `[Image: ${item.mimeType ?? "unknown"} — not displayed]`,
-                );
+                textParts.push(`[Image: ${item.mimeType ?? "unknown"} — not displayed]`);
               }
             }
 
@@ -300,8 +277,7 @@ export default function (pi: ExtensionAPI) {
               output = truncation.content;
 
               if (truncation.truncated) {
-                output +=
-                  `\n\n[Output truncated: ${truncation.outputLines} of ${truncation.totalLines} lines`;
+                output += `\n\n[Output truncated: ${truncation.outputLines} of ${truncation.totalLines} lines`;
                 output += ` (${formatSize(truncation.outputBytes)} of ${formatSize(truncation.totalBytes)})]`;
               }
             }
@@ -360,24 +336,13 @@ export default function (pi: ExtensionAPI) {
         ) {
           const text = result?.content?.[0]?.text ?? "";
           const shortText = text.slice(0, expanded ? 500 : 100);
-          const suffix =
-            !expanded && text.length > 100
-              ? theme.fg("dim", "...")
-              : "";
+          const suffix = !expanded && text.length > 100 ? theme.fg("dim", "...") : "";
 
           if (result?.isError) {
-            return new Text(
-              theme.fg("error", `✗ ${shortText}${suffix}`),
-              0,
-              0,
-            );
+            return new Text(theme.fg("error", `✗ ${shortText}${suffix}`), 0, 0);
           }
 
-          return new Text(
-            theme.fg("success", `✓ ${shortText}${suffix}`),
-            0,
-            0,
-          );
+          return new Text(theme.fg("success", `✓ ${shortText}${suffix}`), 0, 0);
         },
       });
 
@@ -389,10 +354,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     if (ctx?.hasUI && tools.length > 0) {
-      ctx.ui.notify(
-        `MCP: "${serverConfig.name}" — ${tools.length} tool(s) registered`,
-        "info",
-      );
+      ctx.ui.notify(`MCP: "${serverConfig.name}" — ${tools.length} tool(s) registered`, "info");
     }
 
     return tools.length;
@@ -411,9 +373,7 @@ export default function (pi: ExtensionAPI) {
     clients.clear();
     toolMap.clear();
 
-    const enabledServers = (config.servers ?? []).filter(
-      (s) => (s as any).enabled !== false,
-    );
+    const enabledServers = (config.servers ?? []).filter((s) => (s as any).enabled !== false);
 
     if (enabledServers.length === 0) {
       connecting = false;
@@ -421,9 +381,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     // Connect to all servers in parallel
-    const results = await Promise.all(
-      enabledServers.map((sc) => connectServer(sc, ctx)),
-    );
+    const results = await Promise.all(enabledServers.map((sc) => connectServer(sc, ctx)));
 
     // Register tools from successfully connected servers
     let totalTools = 0;
@@ -441,24 +399,16 @@ export default function (pi: ExtensionAPI) {
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         if (ctx?.hasUI) {
-          ctx.ui.notify(
-            `MCP server "${serverConfig.name}" tool listing failed: ${msg}`,
-            "warning",
-          );
+          ctx.ui.notify(`MCP server "${serverConfig.name}" tool listing failed: ${msg}`, "warning");
         }
-        console.error(
-          `[mcp] Failed to list tools from "${serverConfig.name}": ${msg}`,
-        );
+        console.error(`[mcp] Failed to list tools from "${serverConfig.name}": ${msg}`);
       }
     }
 
     connecting = false;
 
     if (ctx?.hasUI && totalTools > 0) {
-      ctx.ui.notify(
-        `MCP: ${clients.size} server(s), ${totalTools} tool(s) ready`,
-        "info",
-      );
+      ctx.ui.notify(`MCP: ${clients.size} server(s), ${totalTools} tool(s) ready`, "info");
     }
   }
 
@@ -467,9 +417,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     config = loadMcpConfig();
 
-    const enabledCount = (config.servers ?? []).filter(
-      (s) => (s as any).enabled !== false,
-    ).length;
+    const enabledCount = (config.servers ?? []).filter((s) => (s as any).enabled !== false).length;
 
     if (enabledCount === 0) {
       if (ctx.hasUI) {
@@ -522,9 +470,7 @@ export default function (pi: ExtensionAPI) {
           .filter(([, v]) => v.client === client)
           .map(([toolName, v]) => `  ${toolName} → ${v.originalName}`);
 
-        const header = info
-          ? `${name} (${info.name} v${info.version})`
-          : name;
+        const header = info ? `${name} (${info.name} v${info.version})` : name;
 
         lines.push(`  ${header}`);
         if (serverTools.length === 0) {
@@ -561,10 +507,7 @@ export default function (pi: ExtensionAPI) {
       await connectAllServers(ctx);
 
       if (ctx.hasUI) {
-        ctx.ui.notify(
-          `MCP: ${clients.size} server(s), ${toolMap.size} tool(s) ready`,
-          "info",
-        );
+        ctx.ui.notify(`MCP: ${clients.size} server(s), ${toolMap.size} tool(s) ready`, "info");
       }
     },
   });
@@ -584,8 +527,7 @@ export default function (pi: ExtensionAPI) {
       // Collect servers with OAuth config
       const oauthServers = (config.servers ?? []).filter(
         (s) =>
-          s.transport === "http" &&
-          (s as import("./mcp-client").HttpServerConfig).oauth?.enabled,
+          s.transport === "http" && (s as import("./mcp-client").HttpServerConfig).oauth?.enabled,
       );
 
       // ── status (default) ────────────────────────────────────────
@@ -603,9 +545,7 @@ export default function (pi: ExtensionAPI) {
 
         for (const serverConfig of oauthServers) {
           const client = clients.get(serverConfig.name);
-          const oauthConfig = (
-            serverConfig as import("./mcp-client").HttpServerConfig
-          ).oauth!;
+          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
           const status = client?.getOAuthStatus();
 
           let authLine: string;
@@ -640,9 +580,7 @@ export default function (pi: ExtensionAPI) {
               if (expiresAt && Date.now() > expiresAt) {
                 authLine = "⚠ expired (not connected)";
               } else if (expiresAt) {
-                const remaining = Math.round(
-                  (expiresAt - Date.now()) / 1000,
-                );
+                const remaining = Math.round((expiresAt - Date.now()) / 1000);
                 authLine = `⚠ cached (${remaining}s remaining, not connected)`;
               } else {
                 authLine = "⚠ cached (not connected)";
@@ -654,9 +592,7 @@ export default function (pi: ExtensionAPI) {
             if (status.tokenExpiry && Date.now() > status.tokenExpiry) {
               authLine = "⚠ expired";
             } else if (status.tokenExpiry) {
-              const remaining = Math.round(
-                (status.tokenExpiry - Date.now()) / 1000,
-              );
+              const remaining = Math.round((status.tokenExpiry - Date.now()) / 1000);
               const mins = Math.floor(remaining / 60);
               const secs = remaining % 60;
               authLine = `✓ authenticated (${mins}m ${secs}s remaining)`;
@@ -672,8 +608,7 @@ export default function (pi: ExtensionAPI) {
           lines.push(`  ${serverConfig.name}: ${authLine}`);
 
           // Show scopes if available
-          const scopes =
-            status?.scopes ?? oauthConfig.scopes;
+          const scopes = status?.scopes ?? oauthConfig.scopes;
           if (scopes && scopes.length > 0) {
             lines.push(`    Scopes: ${scopes.join(", ")}`);
           }
@@ -704,9 +639,7 @@ export default function (pi: ExtensionAPI) {
           if (oauthServers.length === 1) {
             // Fall through with implicit target
           } else {
-            const names = oauthServers
-              .map((s) => s.name)
-              .join(", ");
+            const names = oauthServers.map((s) => s.name).join(", ");
             ctx.ui.notify(
               `Usage: /mcp-auth login <server-name>\nAvailable OAuth servers: ${names || "none"}`,
               "warning",
@@ -717,28 +650,19 @@ export default function (pi: ExtensionAPI) {
 
         const serverName = targetName || oauthServers[0]?.name;
         if (!serverName) {
-          ctx.ui.notify(
-            "No OAuth-enabled servers configured.",
-            "warning",
-          );
+          ctx.ui.notify("No OAuth-enabled servers configured.", "warning");
           return;
         }
 
-        const serverConfig = (config.servers ?? []).find(
-          (s) => s.name === serverName,
-        );
+        const serverConfig = (config.servers ?? []).find((s) => s.name === serverName);
         if (!serverConfig) {
-          ctx.ui.notify(
-            `Server "${serverName}" not found in MCP config.`,
-            "error",
-          );
+          ctx.ui.notify(`Server "${serverName}" not found in MCP config.`, "error");
           return;
         }
 
         if (
           serverConfig.transport !== "http" ||
-          !(serverConfig as import("./mcp-client").HttpServerConfig).oauth
-            ?.enabled
+          !(serverConfig as import("./mcp-client").HttpServerConfig).oauth?.enabled
         ) {
           ctx.ui.notify(
             `Server "${serverName}" does not have OAuth enabled.\n` +
@@ -751,10 +675,7 @@ export default function (pi: ExtensionAPI) {
         // Disconnect existing client if connected
         const existingClient = clients.get(serverName);
         if (existingClient) {
-          ctx.ui.notify(
-            `MCP OAuth: Clearing cached tokens for "${serverName}"...`,
-            "info",
-          );
+          ctx.ui.notify(`MCP OAuth: Clearing cached tokens for "${serverName}"...`, "info");
           existingClient.clearOAuthTokens();
           existingClient.disconnect();
           clients.delete(serverName);
@@ -767,9 +688,7 @@ export default function (pi: ExtensionAPI) {
           }
         } else {
           // Client not connected — just clear tokens on disk
-          const oauthConfig = (
-            serverConfig as import("./mcp-client").HttpServerConfig
-          ).oauth!;
+          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
           const storePath =
             oauthConfig.tokenStorePath ??
             path.join(
@@ -797,10 +716,7 @@ export default function (pi: ExtensionAPI) {
         try {
           const client = await connectServer(serverConfig, ctx);
           if (!client) {
-            ctx.ui.notify(
-              `MCP OAuth: Failed to connect to "${serverName}".`,
-              "error",
-            );
+            ctx.ui.notify(`MCP OAuth: Failed to connect to "${serverName}".`, "error");
             return;
           }
 
@@ -820,10 +736,7 @@ export default function (pi: ExtensionAPI) {
           );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          ctx.ui.notify(
-            `MCP OAuth: Authentication failed for "${serverName}": ${msg}`,
-            "error",
-          );
+          ctx.ui.notify(`MCP OAuth: Authentication failed for "${serverName}": ${msg}`, "error");
         }
         return;
       }
@@ -834,9 +747,7 @@ export default function (pi: ExtensionAPI) {
           if (oauthServers.length === 1) {
             // Fall through with implicit target
           } else {
-            const names = oauthServers
-              .map((s) => s.name)
-              .join(", ");
+            const names = oauthServers.map((s) => s.name).join(", ");
             ctx.ui.notify(
               `Usage: /mcp-auth logout <server-name>\nAvailable OAuth servers: ${names || "none"}`,
               "warning",
@@ -847,10 +758,7 @@ export default function (pi: ExtensionAPI) {
 
         const serverName = targetName || oauthServers[0]?.name;
         if (!serverName) {
-          ctx.ui.notify(
-            "No OAuth-enabled servers configured.",
-            "warning",
-          );
+          ctx.ui.notify("No OAuth-enabled servers configured.", "warning");
           return;
         }
 
@@ -873,18 +781,13 @@ export default function (pi: ExtensionAPI) {
         }
 
         // Also clear token file directly in case it persists
-        const serverConfig = (config.servers ?? []).find(
-          (s) => s.name === serverName,
-        );
+        const serverConfig = (config.servers ?? []).find((s) => s.name === serverName);
         if (
           serverConfig &&
           serverConfig.transport === "http" &&
-          (serverConfig as import("./mcp-client").HttpServerConfig).oauth
-            ?.enabled
+          (serverConfig as import("./mcp-client").HttpServerConfig).oauth?.enabled
         ) {
-          const oauthConfig = (
-            serverConfig as import("./mcp-client").HttpServerConfig
-          ).oauth!;
+          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
           const storePath =
             oauthConfig.tokenStorePath ??
             path.join(
@@ -905,15 +808,9 @@ export default function (pi: ExtensionAPI) {
         }
 
         if (cleared) {
-          ctx.ui.notify(
-            `MCP OAuth: Cleared tokens for "${serverName}".`,
-            "info",
-          );
+          ctx.ui.notify(`MCP OAuth: Cleared tokens for "${serverName}".`, "info");
         } else {
-          ctx.ui.notify(
-            `MCP OAuth: No tokens found for "${serverName}".`,
-            "info",
-          );
+          ctx.ui.notify(`MCP OAuth: No tokens found for "${serverName}".`, "info");
         }
         return;
       }
@@ -964,12 +861,8 @@ export default function (pi: ExtensionAPI) {
     }
 
     // Agent not found — show available subagents
-    const available =
-      discovery.subagents.map((a: AgentConfig) => a.name).join(", ") || "none";
-    ctx.ui.notify(
-      `Unknown agent: "@${agentName}". Available subagents: ${available}`,
-      "error",
-    );
+    const available = discovery.subagents.map((a: AgentConfig) => a.name).join(", ") || "none";
+    ctx.ui.notify(`Unknown agent: "@${agentName}". Available subagents: ${available}`, "error");
     return { action: "handled" };
   });
 }
