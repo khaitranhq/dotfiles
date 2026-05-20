@@ -43,7 +43,8 @@ import {
 } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
-import { loadSubagentConfig } from "../shared/config";
+import { loadSubagentConfig, loadToolsConfig } from "../shared/config";
+import type { AgentToolOverride, ToolsConfig } from "../shared/config";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -53,6 +54,20 @@ const COLLAPSED_ITEM_COUNT = 10;
 
 // Cached primary agent state (persists across invocations)
 let activePrimaryAgent: string | null = null;
+
+// ── Tool override state ───────────────────────────────────────────────
+
+interface ToolOverride {
+  type: "allow" | "deny";
+  tools: string[];
+}
+
+/** Global tool restrictions applied to primary agent and all subagents. */
+let globalToolOverride: ToolOverride | null = null;
+/** Saved active tools before first global override, for reset. */
+let savedActiveTools: string[] | null = null;
+/** Per-agent tool overrides (overrides agent's default tools from .md frontmatter). */
+const agentToolOverrides = new Map<string, ToolOverride>();
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -303,6 +318,8 @@ async function runSingleAgent(
   onUpdate: OnUpdateCallback | undefined,
   makeDetails: (results: SingleResult[]) => SubagentDetails,
   parentModel?: string,
+  /** Resolve effective tools for a subagent given its name and default tools. */
+  resolveEffectiveTools?: (agentName: string, defaultTools?: string[]) => string[] | undefined,
 ): Promise<SingleResult> {
   const agent = subagents.find((a) => a.name === agentName);
 
@@ -331,7 +348,10 @@ async function runSingleAgent(
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
   const modelToUse = parentModel || agent.model;
   if (modelToUse) args.push("--model", modelToUse);
-  if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
+  const effectiveTools = resolveEffectiveTools
+    ? resolveEffectiveTools(agentName, agent.tools)
+    : agent.tools;
+  if (effectiveTools && effectiveTools.length > 0) args.push("--tools", effectiveTools.join(","));
 
   let tmpPromptDir: string | null = null;
   let tmpPromptPath: string | null = null;
@@ -531,6 +551,58 @@ const SubagentParams = Type.Object({
 // ── Extension entry point ──────────────────────────────────────────────
 
 export default function(pi: ExtensionAPI) {
+  // ── Resolve effective tools for a subagent ──────────────────────────
+
+  /**
+   * Compute the effective tool list for a subagent by combining:
+   *   1. Agent's default tools from .md frontmatter (if any)
+   *   2. Per-agent override (allow/deny)
+   *   3. Global override (allow/deny)
+   *
+   * Returns undefined to let the agent use process defaults (all tools).
+   */
+  function computeEffectiveTools(
+    agentName: string,
+    agentDefaultTools?: string[],
+  ): string[] | undefined {
+    // Start with agent's default tools or undefined (meaning all tools)
+    let effective: string[] | undefined = agentDefaultTools
+      ? [...agentDefaultTools]
+      : undefined;
+
+    // Helper: resolve effective to full tool list when undefined but deny needs it
+    const resolveAll = () => pi.getAllTools().map((t) => t.name);
+
+    // Apply per-agent override
+    const agentOverride = agentToolOverrides.get(agentName);
+    if (agentOverride) {
+      if (agentOverride.type === "allow") {
+        effective = [...agentOverride.tools];
+      } else {
+        // deny: filter out denied tools
+        effective = (effective ?? resolveAll()).filter(
+          (t) => !agentOverride.tools.includes(t),
+        );
+      }
+    }
+
+    // Apply global override
+    if (globalToolOverride) {
+      if (globalToolOverride.type === "allow") {
+        effective = effective
+          ? effective.filter((t) => globalToolOverride!.tools.includes(t))
+          : [...globalToolOverride.tools];
+      } else {
+        // deny: filter out denied tools
+        effective = (effective ?? resolveAll()).filter(
+          (t) => !globalToolOverride!.tools.includes(t),
+        );
+      }
+    }
+
+    return effective && effective.length > 0 ? effective : undefined;
+  }
+
   // ── Tool: subagent ───────────────────────────────────────────────────
 
   pi.registerTool({
@@ -643,6 +715,7 @@ export default function(pi: ExtensionAPI) {
             chainUpdate,
             makeDetails("chain"),
             parentModel,
+            computeEffectiveTools,
           );
           results.push(result);
 
@@ -750,6 +823,7 @@ export default function(pi: ExtensionAPI) {
               },
               makeDetails("parallel"),
               parentModel,
+              computeEffectiveTools,
             );
             allResults[index] = result;
             emitParallelUpdate();
@@ -787,6 +861,7 @@ export default function(pi: ExtensionAPI) {
           onUpdate,
           makeDetails("single"),
           parentModel,
+          computeEffectiveTools,
         );
         const isError =
           result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
@@ -1264,11 +1339,57 @@ export default function(pi: ExtensionAPI) {
     };
   });
 
-  // ── Event: Restore active primary-agent status ──────────────────────
+  // ── Event: Restore active primary-agent status & load tools config ──
 
   pi.on("session_start", async (_event, ctx) => {
     if (activePrimaryAgent) {
       ctx.ui.setStatus("agent", `agent: ${activePrimaryAgent}`);
+    }
+
+    // Load tool toggles from custom-settings.yaml
+    const toolsCfg: ToolsConfig = loadToolsConfig();
+
+    function toToolOverride(
+      cfg: AgentToolOverride | undefined,
+    ): ToolOverride | null {
+      if (!cfg) return null;
+      if (cfg.allow && cfg.allow.length > 0) {
+        return { type: "allow", tools: cfg.allow };
+      }
+      if (cfg.deny && cfg.deny.length > 0) {
+        return { type: "deny", tools: cfg.deny };
+      }
+      return null;
+    }
+
+    // Global tools
+    const globalOverride = toToolOverride(toolsCfg.global);
+    if (globalOverride) {
+      if (!globalToolOverride) {
+        savedActiveTools = [...pi.getActiveTools()];
+      }
+      globalToolOverride = globalOverride;
+      if (globalOverride.type === "allow") {
+        pi.setActiveTools(globalOverride.tools);
+      }
+      // for deny, we can't easily setActiveTools with an inverse list,
+      // but computeEffectiveTools handles deny at subagent spawn time
+    } else if (globalToolOverride && savedActiveTools) {
+      // Config removed global override; restore
+      pi.setActiveTools(savedActiveTools);
+      savedActiveTools = null;
+      globalToolOverride = null;
+    }
+
+    // Per-agent tools
+    agentToolOverrides.clear();
+    if (toolsCfg.agents) {
+      for (const [name, cfg] of Object.entries(toolsCfg.agents)) {
+        const override = toToolOverride(cfg);
+        if (override) {
+          agentToolOverrides.set(name, override);
+        }
+      }
     }
   });
 }

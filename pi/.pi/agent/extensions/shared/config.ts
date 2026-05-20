@@ -29,9 +29,33 @@ export interface SubagentConfig {
   confirmProjectAgents?: boolean;
 }
 
+/**
+ * Per-agent tool override: allow (whitelist) or deny (blacklist).
+ * Configured in custom-settings.yaml under `tools.agents.<agentName>`.
+ */
+export interface AgentToolOverride {
+  allow?: string[];
+  deny?: string[];
+}
+
+/**
+ * Tool toggle configuration.
+ *
+ * - `global`: applied to primary agent (via setActiveTools) and all subagent spawns.
+ * - `agents`: per-agent overrides indexed by agent name.
+ *
+ * Only one of `allow` or `deny` should be set per entry. If both are set,
+ * `allow` takes precedence.
+ */
+export interface ToolsConfig {
+  global?: AgentToolOverride;
+  agents?: Record<string, AgentToolOverride>;
+}
+
 export interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
+  tools?: ToolsConfig;
   [key: string]: unknown;
 }
 
@@ -132,5 +156,9 @@ export function loadAlwaysApprove(): AlwaysApproveConfig {
 
 export function loadSubagentConfig(): SubagentConfig {
   return loadCustomSettings().subagent ?? {};
+}
+
+export function loadToolsConfig(): ToolsConfig {
+  return loadCustomSettings().tools ?? {};
 }
 

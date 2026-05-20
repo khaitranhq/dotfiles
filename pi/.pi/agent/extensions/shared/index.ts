@@ -5,11 +5,14 @@ export {
   updateCustomSettings,
   loadAlwaysApprove,
   loadSubagentConfig,
+  loadToolsConfig,
   configPath,
 } from "./config";
 export type {
   AlwaysApproveConfig,
   SubagentConfig,
+  AgentToolOverride,
+  ToolsConfig,
   CustomSettings,
 } from "./config";
 
