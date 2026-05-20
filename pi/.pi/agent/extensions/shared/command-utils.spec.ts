@@ -3,6 +3,8 @@ import {
   COMMAND_SEPARATORS,
   extractBaseCommand,
   extractAllBaseCommands,
+  extractAllCommandSegments,
+  isCommandApproved,
   findRmIndex,
   extractRmPaths,
 } from "./command-utils";
@@ -108,6 +110,83 @@ describe("extractAllBaseCommands", () => {
 
   it("does not confuse && with single &", () => {
     expect(extractAllBaseCommands("cmd1 && cmd2")).toEqual(["cmd1", "cmd2"]);
+  });
+});
+
+// ── extractAllCommandSegments ──────────────────────────────────────
+
+describe("extractAllCommandSegments", () => {
+  it("returns full command text for simple commands", () => {
+    expect(extractAllCommandSegments("ls -la")).toEqual(["ls -la"]);
+    expect(extractAllCommandSegments("git diff --cached")).toEqual(["git diff --cached"]);
+    expect(extractAllCommandSegments("npx tsc --noEmit")).toEqual(["npx tsc --noEmit"]);
+  });
+
+  it("splits compound commands into segments", () => {
+    expect(extractAllCommandSegments("cd /tmp && pnpm install")).toEqual([
+      "cd /tmp",
+      "pnpm install",
+    ]);
+    expect(extractAllCommandSegments("git diff | cat")).toEqual([
+      "git diff",
+      "cat",
+    ]);
+  });
+
+  it("strips leading env assignments from each segment", () => {
+    expect(extractAllCommandSegments("FOO=bar ls -la")).toEqual(["ls -la"]);
+    expect(extractAllCommandSegments("A=1 B=2 echo hi && C=3 git log")).toEqual([
+      "echo hi",
+      "git log",
+    ]);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(extractAllCommandSegments("")).toEqual([]);
+    expect(extractAllCommandSegments("   ")).toEqual([]);
+  });
+
+  it("preserves full path commands", () => {
+    expect(extractAllCommandSegments("/usr/bin/git status")).toEqual([
+      "/usr/bin/git status",
+    ]);
+  });
+});
+
+// ── isCommandApproved ──────────────────────────────────────────────
+
+describe("isCommandApproved", () => {
+  const approved = new Set(["ls", "git diff", "npx tsc", "go test"]);
+
+  it("matches single-word entry against any args", () => {
+    expect(isCommandApproved("ls -la", approved)).toBe(true);
+    expect(isCommandApproved("ls", approved)).toBe(true);
+  });
+
+  it("matches multi-word entry against segment with same prefix", () => {
+    expect(isCommandApproved("git diff --cached", approved)).toBe(true);
+    expect(isCommandApproved("git diff", approved)).toBe(true);
+    expect(isCommandApproved("git diff HEAD", approved)).toBe(true);
+  });
+
+  it("rejects segment whose words differ from entry", () => {
+    expect(isCommandApproved("git log", approved)).toBe(false);
+    expect(isCommandApproved("git push", approved)).toBe(false);
+    expect(isCommandApproved("git", approved)).toBe(false);
+  });
+
+  it("rejects when segment is shorter than entry", () => {
+    // "git diff" entry has 2 words, "git" has 1 → no match
+    expect(isCommandApproved("git", new Set(["git diff"]))).toBe(false);
+  });
+
+  it("matches npx subcommands", () => {
+    expect(isCommandApproved("npx tsc --noEmit", approved)).toBe(true);
+    expect(isCommandApproved("npx vitest", approved)).toBe(false);
+  });
+
+  it("handles empty approved set", () => {
+    expect(isCommandApproved("ls -la", new Set())).toBe(false);
   });
 });
 

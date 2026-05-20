@@ -106,7 +106,7 @@ describe("permission-request extension", () => {
     mockSettings = {
       always_approve: {
         tools: ["read", "write", "edit"],
-        bashCommands: ["cd", "ls", "grep", "cat"],
+        bashCommands: ["cd", "ls", "grep", "cat", "git diff", "git log", "go test"],
       },
     };
     mock = createMockPi();
@@ -136,6 +136,35 @@ describe("permission-request extension", () => {
       );
       expect(result).toBeUndefined();
     });
+
+    it("allows multi-word always-approved subcommand", async () => {
+      const result = await toolCallHandler(
+        bashEvent("git diff --cached"),
+        mockCtx(),
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it("allows multi-word approved subcommand without extra flags", async () => {
+      const result = await toolCallHandler(
+        bashEvent("git log"),
+        mockCtx(),
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it("prompts for different subcommand of same base", async () => {
+      const uiCtx = mockCtx();
+      uiCtx.ui.select.mockResolvedValue("✅ Allow");
+
+      // git push is NOT in always_approve, only git diff / git log
+      const result = await toolCallHandler(
+        bashEvent("git push origin main"),
+        uiCtx,
+      );
+      expect(result).toBeUndefined();
+      expect(uiCtx.ui.select).toHaveBeenCalled();
+    });
   });
 
   // ── Compound commands: all approved ──────────────────────────────
@@ -162,6 +191,14 @@ describe("permission-request extension", () => {
     it("allows semicolon chain with all-approved bases", async () => {
       const result = await toolCallHandler(
         bashEvent("cd /tmp; ls -la; cat file.txt"),
+        mockCtx(),
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it("allows compound command with multi-word subcommand segments", async () => {
+      const result = await toolCallHandler(
+        bashEvent("git diff --cached && go test ./..."),
         mockCtx(),
       );
       expect(result).toBeUndefined();
@@ -241,17 +278,16 @@ describe("permission-request extension", () => {
   describe("always approve persistence for compound commands", () => {
     beforeEach(() => initExtension());
 
-    it('adds all base commands to always_approve when "Always approve" is selected', async () => {
+    it('adds full segment texts to always_approve when "Always approve" is selected', async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
 
       await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx);
 
-      // pnpm should now be in always_approve
+      // Full segment texts should now be in always_approve
       const aa = loadAlwaysApprove();
-      expect(aa.bashCommands).toContain("pnpm");
-      // cd was already there
-      expect(aa.bashCommands).toContain("cd");
+      expect(aa.bashCommands).toContain("cd /tmp");
+      expect(aa.bashCommands).toContain("pnpm install");
     });
 
     it('persists to disk via updateCustomSettings for compound commands', async () => {
@@ -269,6 +305,16 @@ describe("permission-request extension", () => {
         mockCtx(),
       );
       expect(result).toBeUndefined();
+    });
+
+    it('persists subcommand as full segment text', async () => {
+      const uiCtx = mockCtx();
+      uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
+
+      await toolCallHandler(bashEvent("git push origin main"), uiCtx);
+
+      const aa = loadAlwaysApprove();
+      expect(aa.bashCommands).toContain("git push origin main");
     });
   });
 

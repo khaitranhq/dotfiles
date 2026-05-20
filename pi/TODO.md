@@ -11,6 +11,7 @@ pi/.pi/agent/extensions/permission-request
 
 - [x] [ID: 03] use AST to parse bash commands then compare with settings
   - Solution: tree-sitter and tree-sitter-bash
+- [ ] whitelist subcommand (e.g git diff, git log)
 
 ## Search web & fetch web
 
@@ -18,9 +19,10 @@ pi/.pi/agent/extensions/permission-request
 
 ## Todo tool
 
-- [ ] research how Opencode implements todo tool => design document
+- [ ] [ID: 05] research how Opencode implements todo tool => design document
 
 ## General
 
-- [ ] change config file format to yaml
-- [ ] refactor tools
+- [x] [ID: 06] change config file format to yaml
+- [x] [ID: 07] always use rg for find files and content, fallback to find and grep if rg is not available
+- [ ] [ID: 08] refactor tools

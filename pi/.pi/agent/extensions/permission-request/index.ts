@@ -2,7 +2,7 @@
  * Permission Request Extension
  *
  * Gates tool execution based on an always-approve list in
- * ~/.pi/agent/custom-settings.json.
+ * ~/.pi/agent/custom-settings.yaml.
  *
  * Every tool and bash command defaults to "ask" — the approval prompt
  * is shown.  Add tools or commands to the `always_approve` section to
@@ -11,14 +11,20 @@
  *   always_approve.tools        – always allow these tools, no prompt
  *   always_approve.bashCommands – always allow these commands, no prompt
  *
- * Example ~/.pi/agent/custom-settings.json:
+ * Example ~/.pi/agent/custom-settings.yaml:
  *
- *   {
- *     "always_approve": {
- *       "tools":        ["read", "edit", "write"],
- *       "bashCommands": ["find", "grep", "ls", "cd", "rg", "cat"]
- *     }
- *   }
+ *   always_approve:
+ *     tools:
+ *       - read
+ *       - edit
+ *       - write
+ *     bashCommands:
+ *       - find
+ *       - grep
+ *       - ls
+ *       - cd
+ *       - rg
+ *       - cat
  *
  * For compound bash commands (&&, ;, |, ||, &) ALL segments must be approved.
  *
@@ -37,7 +43,10 @@ import {
   type AlwaysApproveConfig,
   type CustomSettings,
 } from "../shared/config";
-import { extractAllBaseCommands } from "../shared/command-utils";
+import {
+  extractAllCommandSegments,
+  isCommandApproved,
+} from "../shared/command-utils";
 
 // ── Set helpers ───────────────────────────────────────────────────────
 
@@ -52,28 +61,6 @@ function addToAlwaysApprove(
     aa[category] = [...list, name];
   }
   return { ...settings, always_approve: aa };
-}
-
-// ── Command extraction ────────────────────────────────────────────────
-
-/**
- * Extract the first "word" of a bash command for matching.
- * For compound commands, returns the first segment's base command.
- */
-function extractFirstBaseCommand(fullCommand: string): string {
-  return extractAllBaseCommands(fullCommand)[0] || "";
-}
-
-// ── Session key ───────────────────────────────────────────────────────
-
-/** Build a session approval key. For bash, include the first base command. */
-function sessionKey(toolName: string, event: ToolCallEvent): string {
-  if (toolName === "bash") {
-    const command = (event.input as { command: string }).command;
-    const base = extractFirstBaseCommand(command);
-    return `bash:${base}`;
-  }
-  return toolName;
 }
 
 // ── Extension ─────────────────────────────────────────────────────────
@@ -106,12 +93,14 @@ export default function(pi: ExtensionAPI) {
 
     // Determine whether this call is always-approved.
     // For compound bash commands, ALL segments must be approved.
+    // Uses word-prefix matching so "git diff" matches "git diff --cached"
+    // but not "git log".
     let alwaysApproved = false;
 
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
-      const bases = extractAllBaseCommands(command);
-      if (bases.length > 0 && bases.every((b) => alwaysApproveCommands.has(b))) {
+      const segments = extractAllCommandSegments(command);
+      if (segments.length > 0 && segments.every((s) => isCommandApproved(s, alwaysApproveCommands))) {
         alwaysApproved = true;
       }
     } else {
@@ -120,16 +109,15 @@ export default function(pi: ExtensionAPI) {
       }
     }
 
-    // Check session-only approvals — all base commands must be approved
+    // Check session-only approvals — all segments must be approved
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
-      const bases = extractAllBaseCommands(command);
-      if (bases.length > 0 && bases.every((b) => sessionApprovals.has(`bash:${b}`))) {
+      const segments = extractAllCommandSegments(command);
+      if (segments.length > 0 && segments.every((s) => isCommandApproved(s, sessionApprovals))) {
         return undefined;
       }
     } else {
-      const key = sessionKey(toolName, event);
-      if (sessionApprovals.has(key)) return undefined;
+      if (sessionApprovals.has(toolName)) return undefined;
     }
 
     // ── always-approve ──────────────────────────────────────────────
@@ -168,15 +156,16 @@ export default function(pi: ExtensionAPI) {
       }
 
       case "🔓 Always approve": {
-        // Persist to custom-settings.json under always_approve.
-        // For compound commands, add EVERY base command in the chain.
+        // Persist to custom-settings.yaml under always_approve.
+        // For compound commands, persist every segment's full text
+        // so word-prefix matching can distinguish subcommands.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
-          const bases = extractAllBaseCommands(command);
-          if (bases.length > 0) {
-            for (const base of bases) {
-              updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", base));
-              alwaysApproveCommands.add(base);
+          const segments = extractAllCommandSegments(command);
+          if (segments.length > 0) {
+            for (const seg of segments) {
+              updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", seg));
+              alwaysApproveCommands.add(seg);
             }
           } else {
             updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
@@ -190,19 +179,20 @@ export default function(pi: ExtensionAPI) {
       }
 
       case "🕐 Approve in this session only": {
-        // For compound commands, approve all base commands for the session.
+        // For compound commands, persist every segment's full text
+        // in session approvals for word-prefix matching.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
-          const bases = extractAllBaseCommands(command);
-          if (bases.length > 0) {
-            for (const base of bases) {
-              sessionApprovals.add(`bash:${base}`);
+          const segments = extractAllCommandSegments(command);
+          if (segments.length > 0) {
+            for (const seg of segments) {
+              sessionApprovals.add(seg);
             }
           } else {
-            sessionApprovals.add(key);
+            sessionApprovals.add(toolName);
           }
         } else {
-          sessionApprovals.add(key);
+          sessionApprovals.add(toolName);
         }
         return undefined;
       }

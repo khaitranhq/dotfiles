@@ -11,7 +11,7 @@
  *   - Connection reuse: clients persist across turns
  *   - No full server metadata in LLM context — only tool name + snippet
  *
- * **Configuration:** ~/.pi/agent/custom-settings.json → "mcp" section
+ * **Configuration:** ~/.pi/agent/custom-settings.yaml → "mcp" section
  */
 
 import * as fs from "node:fs";
@@ -33,6 +33,7 @@ import {
 } from "./mcp-client";
 import { jsonSchemaToTypeBox, describeSchema } from "./schema";
 import { discoverAgents, type AgentConfig } from "../subagent/agents";
+import { loadCustomSettings, type CustomSettings } from "../shared/config";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -50,13 +51,7 @@ interface McpConfig {
   reconnectMaxRetries?: number;
 }
 
-interface McpSettingsFile {
-  mcp?: McpConfig;
-}
-
 // ── Constants ──────────────────────────────────────────────────────────
-
-const CONFIG_PATH = path.join(os.homedir(), ".pi", "agent", "custom-settings.json");
 
 const DEFAULTS: Required<McpConfig> = {
   servers: [],
@@ -120,30 +115,26 @@ function buildPromptSnippet(config: McpConfig, mcpTool: McpTool, serverName: str
 
 function loadMcpConfig(): McpConfig {
   try {
-    if (!fs.existsSync(CONFIG_PATH)) {
-      return { ...DEFAULTS };
-    }
+    const settings: CustomSettings = loadCustomSettings();
+    const mcp = settings.mcp as McpConfig | undefined;
 
-    const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
-    const settings = JSON.parse(raw) as McpSettingsFile;
-
-    if (!settings.mcp) {
+    if (!mcp) {
       return { ...DEFAULTS };
     }
 
     return {
-      toolPrefix: settings.mcp.toolPrefix ?? DEFAULTS.toolPrefix,
-      maxResultBytes: settings.mcp.maxResultBytes ?? DEFAULTS.maxResultBytes,
-      maxResultLines: settings.mcp.maxResultLines ?? DEFAULTS.maxResultLines,
+      toolPrefix: mcp.toolPrefix ?? DEFAULTS.toolPrefix,
+      maxResultBytes: mcp.maxResultBytes ?? DEFAULTS.maxResultBytes,
+      maxResultLines: mcp.maxResultLines ?? DEFAULTS.maxResultLines,
       reconnectEnabled:
-        settings.mcp.reconnectEnabled ?? DEFAULTS.reconnectEnabled,
+        mcp.reconnectEnabled ?? DEFAULTS.reconnectEnabled,
       reconnectMaxRetries:
-        settings.mcp.reconnectMaxRetries ?? DEFAULTS.reconnectMaxRetries,
-      servers: settings.mcp.servers ?? [],
+        mcp.reconnectMaxRetries ?? DEFAULTS.reconnectMaxRetries,
+      servers: mcp.servers ?? [],
     };
   } catch (err) {
     console.error(
-      `[mcp] Failed to load config from ${CONFIG_PATH}: ${err}`,
+      `[mcp] Failed to load config from custom-settings.yaml: ${err}`,
     );
     return { ...DEFAULTS };
   }
@@ -602,7 +593,7 @@ export default function (pi: ExtensionAPI) {
         if (oauthServers.length === 0) {
           ctx.ui.notify(
             "MCP OAuth: No servers configured with OAuth.\n" +
-              "Add 'oauth: { enabled: true }' to an HTTP server in ~/.pi/agent/custom-settings.json",
+              "Add 'oauth: { enabled: true }' to an HTTP server in ~/.pi/agent/custom-settings.yaml",
             "info",
           );
           return;
@@ -751,7 +742,7 @@ export default function (pi: ExtensionAPI) {
         ) {
           ctx.ui.notify(
             `Server "${serverName}" does not have OAuth enabled.\n` +
-              `Add 'oauth: { enabled: true }' to its config in ~/.pi/agent/custom-settings.json`,
+              `Add 'oauth: { enabled: true }' to its config in ~/.pi/agent/custom-settings.yaml`,
             "warning",
           );
           return;

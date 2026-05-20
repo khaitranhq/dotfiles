@@ -20,7 +20,8 @@
     "@earendil-works/pi-tui": "0.75.3",
     "tree-sitter": "0.25.0",
     "tree-sitter-bash": "0.25.1",
-    "typebox": "1.1.38"
+    "typebox": "1.1.38",
+    "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "25.9.1",

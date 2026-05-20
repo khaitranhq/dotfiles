@@ -539,7 +539,7 @@ export default function(pi: ExtensionAPI) {
     description: [
       "Delegate tasks to specialized subagents with isolated context.",
       "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
-      'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.json to change defaults.',
+      'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.yaml to change defaults.',
       'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
     ].join(" "),
     promptSnippet: "Delegate task to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",

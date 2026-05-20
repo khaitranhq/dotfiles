@@ -148,6 +148,27 @@ function listGitFiles(cwd: string): string[] {
 }
 
 function listFindFiles(cwd: string): string[] {
+  // Prefer rg (ripgrep) — fast, respects .gitignore, recursive by default
+  try {
+    const output = execSync(
+      `rg --files -g '!node_modules/**' -g '!.git/**' -g '!dist/**' -g '!build/**' -g '!target/**' -g '!__pycache__/**' -g '!vendor/**' -g '!.venv/**' -g '!.cache/**' -g '!.next/**' 2>/dev/null | head -n ${PATH_LIST_LIMIT}`,
+      {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+        maxBuffer: 10 * 1024 * 1024,
+        timeout: 10_000,
+      },
+    );
+
+    return output
+      .split("\n")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  } catch {
+    // rg not available — fall back to find
+  }
+
   try {
     const output = execSync(
       `find . ${FIND_PRUNE} -type f -print | head -n ${PATH_LIST_LIMIT}`,
@@ -170,6 +191,31 @@ function listFindFiles(cwd: string): string[] {
 }
 
 function listFindDirectories(cwd: string): string[] {
+  // Prefer rg (ripgrep) — derive directories from file paths
+  try {
+    const output = execSync(
+      `rg --files -g '!node_modules/**' -g '!.git/**' -g '!dist/**' -g '!build/**' -g '!target/**' -g '!__pycache__/**' -g '!vendor/**' -g '!.venv/**' -g '!.cache/**' -g '!.next/**' 2>/dev/null`,
+      {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+        maxBuffer: 10 * 1024 * 1024,
+        timeout: 10_000,
+      },
+    );
+
+    const files = output
+      .split("\n")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+    if (files.length > 0) {
+      return buildDirectoriesFromFiles(files);
+    }
+  } catch {
+    // rg not available — fall back to find
+  }
+
   try {
     const output = execSync(
       `find . ${FIND_PRUNE} -type d -print | head -n ${PATH_LIST_LIMIT}`,

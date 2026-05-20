@@ -68,6 +68,70 @@ export function extractAllBaseCommands(fullCommand: string): string[] {
   return commands;
 }
 
+/**
+ * Extract the full text of each top-level command segment from a
+ * (possibly compound) shell command.
+ *
+ * Like {@link extractAllBaseCommands}, but returns the complete command
+ * text (including subcommands and arguments) instead of just the
+ * basename of the first word.  Leading variable assignments are stripped
+ * from each segment.
+ *
+ * Example:
+ *   "cd /tmp && git diff --cached"   →  ["cd /tmp", "git diff --cached"]
+ *   "FOO=1 ls -la | grep foo"        →  ["ls -la", "grep foo"]
+ *   "npx tsc --noEmit"               →  ["npx tsc --noEmit"]
+ *   "echo \$(curl example.com)"       →  ["echo \$(curl example.com)"]
+ */
+export function extractAllCommandSegments(fullCommand: string): string[] {
+  if (!fullCommand || !fullCommand.trim()) return [];
+
+  const parser = getParser();
+  const tree = parser.parse(fullCommand);
+  const segments: string[] = [];
+  collectCommandSegmentTexts(tree.rootNode, fullCommand, segments);
+  return segments;
+}
+
+/**
+ * Check whether a command segment is approved against a set of
+ * allow-listed entries.
+ *
+ * Uses word-prefix matching: an entry matches if every word of the
+ * entry equals the corresponding word of the segment.  This lets
+ * "git diff" match "git diff --cached" while rejecting "git log".
+ *
+ * Single-word entries like "ls" still match "ls -la" as before.
+ *
+ * Example:
+ *   isCommandApproved("git diff --cached", Set(["git diff"]))   → true
+ *   isCommandApproved("git log",           Set(["git diff"]))   → false
+ *   isCommandApproved("ls -la",            Set(["ls"]))         → true
+ *   isCommandApproved("npx tsc --noEmit",  Set(["npx tsc"]))    → true
+ */
+export function isCommandApproved(
+  segment: string,
+  approved: Set<string>,
+): boolean {
+  const segmentWords = segment.split(/\s+/);
+
+  for (const entry of approved) {
+    const entryWords = entry.split(/\s+/);
+    if (entryWords.length === 0 || entryWords.length > segmentWords.length) continue;
+
+    let match = true;
+    for (let i = 0; i < entryWords.length; i++) {
+      if (entryWords[i] !== segmentWords[i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return true;
+  }
+
+  return false;
+}
+
 // ── AST walker ──────────────────────────────────────────────────────
 
 /**
@@ -101,6 +165,35 @@ function collectCommandNodes(
     for (let i = 0; i < node.childCount; i++) {
       const child = node.child(i);
       if (child) collectCommandNodes(child, commands);
+    }
+  }
+}
+
+/**
+ * Recursively walk the tree-sitter AST and collect full command segment texts.
+ *
+ * Like {@link collectCommandNodes} but gathers the complete text of each
+ * top-level command (stripped of leading env assignments) instead of just
+ * the base command name.
+ */
+function collectCommandSegmentTexts(
+  node: Parser.SyntaxNode,
+  fullSource: string,
+  segments: string[],
+): void {
+  if (node.type === "command") {
+    let text = fullSource.substring(node.startIndex, node.endIndex);
+    // Strip leading variable assignments (e.g., FOO=bar BAZ=qux ...)
+    text = text.replace(/^(?:\w+=\S+\s+)+/, "");
+    text = text.trim();
+    if (text) segments.push(text);
+    return;
+  }
+
+  if (COMMAND_CONTAINER_TYPES.has(node.type)) {
+    for (let i = 0; i < node.childCount; i++) {
+      const child = node.child(i);
+      if (child) collectCommandSegmentTexts(child, fullSource, segments);
     }
   }
 }

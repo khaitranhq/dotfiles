@@ -51,6 +51,28 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Hard Constraints
 
+### File and Content Search
+
+**Always use `rg` (ripgrep) for all file and content search operations.**
+Only fall back to `find` (files) or `grep` (content) when `rg` is unavailable.
+
+```
+# ✅ Do this (rg first):
+rg --files -g '*.go'          # find Go files
+rg 'pattern' path/             # search content
+rg -t go 'pattern'             # search by file type
+
+# ❌ Don't do this:
+find . -name '*.go'            # use rg instead
+grep -r 'pattern' .            # use rg instead
+
+# ⚠️ Only when rg is unavailable:
+find . -name '*.go'
+grep -r 'pattern' .
+```
+
+**Rationale**: `rg` is faster, respects `.gitignore`, handles large repos, and avoids binary-file noise.
+
 ### Git Commits
 
 Never run `git commit`. The user will handle all git commits themselves.
