@@ -2,22 +2,18 @@
  * Pi Desktop Notification Extension
  *
  * Sends desktop toast notifications for:
- * 1. Tool calls that need user approval (permission "ask") when the
- *    tool/command is NOT in the auto-approve list.
- * 2. Agent completion — when the agent finishes processing a prompt and
+ * 1. Agent completion — when the agent finishes processing a prompt and
  *    is idle, with a snippet of the last assistant response.
+ *
+ * Also exports `notifyPermissionRequired()` for the permission-request
+ * extension to call when it shows the "🔐 Permission required" prompt.
  *
  * Uses PowerShell toast notifications on Windows.  Non-Windows systems
  * are skipped.
  */
 
 import { execFile } from "node:child_process";
-import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
-import {
-  loadAlwaysApprove,
-  type AlwaysApproveConfig,
-} from "../shared/config";
-import { extractBaseCommand } from "../shared/command-utils";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -27,61 +23,7 @@ const TITLE = "Pi";
 const DEFAULT_COMMAND = "powershell.exe";
 const DEFAULT_ARGS: string[] = ["-NoProfile", "-Command"];
 
-/**
- * Determine whether the given tool call requires user approval ("ask").
- * Returns true when the tool/command is NOT in the auto-approve list —
- * meaning the agent will prompt the user before executing.
- */
-function isPermissionAsk(event: ToolCallEvent, alwaysApprove: AlwaysApproveConfig): boolean {
-  const toolName = event.toolName;
-
-  if (toolName === "bash") {
-    const command = (event.input as { command: string }).command;
-    const base = extractBaseCommand(command);
-    // If the base command is in always-approve, it's allowed → no notification
-    if (base && (alwaysApprove.bashCommands ?? []).includes(base)) {
-      return false;
-    }
-    // Not in always-approve → will "ask" the user → notify
-    return true;
-  }
-
-  // Non-bash tools: always-approved if listed in tools → no notification
-  if ((alwaysApprove.tools ?? []).includes(toolName)) {
-    return false;
-  }
-
-  // Not in always-approve → will "ask" the user → notify
-  return true;
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────
-
-/** Build a short description of the tool call for the toast notification. */
-function describeToolCall(event: ToolCallEvent): string {
-  const input = event.input as Record<string, unknown>;
-
-  switch (event.toolName) {
-    case "bash":
-      return `bash: ${String(input.command ?? "(no command)").slice(0, 100)}`;
-    case "question":
-      return `Question: ${String(input.text ?? "?").slice(0, 100)}`;
-    case "read":
-      return `read: ${input.path ?? "?"}`;
-    case "write":
-      return `write: ${input.path ?? "?"}`;
-    case "edit":
-      return `edit: ${input.path ?? "?"}`;
-    case "ls":
-      return `ls: ${input.path ?? "."}`;
-    case "grep":
-      return `grep: ${input.pattern ?? "?"}`;
-    case "find":
-      return `find: ${input.path ?? "."}`;
-    default:
-      return `${event.toolName}`;
-  }
-}
 
 function createToastScript(title: string, message: string): string {
   return [
@@ -116,23 +58,18 @@ function notify(title: string, message: string): void {
   });
 }
 
+/**
+ * Send a desktop toast notification for a permission-required prompt.
+ * Called by the permission-request extension when it shows the
+ * "🔐 Permission required" select dialog.
+ */
+export function notifyPermissionRequired(description: string): void {
+  notify(TITLE, description);
+}
+
 export default function(pi: ExtensionAPI) {
   // Skip on non-Windows — powershell toast notifications are Windows-only.
   if (process.platform !== "win32") return;
-
-  // Reload config on session start so changes take effect without restart.
-  let alwaysApprove = loadAlwaysApprove();
-  pi.on("session_start", async () => {
-    alwaysApprove = loadAlwaysApprove();
-  });
-
-  // Notify on tool calls only when the user needs to approve them
-  // (permission level is "ask" — not in the auto-approve list).
-  // Auto-approved tools/commands silently skip notifications.
-  pi.on("tool_call", async (event) => {
-    if (!isPermissionAsk(event, alwaysApprove)) return;
-    notify(TITLE, describeToolCall(event));
-  });
 
   // Notify when the agent finishes processing a prompt.
   // Lets users know pi is idle and ready for the next input.

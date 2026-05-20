@@ -26,6 +26,7 @@ always_approve:
     - go test
     - go vet
     - go build
+    - go list
     - git diff
     - git status
     - git log

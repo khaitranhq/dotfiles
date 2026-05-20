@@ -47,6 +47,7 @@ import {
   extractAllCommandSegments,
   isCommandApproved,
 } from "../shared/command-utils";
+import { notifyPermissionRequired } from "../notification/index";
 
 // ── Set helpers ───────────────────────────────────────────────────────
 
@@ -134,6 +135,9 @@ export default function(pi: ExtensionAPI) {
 
     // Build a human-readable description of what's being requested
     const desc = describeCall(event);
+
+    // Send desktop toast notification for this permission prompt
+    notifyPermissionRequired(desc);
 
     const selected = await ctx.ui.select(`🔐 Permission required — ${desc}`, [
       "✅ Allow",
