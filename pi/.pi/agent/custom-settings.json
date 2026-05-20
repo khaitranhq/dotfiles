@@ -43,7 +43,8 @@
       "diff",
       "stat",
       "head",
-      "d2"
+      "d2",
+      "go doc"
     ],
     "tools": [
       "read",

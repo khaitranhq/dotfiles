@@ -20,7 +20,7 @@
  *     }
  *   }
  *
- * For compound bash commands (&&, ;, |, ||) the first segment is matched.
+ * For compound bash commands (&&, ;, |, ||, &) ALL segments must be approved.
  *
  * When a call is not always-approved, the user sees:
  *
@@ -30,7 +30,6 @@
  *   [4] Approve in this session   – allow for the rest of this session
  */
 
-import * as path from "node:path";
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import {
   loadAlwaysApprove,
@@ -38,6 +37,7 @@ import {
   type AlwaysApproveConfig,
   type CustomSettings,
 } from "../shared/config";
+import { extractAllBaseCommands } from "../shared/command-utils";
 
 // ── Set helpers ───────────────────────────────────────────────────────
 
@@ -58,39 +58,19 @@ function addToAlwaysApprove(
 
 /**
  * Extract the first "word" of a bash command for matching.
- * Handles compound commands (&&, ;, |) by taking the first segment.
+ * For compound commands, returns the first segment's base command.
  */
-function extractBaseCommand(fullCommand: string): string {
-  let cmd = fullCommand.trim();
-
-  // Split on common compound separators; keep only the first segment
-  for (const sep of ["&&", ";", "|", "||", "&"]) {
-    const idx = cmd.indexOf(sep);
-    if (idx !== -1) {
-      cmd = cmd.slice(0, idx);
-    }
-  }
-
-  const words = cmd.trim().split(/\s+/);
-  if (words.length === 0) return "";
-
-  // Skip leading env assignments (KEY=val …)
-  let first = words[0];
-  let i = 0;
-  while (first.includes("=") && i < words.length - 1) {
-    first = words[++i];
-  }
-
-  return path.basename(first);
+function extractFirstBaseCommand(fullCommand: string): string {
+  return extractAllBaseCommands(fullCommand)[0] || "";
 }
 
 // ── Session key ───────────────────────────────────────────────────────
 
-/** Build a session approval key. For bash, include the base command. */
+/** Build a session approval key. For bash, include the first base command. */
 function sessionKey(toolName: string, event: ToolCallEvent): string {
   if (toolName === "bash") {
     const command = (event.input as { command: string }).command;
-    const base = extractBaseCommand(command);
+    const base = extractFirstBaseCommand(command);
     return `bash:${base}`;
   }
   return toolName;
@@ -125,12 +105,13 @@ export default function(pi: ExtensionAPI) {
     const toolName = event.toolName;
 
     // Determine whether this call is always-approved.
+    // For compound bash commands, ALL segments must be approved.
     let alwaysApproved = false;
 
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
-      const base = extractBaseCommand(command);
-      if (base && alwaysApproveCommands.has(base)) {
+      const bases = extractAllBaseCommands(command);
+      if (bases.length > 0 && bases.every((b) => alwaysApproveCommands.has(b))) {
         alwaysApproved = true;
       }
     } else {
@@ -139,9 +120,17 @@ export default function(pi: ExtensionAPI) {
       }
     }
 
-    // Check session-only approvals (granted earlier this session)
-    const key = sessionKey(toolName, event);
-    if (sessionApprovals.has(key)) return undefined;
+    // Check session-only approvals — all base commands must be approved
+    if (toolName === "bash") {
+      const command = (event.input as { command: string }).command;
+      const bases = extractAllBaseCommands(command);
+      if (bases.length > 0 && bases.every((b) => sessionApprovals.has(`bash:${b}`))) {
+        return undefined;
+      }
+    } else {
+      const key = sessionKey(toolName, event);
+      if (sessionApprovals.has(key)) return undefined;
+    }
 
     // ── always-approve ──────────────────────────────────────────────
     if (alwaysApproved) return undefined;
@@ -179,13 +168,16 @@ export default function(pi: ExtensionAPI) {
       }
 
       case "🔓 Always approve": {
-        // Persist to custom-settings.json under always_approve
+        // Persist to custom-settings.json under always_approve.
+        // For compound commands, add EVERY base command in the chain.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
-          const base = extractBaseCommand(command);
-          if (base) {
-            updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", base));
-            alwaysApproveCommands.add(base);
+          const bases = extractAllBaseCommands(command);
+          if (bases.length > 0) {
+            for (const base of bases) {
+              updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", base));
+              alwaysApproveCommands.add(base);
+            }
           } else {
             updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
             alwaysApproveTools.add(toolName);
@@ -198,7 +190,20 @@ export default function(pi: ExtensionAPI) {
       }
 
       case "🕐 Approve in this session only": {
-        sessionApprovals.add(key);
+        // For compound commands, approve all base commands for the session.
+        if (toolName === "bash") {
+          const command = (event.input as { command: string }).command;
+          const bases = extractAllBaseCommands(command);
+          if (bases.length > 0) {
+            for (const base of bases) {
+              sessionApprovals.add(`bash:${base}`);
+            }
+          } else {
+            sessionApprovals.add(key);
+          }
+        } else {
+          sessionApprovals.add(key);
+        }
         return undefined;
       }
 

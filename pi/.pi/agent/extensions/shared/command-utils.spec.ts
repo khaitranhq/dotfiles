@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   COMMAND_SEPARATORS,
   extractBaseCommand,
+  extractAllBaseCommands,
   findRmIndex,
   extractRmPaths,
 } from "./command-utils";
@@ -50,6 +51,63 @@ describe("extractBaseCommand", () => {
   it("returns basename for full-path commands", () => {
     expect(extractBaseCommand("/usr/bin/git status")).toBe("git");
     expect(extractBaseCommand("/usr/local/bin/node server.js")).toBe("node");
+  });
+});
+
+// ── extractAllBaseCommands ─────────────────────────────────────────
+
+describe("extractAllBaseCommands", () => {
+  it("returns single base command for simple commands", () => {
+    expect(extractAllBaseCommands("ls -la")).toEqual(["ls"]);
+    expect(extractAllBaseCommands("echo hello")).toEqual(["echo"]);
+    expect(extractAllBaseCommands("pnpm install")).toEqual(["pnpm"]);
+  });
+
+  it("extracts all base commands from && chain", () => {
+    expect(extractAllBaseCommands("cd /tmp && pnpm install")).toEqual(["cd", "pnpm"]);
+    expect(extractAllBaseCommands("cd /tmp && ls -la && pnpm install")).toEqual(["cd", "ls", "pnpm"]);
+  });
+
+  it("extracts all base commands from ; chain", () => {
+    expect(extractAllBaseCommands("echo hello; cat file.txt")).toEqual(["echo", "cat"]);
+  });
+
+  it("extracts all base commands from | pipe", () => {
+    expect(extractAllBaseCommands("cat file | grep foo")).toEqual(["cat", "grep"]);
+  });
+
+  it("handles || separator", () => {
+    expect(extractAllBaseCommands("ls || echo fail")).toEqual(["ls", "echo"]);
+  });
+
+  it("handles & separator", () => {
+    expect(extractAllBaseCommands("sleep 1 & ls")).toEqual(["sleep", "ls"]);
+  });
+
+  it("handles mixed separators", () => {
+    expect(extractAllBaseCommands("echo hello; cat file | grep foo && ls")).toEqual(["echo", "cat", "grep", "ls"]);
+  });
+
+  it("skips leading env assignments in each segment", () => {
+    expect(extractAllBaseCommands("FOO=bar ls -la && BAZ=qux pnpm install")).toEqual(["ls", "pnpm"]);
+  });
+
+  it("returns basename for full-path commands", () => {
+    expect(extractAllBaseCommands("/usr/bin/git status && /usr/local/bin/node -v")).toEqual(["git", "node"]);
+  });
+
+  it("returns empty array for empty input", () => {
+    expect(extractAllBaseCommands("")).toEqual([]);
+    expect(extractAllBaseCommands("   ")).toEqual([]);
+  });
+
+  it("does not confuse || with single |", () => {
+    // || should split into two separate segments, not three
+    expect(extractAllBaseCommands("cmd1 || cmd2")).toEqual(["cmd1", "cmd2"]);
+  });
+
+  it("does not confuse && with single &", () => {
+    expect(extractAllBaseCommands("cmd1 && cmd2")).toEqual(["cmd1", "cmd2"]);
   });
 });
 

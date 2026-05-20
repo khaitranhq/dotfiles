@@ -6,6 +6,8 @@
  * bash tool inputs.
  */
 
+import * as path from "node:path";
+
 // ── Command splitting ─────────────────────────────────────────────────
 
 /** Shell command separators that introduce a new command in a chain. */
@@ -18,17 +20,39 @@ export const COMMAND_SEPARATORS = new Set(["&&", "||", ";", "|", "&"]);
  * and strips leading env assignments (KEY=val …).
  */
 export function extractBaseCommand(fullCommand: string): string {
-  let cmd = fullCommand.trim();
+  return extractAllBaseCommands(fullCommand)[0] || "";
+}
 
-  // Split on common compound separators; keep only the first segment
-  for (const sep of COMMAND_SEPARATORS) {
-    const idx = cmd.indexOf(sep);
-    if (idx !== -1) {
-      cmd = cmd.slice(0, idx);
-    }
-  }
+/**
+ * Extract base commands from *all* segments of a (possibly compound) command.
+ *
+ * Splits on &&, ||, ;, |, & and extracts the first word from each segment,
+ * stripping env assignments.  Returns an array of base command names.
+ *
+ * Example:
+ *   "cd /tmp && pnpm install"  →  ["cd", "pnpm"]
+ *   "FOO=1 ls -la | grep foo"  →  ["ls", "grep"]
+ */
+export function extractAllBaseCommands(fullCommand: string): string[] {
+  if (!fullCommand || !fullCommand.trim()) return [];
 
-  const words = cmd.trim().split(/\s+/);
+  // Split on compound separators — longer alternatives first to avoid
+  // partial matches (|| before |, && before &).
+  const segments = fullCommand.split(/\s*(?:\|\||&&|;|\||&)\s*/);
+
+  return segments
+    .map((seg) => extractSingleBaseCommand(seg))
+    .filter((cmd) => cmd.length > 0);
+}
+
+// ── Internal helpers ──────────────────────────────────────────────────
+
+/**
+ * Extract the first word of a SINGLE command segment (no separators).
+ * Strips leading env assignments and returns basename.
+ */
+function extractSingleBaseCommand(segment: string): string {
+  const words = segment.trim().split(/\s+/);
   if (words.length === 0) return "";
 
   // Skip leading env assignments (KEY=val …)
@@ -40,8 +64,6 @@ export function extractBaseCommand(fullCommand: string): string {
 
   return path.basename(first);
 }
-
-import * as path from "node:path";
 
 // ── rm detection ──────────────────────────────────────────────────────
 

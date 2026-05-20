@@ -28,6 +28,7 @@ export {
 export {
   COMMAND_SEPARATORS,
   extractBaseCommand,
+  extractAllBaseCommands,
   findRmIndex,
   extractRmPaths,
 } from "./command-utils";
