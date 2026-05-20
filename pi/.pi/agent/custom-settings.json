@@ -1,4 +1,11 @@
 {
+  "notification": {
+    "command": "powershell.exe",
+    "args": ["-NoProfile", "-Command"]
+  },
+  "mcp": {
+    "servers": []
+  },
   "always_approve": {
     "bashCommands": [
       "find",
@@ -43,7 +50,9 @@
       "write",
       "edit",
       "subagent",
-      "question"
+      "question",
+      "mcp_jira_getaccessibleatlassianresources",
+      "mcp_jira_getjiraissue"
     ]
   }
 }

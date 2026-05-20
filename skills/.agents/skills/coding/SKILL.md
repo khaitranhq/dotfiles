@@ -542,6 +542,25 @@ Use this checklist:
 - [ ] **Comments**: Does the code explain itself, or are comments masking complexity?
 - [ ] **No smells**: Does the code pass the smell checklist?
 
+## Validation After Code Changes
+
+After making any code change — whether implementing a new feature, refactoring, or fixing a bug — run validation tools to catch issues early.
+
+### Required Validation Steps
+
+1. **Run the formatter** — Ensure code style is consistent (e.g., `gofmt`, `prettier`, `rustfmt`, `black`)
+2. **Run the linter** — Catch code quality issues, potential bugs, and style violations (e.g., `golangci-lint`, `eslint`, `clippy`, `ruff`)
+3. **Run a dry-build / type-check** — Verify the code compiles without producing output artifacts:
+   - Go: `go build -o /dev/null ./...`
+   - TypeScript: `tsc --noEmit`
+   - Rust: `cargo check`
+   - Python: `mypy .` or `pyright`
+   - Other languages: use the equivalent no-output build/check command
+
+### Finding the Right Tools
+
+Each language has its own ecosystem of formatters, linters, and build tools. **Load the language-specific skill** (e.g., `golang`, `typescript`, `python`) for detailed information about the exact tools, their configuration, and invocation commands for that language. The language skill will also cover project-specific setup and conventions.
+
 ## Constraints
 
 ### MUST DO
@@ -560,6 +579,7 @@ Use this checklist:
 - **Prefer composition** — Use composition over inheritance for behavior reuse (limit inheritance depth)
 - **Apply Law of Demeter** — Methods should only talk to immediate dependencies; avoid method chaining
 - **Review against this skill** — Use the code review checklist when reviewing PRs
+- **Validate after changes** — After every code change, run the formatter, linter, and dry-build/type-check (e.g., `go build -o /dev/null`, `tsc --noEmit`) to catch issues early. Load the language-specific skill for exact tool commands
 
 ### MUST NOT DO
 
