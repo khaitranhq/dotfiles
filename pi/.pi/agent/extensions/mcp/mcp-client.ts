@@ -82,6 +82,21 @@ export interface HttpServerConfig {
 
 export type ServerConfig = StdioServerConfig | SseServerConfig | HttpServerConfig;
 
+export interface OAuthStatus {
+  /** Whether OAuth is configured for this server. */
+  configured: boolean;
+  /** Whether we currently hold a valid access token. */
+  authenticated: boolean;
+  /** Whether cached tokens exist on disk. */
+  hasTokens: boolean;
+  /** Unix-ms timestamp when the current token expires (if known). */
+  tokenExpiry?: number;
+  /** Scopes granted by the current token. */
+  scopes?: string[];
+  /** Path to the persisted token store. */
+  tokenStorePath?: string | null;
+}
+
 export interface McpTool {
   name: string;
   description?: string;
@@ -156,7 +171,6 @@ interface Transport extends EventEmitter {
 
 class StdioTransport extends EventEmitter implements Transport {
   private process: ChildProcess | null = null;
-  private buffer = "";
 
   constructor(private readonly config: StdioServerConfig) {
     super();
@@ -209,7 +223,7 @@ class StdioTransport extends EventEmitter implements Transport {
     });
 
     // Passthrough stderr for debugging (suppressed in production)
-    this.process.stderr?.on("data", (data: Buffer) => {
+    this.process.stderr?.on("data", (_data: Buffer) => {
       // MCP spec: stderr may contain log messages — ignore for token efficiency
     });
 
@@ -625,7 +639,9 @@ function startRedirectServer(
       if (reqUrl.pathname === "/callback") {
         const code = reqUrl.searchParams.get("code");
         const error = reqUrl.searchParams.get("error");
-        const state = reqUrl.searchParams.get("state");
+        // CSRF state parameter received but not yet validated.
+        // Future: validate against the expected state from runOAuthFlow.
+        void reqUrl.searchParams.get("state");
 
         if (error) {
           res.writeHead(400, { "Content-Type": "text/html" });
@@ -878,8 +894,9 @@ async function runOAuthFlow(
           : `xdg-open "${authUrl}"`;
     exec(openCmd, (err) => {
       if (err) {
-        // Browser open failed, user will have to visit the URL manually
-        log?.("Could not open browser automatically. Please visit the URL above.");
+        // Browser open failed — show the URL prominently so the user can copy it
+        log?.(`[OAuth] Could not open browser automatically.`);
+        log?.(`[OAuth] Please visit this URL to authorize:\n  ${authUrl}`);
       }
     });
 
@@ -928,6 +945,7 @@ class HttpTransport extends EventEmitter implements Transport {
   private oauthMetadata: OAuthMetadata | null = null;
   private oauthClientId: string | null = null;
   private oauthReady = false;
+  private sessionId: string | null = null;
   private baseUrl: string;
   private isOAuth: boolean;
 
@@ -1034,6 +1052,11 @@ class HttpTransport extends EventEmitter implements Transport {
       headers["Authorization"] = `Bearer ${this.accessToken}`;
     }
 
+    // Include session ID for all requests after the initialize handshake
+    if (this.sessionId) {
+      headers["Mcp-Session-Id"] = this.sessionId;
+    }
+
     const body = JSON.stringify(message);
 
     try {
@@ -1044,8 +1067,53 @@ class HttpTransport extends EventEmitter implements Transport {
         signal: this.abortController?.signal,
       });
 
+      // Capture Mcp-Session-Id from response headers (set on initialize response)
+      const newSessionId = response.headers.get("Mcp-Session-Id");
+      if (newSessionId) {
+        this.sessionId = newSessionId;
+      }
+
       if (!response.ok) {
         const errText = await response.text().catch(() => "");
+
+        // Try to parse as a JSON-RPC error response first.
+        // Streamable HTTP servers may return JSON-RPC errors with non-2xx
+        // status codes (e.g. 400 for "no session ID" or "not initialized").
+        // Those must be routed through the event system so the caller
+        // receives a proper JSON-RPC error instead of a transport error.
+        try {
+          const errMsg = JSON.parse(errText);
+          if (
+            errMsg &&
+            typeof errMsg === "object" &&
+            errMsg.jsonrpc === "2.0"
+          ) {
+            if ("id" in errMsg && errMsg.id !== undefined && "method" in errMsg) {
+              this.emit("request", errMsg);
+              return;
+            } else if ("id" in errMsg && errMsg.id !== undefined) {
+              this.emit("response", errMsg as JsonRpcResponse);
+              return;
+            } else if ("id" in message && message.id !== undefined) {
+              // Response has no id but we know it — synthesize a proper response
+              // so the pending callback can be settled (JSON-RPC allows omitting
+              // id for parse errors, but servers sometimes omit it for other
+              // errors too).
+              this.emit("response", {
+                jsonrpc: "2.0",
+                id: message.id,
+                error: errMsg.error,
+              } as JsonRpcResponse);
+              return;
+            } else {
+              // No id in either direction — emit as notification
+              this.emit("notification", errMsg as JsonRpcNotification);
+              return;
+            }
+          }
+        } catch {
+          // Not valid JSON-RPC — fall through to transport error handling
+        }
 
         // Check for OAuth errors
         if (
@@ -1053,13 +1121,18 @@ class HttpTransport extends EventEmitter implements Transport {
           this.isOAuth &&
           this.config.oauth
         ) {
-          // Token may have expired — try to refresh and retry once
+          // Token may have expired — try to refresh and retry once.
+          // Clear session ID: a new token may need a fresh session.
           this.oauthReady = false;
           this.accessToken = null;
+          this.sessionId = null;
           await this.ensureValidToken();
 
           // Retry the request with new token
-          const retryHeaders = { ...headers };
+          const retryHeaders: Record<string, string> = {
+            ...headers,
+          };
+          delete retryHeaders["Mcp-Session-Id"];
           if (this.accessToken) {
             retryHeaders["Authorization"] = `Bearer ${this.accessToken}`;
           }
@@ -1070,10 +1143,49 @@ class HttpTransport extends EventEmitter implements Transport {
             signal: this.abortController?.signal,
           });
 
+          // Capture session ID from retry response
+          const retrySessionId = retryResp.headers.get("Mcp-Session-Id");
+          if (retrySessionId) {
+            this.sessionId = retrySessionId;
+          }
+
           if (retryResp.ok) {
             await this.handleResponse(retryResp, message);
             return;
           }
+
+          // Retry also returned an error — try to parse as JSON-RPC
+          const retryErrText = await retryResp.text().catch(() => "");
+          try {
+            const retryErrMsg = JSON.parse(retryErrText);
+            if (
+              retryErrMsg &&
+              typeof retryErrMsg === "object" &&
+              retryErrMsg.jsonrpc === "2.0"
+            ) {
+              if ("id" in retryErrMsg && retryErrMsg.id !== undefined) {
+                this.emit("response", retryErrMsg as JsonRpcResponse);
+                return;
+              } else if ("id" in message && message.id !== undefined) {
+                // Synthesize response with known id
+                this.emit("response", {
+                  jsonrpc: "2.0",
+                  id: message.id,
+                  error: retryErrMsg.error,
+                } as JsonRpcResponse);
+                return;
+              } else {
+                this.emit("notification", retryErrMsg as JsonRpcNotification);
+                return;
+              }
+            }
+          } catch {
+            // Fall through
+          }
+
+          throw new McpError(
+            `HTTP request failed (${retryResp.status}): ${retryErrText.slice(0, 200)}`,
+          );
         }
 
         // MCP auth-required check: if server returns 401/403 with JSON-RPC error
@@ -1211,11 +1323,49 @@ class HttpTransport extends EventEmitter implements Transport {
     }
   }
 
+  /** Clear cached OAuth tokens (forces re-auth on next connect). */
+  clearOAuthTokens(): void {
+    this.tokenManager?.clear();
+    this.accessToken = null;
+    this.oauthReady = false;
+    this.oauthMetadata = null;
+    this.sessionId = null;
+  }
+
+  /** Get the path to the persisted token store, if any. */
+  getTokenStorePath(): string | null {
+    if (!this.isOAuth) return null;
+    return (
+      this.config.oauth?.tokenStorePath ??
+      path.join(
+        os.homedir(),
+        ".pi",
+        "agent",
+        "mcp-tokens",
+        `${sanitizeForFilename(this.config.name)}.json`,
+      )
+    );
+  }
+
+  /** Return OAuth diagnostic info for the current transport. */
+  getOAuthStatus(): OAuthStatus {
+    const cached = this.tokenManager?.load() ?? null;
+    return {
+      configured: this.isOAuth,
+      authenticated: this.oauthReady,
+      hasTokens: cached !== null,
+      tokenExpiry: cached?.expires_at,
+      scopes: cached?.scope?.split(" ") ?? this.config.oauth?.scopes,
+      tokenStorePath: this.getTokenStorePath(),
+    };
+  }
+
   close(): void {
     this.abortController?.abort();
     this.abortController = null;
     this.accessToken = null;
     this.oauthReady = false;
+    this.sessionId = null;
   }
 }
 
@@ -1313,9 +1463,13 @@ export class McpClient {
       this.serverInfo = initResult.serverInfo;
 
       // Send initialized notification
-      this.transport.send({
-        jsonrpc: "2.0",
-        method: "notifications/initialized",
+      Promise.resolve(
+        this.transport.send({
+          jsonrpc: "2.0",
+          method: "notifications/initialized",
+        }),
+      ).catch((err: Error) => {
+        this.logInfo(`Failed to send initialized notification: ${err.message}`);
       });
 
       this.connected = true;
@@ -1408,13 +1562,13 @@ export class McpClient {
   async callTool(
     name: string,
     args: Record<string, unknown>,
-    signal?: AbortSignal,
+    _signal?: AbortSignal,
   ): Promise<{
     content: Array<{ type: "text" | "image" | "resource"; text?: string; data?: string; mimeType?: string }>;
     isError?: boolean;
   }> {
     const result = await this.request<{
-      content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
+      content: Array<{ type: "text" | "image" | "resource"; text?: string; data?: string; mimeType?: string }>;
       isError?: boolean;
     }>("tools/call", {
       name,
@@ -1442,6 +1596,89 @@ export class McpClient {
   /** Unique server name. */
   get serverName(): string {
     return this.config.name;
+  }
+
+  /** Whether this server is configured with OAuth. */
+  get hasOAuth(): boolean {
+    return (
+      this.config.transport === "http" &&
+      (this.config as HttpServerConfig).oauth?.enabled === true
+    );
+  }
+
+  /** Get the OAuth config for this server, if any. */
+  get oauthConfig(): OAuthConfig | null {
+    if (this.config.transport === "http") {
+      return (this.config as HttpServerConfig).oauth ?? null;
+    }
+    return null;
+  }
+
+  /** Get OAuth authentication status for diagnostics. */
+  getOAuthStatus(): OAuthStatus | null {
+    if (this.transport instanceof HttpTransport) {
+      return (this.transport as HttpTransport).getOAuthStatus();
+    }
+    if (this.hasOAuth) {
+      // Transport not yet created — check config + token file
+      const storePath =
+        this.oauthConfig?.tokenStorePath ??
+        path.join(
+          os.homedir(),
+          ".pi",
+          "agent",
+          "mcp-tokens",
+          `${sanitizeForFilename(this.config.name)}.json`,
+        );
+      let hasTokens = false;
+      let tokenExpiry: number | undefined;
+      try {
+        if (fs.existsSync(storePath)) {
+          const raw = fs.readFileSync(storePath, "utf-8");
+          const parsed = JSON.parse(raw);
+          if (parsed.access_token) {
+            hasTokens = true;
+            tokenExpiry = parsed.expires_at;
+          }
+        }
+      } catch {
+        // Ignore
+      }
+      return {
+        configured: true,
+        authenticated: false,
+        hasTokens,
+        tokenExpiry,
+        scopes: this.oauthConfig?.scopes,
+        tokenStorePath: storePath,
+      };
+    }
+    return null;
+  }
+
+  /** Clear OAuth tokens (forces re-auth on next connect). */
+  clearOAuthTokens(): void {
+    if (this.transport instanceof HttpTransport) {
+      (this.transport as HttpTransport).clearOAuthTokens();
+    } else if (this.hasOAuth) {
+      // Transport not created yet — delete token file directly
+      const storePath =
+        this.oauthConfig?.tokenStorePath ??
+        path.join(
+          os.homedir(),
+          ".pi",
+          "agent",
+          "mcp-tokens",
+          `${sanitizeForFilename(this.config.name)}.json`,
+        );
+      try {
+        if (fs.existsSync(storePath)) {
+          fs.unlinkSync(storePath);
+        }
+      } catch {
+        // Ignore
+      }
+    }
   }
 
   /** Disconnect and clean up. */

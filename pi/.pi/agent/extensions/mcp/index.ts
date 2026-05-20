@@ -179,11 +179,14 @@ export default function (pi: ExtensionAPI) {
 
     client.setLogger((msg) => {
       // Log to pi's notification system if available
-      // Show errors/warnings, and OAuth progress messages
+      // Always show OAuth messages, errors, and browser-fallback URLs
       if (
         msg.includes("error") ||
         msg.includes("fail") ||
-        msg.includes("OAuth")
+        msg.includes("OAuth") ||
+        msg.includes("browser") ||
+        msg.includes("http://") ||
+        msg.includes("https://")
       ) {
         ctx?.ui?.notify?.(msg, "info");
       }
@@ -206,6 +209,204 @@ export default function (pi: ExtensionAPI) {
     }
   }
 
+  /**
+   * Register all tools from a connected MCP client for the given server.
+   * Returns the count of tools registered.
+   */
+  async function registerServerTools(
+    client: McpClient,
+    serverConfig: ServerConfig,
+    ctx?: Parameters<Parameters<typeof pi.on>[1]>[1],
+  ): Promise<number> {
+    if (!client.hasTools) {
+      if (ctx?.hasUI) {
+        ctx.ui.notify(
+          `MCP server "${serverConfig.name}" connected (no tools)`,
+          "info",
+        );
+      }
+      return 0;
+    }
+
+    const tools = await client.listTools();
+    if (tools.length === 0) return 0;
+
+    const prefix = config.toolPrefix ?? DEFAULTS.toolPrefix;
+
+    for (const mcpTool of tools) {
+      const toolName = makeToolName(prefix, serverConfig.name, mcpTool.name);
+
+      // Convert JSON Schema to TypeBox (falls back to Type.Any for unknowns)
+      const paramSchema: TSchema =
+        mcpTool.inputSchema &&
+        typeof mcpTool.inputSchema === "object" &&
+        Object.keys(mcpTool.inputSchema as Record<string, unknown>).length > 0
+          ? jsonSchemaToTypeBox(mcpTool.inputSchema)
+          : Type.Object({});
+
+      pi.registerTool({
+        name: toolName,
+        label: `MCP: ${serverConfig.name}/${mcpTool.name}`,
+        description: buildToolDescription(mcpTool),
+        promptSnippet: buildPromptSnippet(config, mcpTool, serverConfig.name),
+        parameters: paramSchema as any,
+
+        async execute(_toolCallId, params, signal, onUpdate, _ctx) {
+          // Look up the client — it may have disconnected
+          const entry = toolMap.get(toolName);
+          if (!entry) {
+            throw new Error(
+              `MCP tool "${toolName}" is no longer available (server disconnected)`,
+            );
+          }
+
+          // Check for cancellation
+          if (signal?.aborted) {
+            return {
+              content: [{ type: "text" as const, text: "Cancelled" }],
+              details: { server: serverConfig.name, tool: mcpTool.name, isMcp: true },
+            };
+          }
+
+          onUpdate?.({
+            content: [
+              { type: "text" as const, text: `Calling ${serverConfig.name}/${mcpTool.name}...` },
+            ],
+            details: { server: serverConfig.name, tool: mcpTool.name, isMcp: true },
+          } as any);
+
+          try {
+            const result = await entry.client.callTool(
+              entry.originalName,
+              params as Record<string, unknown>,
+              signal ?? undefined,
+            );
+
+            // Extract text content
+            const textParts: string[] = [];
+            for (const item of result.content) {
+              if (item.type === "text" && item.text) {
+                textParts.push(item.text);
+              } else if (item.type === "resource") {
+                textParts.push(
+                  `[Resource: ${item.mimeType ?? "unknown"} — not displayed]`,
+                );
+              } else if (item.type === "image") {
+                textParts.push(
+                  `[Image: ${item.mimeType ?? "unknown"} — not displayed]`,
+                );
+              }
+            }
+
+            let output = textParts.join("\n");
+
+            // ── Truncation for token efficiency ──────────────────
+            const maxBytes = config.maxResultBytes ?? DEFAULTS.maxResultBytes;
+            const maxLines = config.maxResultLines ?? DEFAULTS.maxResultLines;
+
+            if (output) {
+              const truncation = truncateHead(output, { maxLines, maxBytes });
+              output = truncation.content;
+
+              if (truncation.truncated) {
+                output +=
+                  `\n\n[Output truncated: ${truncation.outputLines} of ${truncation.totalLines} lines`;
+                output += ` (${formatSize(truncation.outputBytes)} of ${formatSize(truncation.totalBytes)})]`;
+              }
+            }
+
+            // Signal errors from the MCP server
+            if (result.isError) {
+              throw new Error(output || "MCP tool returned an error");
+            }
+
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: output || "(empty result)",
+                },
+              ],
+              details: {
+                server: serverConfig.name,
+                tool: entry.originalName,
+                isMcp: true,
+              },
+            };
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+
+            // Attempt reconnection if enabled
+            if (
+              config.reconnectEnabled &&
+              err instanceof McpError &&
+              err.message.includes("timed out")
+            ) {
+              // Don't reconnect from within a tool call — just report
+            }
+
+            throw new Error(`MCP tool "${entry.originalName}" failed: ${msg}`);
+          }
+        },
+
+        // ── Custom rendering ─────────────────────────────────────
+        renderCall(args: unknown, theme: any, _context: any) {
+          const shortArgs = JSON.stringify(args).slice(0, 60);
+          return new Text(
+            theme.fg("toolTitle", theme.bold(`${serverConfig.name}/${mcpTool.name}`)) +
+              " " +
+              theme.fg("dim", shortArgs.length > 60 ? shortArgs + "..." : shortArgs),
+            0,
+            0,
+          );
+        },
+
+        renderResult(
+          result: any,
+          { expanded }: { expanded?: boolean; isPartial?: boolean },
+          theme: any,
+          _context: any,
+        ) {
+          const text = result?.content?.[0]?.text ?? "";
+          const shortText = text.slice(0, expanded ? 500 : 100);
+          const suffix =
+            !expanded && text.length > 100
+              ? theme.fg("dim", "...")
+              : "";
+
+          if (result?.isError) {
+            return new Text(
+              theme.fg("error", `✗ ${shortText}${suffix}`),
+              0,
+              0,
+            );
+          }
+
+          return new Text(
+            theme.fg("success", `✓ ${shortText}${suffix}`),
+            0,
+            0,
+          );
+        },
+      });
+
+      // Map tool name → client for execution
+      toolMap.set(toolName, {
+        client,
+        originalName: mcpTool.name,
+      });
+    }
+
+    if (ctx?.hasUI && tools.length > 0) {
+      ctx.ui.notify(
+        `MCP: "${serverConfig.name}" — ${tools.length} tool(s) registered`,
+        "info",
+      );
+    }
+
+    return tools.length;
+  }
+
   async function connectAllServers(
     ctx?: Parameters<Parameters<typeof pi.on>[1]>[1],
   ): Promise<void> {
@@ -213,13 +414,13 @@ export default function (pi: ExtensionAPI) {
     connecting = true;
 
     // Disconnect existing clients
-    for (const [name, client] of clients) {
+    for (const [, client] of clients) {
       client.disconnect();
     }
     clients.clear();
     toolMap.clear();
 
-    const enabledServers = config.servers.filter(
+    const enabledServers = (config.servers ?? []).filter(
       (s) => (s as any).enabled !== false,
     );
 
@@ -243,191 +444,9 @@ export default function (pi: ExtensionAPI) {
       const serverConfig = enabledServers[i];
       clients.set(serverConfig.name, client);
 
-      // Only register tools if the server supports them
-      if (!client.hasTools) {
-        if (ctx?.hasUI) {
-          ctx.ui.notify(
-            `MCP server "${serverConfig.name}" connected (no tools)`,
-            "info",
-          );
-        }
-        continue;
-      }
-
       try {
-        const tools = await client.listTools();
-        if (tools.length === 0) continue;
-
-        const prefix = config.toolPrefix ?? DEFAULTS.toolPrefix;
-
-        for (const mcpTool of tools) {
-          const toolName = makeToolName(prefix, serverConfig.name, mcpTool.name);
-
-          // Convert JSON Schema to TypeBox (falls back to Type.Any for unknowns)
-          const paramSchema: TSchema =
-            mcpTool.inputSchema &&
-            typeof mcpTool.inputSchema === "object" &&
-            Object.keys(mcpTool.inputSchema as Record<string, unknown>).length > 0
-              ? jsonSchemaToTypeBox(mcpTool.inputSchema)
-              : Type.Object({});
-
-          pi.registerTool({
-            name: toolName,
-            label: `MCP: ${serverConfig.name}/${mcpTool.name}`,
-            description: buildToolDescription(mcpTool),
-            promptSnippet: buildPromptSnippet(config, mcpTool, serverConfig.name),
-            parameters: paramSchema as any,
-
-            async execute(toolCallId, params, signal, onUpdate, _ctx) {
-              // Look up the client — it may have disconnected
-              const entry = toolMap.get(toolName);
-              if (!entry) {
-                throw new Error(
-                  `MCP tool "${toolName}" is no longer available (server disconnected)`,
-                );
-              }
-
-              // Check for cancellation
-              if (signal?.aborted) {
-                return { content: [{ type: "text" as const, text: "Cancelled" }] };
-              }
-
-              onUpdate?.({
-                content: [
-                  { type: "text" as const, text: `Calling ${serverConfig.name}/${mcpTool.name}...` },
-                ],
-              });
-
-              try {
-                const result = await entry.client.callTool(
-                  entry.originalName,
-                  params as Record<string, unknown>,
-                  signal ?? undefined,
-                );
-
-                // Extract text content
-                const textParts: string[] = [];
-                for (const item of result.content) {
-                  if (item.type === "text" && item.text) {
-                    textParts.push(item.text);
-                  } else if (item.type === "resource") {
-                    textParts.push(
-                      `[Resource: ${item.mimeType ?? "unknown"} — not displayed]`,
-                    );
-                  } else if (item.type === "image") {
-                    textParts.push(
-                      `[Image: ${item.mimeType ?? "unknown"} — not displayed]`,
-                    );
-                  }
-                }
-
-                let output = textParts.join("\n");
-
-                // ── Truncation for token efficiency ──────────────────
-                const maxBytes = config.maxResultBytes ?? DEFAULTS.maxResultBytes;
-                const maxLines = config.maxResultLines ?? DEFAULTS.maxResultLines;
-
-                if (output) {
-                  const truncation = truncateHead(output, { maxLines, maxBytes });
-                  output = truncation.content;
-
-                  if (truncation.truncated) {
-                    output +=
-                      `\n\n[Output truncated: ${truncation.outputLines} of ${truncation.totalLines} lines`;
-                    output += ` (${formatSize(truncation.outputBytes)} of ${formatSize(truncation.totalBytes)})]`;
-                  }
-                }
-
-                // Signal errors from the MCP server
-                if (result.isError) {
-                  throw new Error(output || "MCP tool returned an error");
-                }
-
-                return {
-                  content: [
-                    {
-                      type: "text" as const,
-                      text: output || "(empty result)",
-                    },
-                  ],
-                  details: {
-                    server: serverConfig.name,
-                    tool: entry.originalName,
-                    isMcp: true,
-                  },
-                };
-              } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-
-                // Attempt reconnection if enabled
-                if (
-                  config.reconnectEnabled &&
-                  err instanceof McpError &&
-                  err.message.includes("timed out")
-                ) {
-                  // Don't reconnect from within a tool call — just report
-                }
-
-                throw new Error(`MCP tool "${entry.originalName}" failed: ${msg}`);
-              }
-            },
-
-            // ── Custom rendering ─────────────────────────────────────
-            renderCall(args: Record<string, unknown>, theme: any, _context: any) {
-              const shortArgs = JSON.stringify(args).slice(0, 60);
-              return new Text(
-                theme.fg("toolTitle", theme.bold(`${serverConfig.name}/${mcpTool.name}`)) +
-                  " " +
-                  theme.fg("dim", shortArgs.length > 60 ? shortArgs + "..." : shortArgs),
-                0,
-                0,
-              );
-            },
-
-            renderResult(
-              result: any,
-              { expanded }: { expanded?: boolean; isPartial?: boolean },
-              theme: any,
-              _context: any,
-            ) {
-              const text = result?.content?.[0]?.text ?? "";
-              const shortText = text.slice(0, expanded ? 500 : 100);
-              const suffix =
-                !expanded && text.length > 100
-                  ? theme.fg("dim", "...")
-                  : "";
-
-              if (result?.isError) {
-                return new Text(
-                  theme.fg("error", `✗ ${shortText}${suffix}`),
-                  0,
-                  0,
-                );
-              }
-
-              return new Text(
-                theme.fg("success", `✓ ${shortText}${suffix}`),
-                0,
-                0,
-              );
-            },
-          });
-
-          // Map tool name → client for execution
-          toolMap.set(toolName, {
-            client,
-            originalName: mcpTool.name,
-          });
-
-          totalTools++;
-        }
-
-        if (ctx?.hasUI && totalTools > 0) {
-          ctx.ui.notify(
-            `MCP: "${serverConfig.name}" — ${tools.length} tool(s) registered`,
-            "info",
-          );
-        }
+        const toolCount = await registerServerTools(client, serverConfig, ctx);
+        totalTools += toolCount;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         if (ctx?.hasUI) {
@@ -457,7 +476,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     config = loadMcpConfig();
 
-    const enabledCount = config.servers.filter(
+    const enabledCount = (config.servers ?? []).filter(
       (s) => (s as any).enabled !== false,
     ).length;
 
@@ -485,7 +504,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("session_shutdown", async () => {
-    for (const [name, client] of clients) {
+    for (const [, client] of clients) {
       client.disconnect();
     }
     clients.clear();
@@ -556,6 +575,364 @@ export default function (pi: ExtensionAPI) {
           "info",
         );
       }
+    },
+  });
+
+  // ── Command: /mcp-auth ───────────────────────────────────────────
+
+  pi.registerCommand("mcp-auth", {
+    description:
+      "Manage OAuth authentication for MCP servers. " +
+      "Usage: /mcp-auth [status|login <name>|logout <name>]",
+    handler: async (args, ctx) => {
+      const trimmedArgs = (args ?? "").trim();
+      const parts = trimmedArgs.split(/\s+/);
+      const subCommand = parts[0]?.toLowerCase() ?? "status";
+      const targetName = parts.slice(1).join(" ");
+
+      // Collect servers with OAuth config
+      const oauthServers = (config.servers ?? []).filter(
+        (s) =>
+          s.transport === "http" &&
+          (s as import("./mcp-client").HttpServerConfig).oauth?.enabled,
+      );
+
+      // ── status (default) ────────────────────────────────────────
+      if (subCommand === "status" || !subCommand) {
+        if (oauthServers.length === 0) {
+          ctx.ui.notify(
+            "MCP OAuth: No servers configured with OAuth.\n" +
+              "Add 'oauth: { enabled: true }' to an HTTP server in ~/.pi/agent/custom-settings.json",
+            "info",
+          );
+          return;
+        }
+
+        const lines: string[] = ["MCP OAuth Status:", ""];
+
+        for (const serverConfig of oauthServers) {
+          const client = clients.get(serverConfig.name);
+          const oauthConfig = (
+            serverConfig as import("./mcp-client").HttpServerConfig
+          ).oauth!;
+          const status = client?.getOAuthStatus();
+
+          let authLine: string;
+          if (!status) {
+            // Client not connected — check config
+            // Compute token store path to check manually
+            const storePath =
+              oauthConfig.tokenStorePath ??
+              path.join(
+                os.homedir(),
+                ".pi",
+                "agent",
+                "mcp-tokens",
+                `${serverConfig.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
+              );
+            let hasTokens = false;
+            let expiresAt: number | undefined;
+            try {
+              if (fs.existsSync(storePath)) {
+                const raw = fs.readFileSync(storePath, "utf-8");
+                const tokens = JSON.parse(raw);
+                if (tokens.access_token) {
+                  hasTokens = true;
+                  expiresAt = tokens.expires_at;
+                }
+              }
+            } catch {
+              // Ignore
+            }
+
+            if (hasTokens) {
+              if (expiresAt && Date.now() > expiresAt) {
+                authLine = "⚠ expired (not connected)";
+              } else if (expiresAt) {
+                const remaining = Math.round(
+                  (expiresAt - Date.now()) / 1000,
+                );
+                authLine = `⚠ cached (${remaining}s remaining, not connected)`;
+              } else {
+                authLine = "⚠ cached (not connected)";
+              }
+            } else {
+              authLine = "✗ not authenticated";
+            }
+          } else if (status.authenticated) {
+            if (status.tokenExpiry && Date.now() > status.tokenExpiry) {
+              authLine = "⚠ expired";
+            } else if (status.tokenExpiry) {
+              const remaining = Math.round(
+                (status.tokenExpiry - Date.now()) / 1000,
+              );
+              const mins = Math.floor(remaining / 60);
+              const secs = remaining % 60;
+              authLine = `✓ authenticated (${mins}m ${secs}s remaining)`;
+            } else {
+              authLine = "✓ authenticated";
+            }
+          } else if (status.hasTokens) {
+            authLine = "⚠ tokens present but not valid";
+          } else {
+            authLine = "✗ not authenticated";
+          }
+
+          lines.push(`  ${serverConfig.name}: ${authLine}`);
+
+          // Show scopes if available
+          const scopes =
+            status?.scopes ?? oauthConfig.scopes;
+          if (scopes && scopes.length > 0) {
+            lines.push(`    Scopes: ${scopes.join(", ")}`);
+          }
+
+          // Show token store path
+          const storePath =
+            status?.tokenStorePath ??
+            oauthConfig.tokenStorePath ??
+            path.join(
+              os.homedir(),
+              ".pi",
+              "agent",
+              "mcp-tokens",
+              `${serverConfig.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
+            );
+          lines.push(`    Tokens: ${storePath}`);
+          lines.push("");
+        }
+
+        ctx.ui.notify(lines.join("\n"), "info");
+        return;
+      }
+
+      // ── login <name> ────────────────────────────────────────────
+      if (subCommand === "login") {
+        if (!targetName) {
+          // If only one OAuth server, default to it
+          if (oauthServers.length === 1) {
+            // Fall through with implicit target
+          } else {
+            const names = oauthServers
+              .map((s) => s.name)
+              .join(", ");
+            ctx.ui.notify(
+              `Usage: /mcp-auth login <server-name>\nAvailable OAuth servers: ${names || "none"}`,
+              "warning",
+            );
+            return;
+          }
+        }
+
+        const serverName = targetName || oauthServers[0]?.name;
+        if (!serverName) {
+          ctx.ui.notify(
+            "No OAuth-enabled servers configured.",
+            "warning",
+          );
+          return;
+        }
+
+        const serverConfig = (config.servers ?? []).find(
+          (s) => s.name === serverName,
+        );
+        if (!serverConfig) {
+          ctx.ui.notify(
+            `Server "${serverName}" not found in MCP config.`,
+            "error",
+          );
+          return;
+        }
+
+        if (
+          serverConfig.transport !== "http" ||
+          !(serverConfig as import("./mcp-client").HttpServerConfig).oauth
+            ?.enabled
+        ) {
+          ctx.ui.notify(
+            `Server "${serverName}" does not have OAuth enabled.\n` +
+              `Add 'oauth: { enabled: true }' to its config in ~/.pi/agent/custom-settings.json`,
+            "warning",
+          );
+          return;
+        }
+
+        // Disconnect existing client if connected
+        const existingClient = clients.get(serverName);
+        if (existingClient) {
+          ctx.ui.notify(
+            `MCP OAuth: Clearing cached tokens for "${serverName}"...`,
+            "info",
+          );
+          existingClient.clearOAuthTokens();
+          existingClient.disconnect();
+          clients.delete(serverName);
+
+          // Remove tools registered by this client
+          for (const [toolName, entry] of toolMap) {
+            if (entry.client === existingClient) {
+              toolMap.delete(toolName);
+            }
+          }
+        } else {
+          // Client not connected — just clear tokens on disk
+          const oauthConfig = (
+            serverConfig as import("./mcp-client").HttpServerConfig
+          ).oauth!;
+          const storePath =
+            oauthConfig.tokenStorePath ??
+            path.join(
+              os.homedir(),
+              ".pi",
+              "agent",
+              "mcp-tokens",
+              `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
+            );
+          try {
+            if (fs.existsSync(storePath)) {
+              fs.unlinkSync(storePath);
+            }
+          } catch {
+            // Ignore
+          }
+        }
+
+        ctx.ui.notify(
+          `MCP OAuth: Starting authentication for "${serverName}"...\n` +
+            `A browser window should open. Follow the prompts to authorize.`,
+          "info",
+        );
+
+        try {
+          const client = await connectServer(serverConfig, ctx);
+          if (!client) {
+            ctx.ui.notify(
+              `MCP OAuth: Failed to connect to "${serverName}".`,
+              "error",
+            );
+            return;
+          }
+
+          clients.set(serverName, client);
+
+          // Register tools from the newly connected server
+          const toolCount = await registerServerTools(client, serverConfig, ctx);
+
+          const status = client.getOAuthStatus();
+          const authMsg = status?.authenticated
+            ? "authenticated"
+            : "connected (check OAuth status)";
+
+          ctx.ui.notify(
+            `MCP OAuth: "${serverName}" ${authMsg} and ${toolCount} tool(s) registered.`,
+            "info",
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          ctx.ui.notify(
+            `MCP OAuth: Authentication failed for "${serverName}": ${msg}`,
+            "error",
+          );
+        }
+        return;
+      }
+
+      // ── logout <name> ───────────────────────────────────────────
+      if (subCommand === "logout") {
+        if (!targetName) {
+          if (oauthServers.length === 1) {
+            // Fall through with implicit target
+          } else {
+            const names = oauthServers
+              .map((s) => s.name)
+              .join(", ");
+            ctx.ui.notify(
+              `Usage: /mcp-auth logout <server-name>\nAvailable OAuth servers: ${names || "none"}`,
+              "warning",
+            );
+            return;
+          }
+        }
+
+        const serverName = targetName || oauthServers[0]?.name;
+        if (!serverName) {
+          ctx.ui.notify(
+            "No OAuth-enabled servers configured.",
+            "warning",
+          );
+          return;
+        }
+
+        let cleared = false;
+
+        // Clear from connected client
+        const existingClient = clients.get(serverName);
+        if (existingClient) {
+          existingClient.clearOAuthTokens();
+          existingClient.disconnect();
+          clients.delete(serverName);
+
+          // Remove tools registered by this client
+          for (const [toolName, entry] of toolMap) {
+            if (entry.client === existingClient) {
+              toolMap.delete(toolName);
+            }
+          }
+          cleared = true;
+        }
+
+        // Also clear token file directly in case it persists
+        const serverConfig = (config.servers ?? []).find(
+          (s) => s.name === serverName,
+        );
+        if (
+          serverConfig &&
+          serverConfig.transport === "http" &&
+          (serverConfig as import("./mcp-client").HttpServerConfig).oauth
+            ?.enabled
+        ) {
+          const oauthConfig = (
+            serverConfig as import("./mcp-client").HttpServerConfig
+          ).oauth!;
+          const storePath =
+            oauthConfig.tokenStorePath ??
+            path.join(
+              os.homedir(),
+              ".pi",
+              "agent",
+              "mcp-tokens",
+              `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
+            );
+          try {
+            if (fs.existsSync(storePath)) {
+              fs.unlinkSync(storePath);
+              cleared = true;
+            }
+          } catch {
+            // Ignore
+          }
+        }
+
+        if (cleared) {
+          ctx.ui.notify(
+            `MCP OAuth: Cleared tokens for "${serverName}".`,
+            "info",
+          );
+        } else {
+          ctx.ui.notify(
+            `MCP OAuth: No tokens found for "${serverName}".`,
+            "info",
+          );
+        }
+        return;
+      }
+
+      // ── unknown sub-command ──────────────────────────────────────
+      ctx.ui.notify(
+        `Unknown sub-command: "${subCommand}".\n` +
+          `Usage: /mcp-auth [status|login <name>|logout <name>]`,
+        "warning",
+      );
     },
   });
 
