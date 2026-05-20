@@ -93,3 +93,13 @@ repos:
         name: "🦀 Format TypeScript (oxfmt)"
         files: ^pi/
         args: []
+
+  # Local hook: run tests on pi/ changes
+  - repo: local
+    hooks:
+      - id: pi-test
+        name: "🧪 Run pi tests"
+        entry: sh -c 'cd pi && pnpm test'
+        language: system
+        files: ^pi/
+        pass_filenames: false
