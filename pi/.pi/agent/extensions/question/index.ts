@@ -22,8 +22,13 @@ import {
   Key,
   matchesKey,
   Text,
-  truncateToWidth,
 } from "@earendil-works/pi-tui";
+
+/** Truncate a string to a given display width. */
+function truncateToWidth(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, Math.max(0, max - 1)) + "…";
+}
 import { Type } from "typebox";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -99,9 +104,7 @@ const QuestionSchema = Type.Object({
   prompt: Type.String({
     description: "The full question text displayed to the user",
   }),
-  type: Type.Optional(QuestionTypeSchema, {
-    description: "Question type. Defaults to 'select' if options provided, otherwise 'input'",
-  }),
+  type: Type.Optional(QuestionTypeSchema),
   options: Type.Optional(
     Type.Array(QuestionOptionSchema, {
       description: "Available options for select and multi_select types",
@@ -231,7 +234,7 @@ export default function question(pi: ExtensionAPI) {
               noMatch: (t: string) => theme.fg("warning", t),
             },
           };
-          const editor = new Editor(tui, editorTheme);
+          const editor = new Editor(tui as any, editorTheme);
 
           // ── Helpers ─────────────────────────────────────────────────
 
