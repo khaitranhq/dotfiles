@@ -40,7 +40,8 @@
       "stat",
       "head",
       "d2",
-      "go doc"
+      "go doc",
+      "echo"
     ],
     "tools": [
       "read",

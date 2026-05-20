@@ -1,14 +1,26 @@
 # Pi agent configs
 
-- [ ] [ID: 01] mcp
-  - [ ] [ID: 02] Github mcp
-  - [x] [ID: 03] Jira mcp
-- [ ] [ID: 04] todo tool
-- [x] [ID: 05] change from allow/deny/ask to auto approval tools
-- [x] [ID: 06] @<agent name>
-- [x] [ID: 07] fuzzy search for file names
-- [ ] [ID: 08] search-web and fetch-web tools
-- [ ] notification not work pi/.pi/agent/custom-settings.json
-- [x] why it's able to run pnmn install?
-- [ ] split Jira to another agent
-- [ ] why cd .. && grep ask approval?
+## MCP
+
+- [ ] [ID: 01] Move Jira MCP to another agent
+- [ ] [ID: 02] Set up Github MCP
+
+## Tool approval
+
+pi/.pi/agent/extensions/permission-request
+
+- [x] [ID: 03] use AST to parse bash commands then compare with settings
+  - Solution: tree-sitter and tree-sitter-bash
+
+## Search web & fetch web
+
+- [ ] [ID: 04] research how Opencode works => design document
+
+## Todo tool
+
+- [ ] research how Opencode implements todo tool => design document
+
+## General
+
+- [ ] change config file format to yaml
+- [ ] refactor tools
