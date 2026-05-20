@@ -11,3 +11,4 @@
 - [ ] notification not work pi/.pi/agent/custom-settings.json
 - [x] why it's able to run pnmn install?
 - [ ] split Jira to another agent
+- [ ] why cd .. && grep ask approval?

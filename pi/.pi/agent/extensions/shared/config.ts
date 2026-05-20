@@ -29,24 +29,9 @@ export interface SubagentConfig {
   confirmProjectAgents?: boolean;
 }
 
-export interface NotificationConfig {
-  /**
-   * Command to execute for sending desktop notifications.
-   * Receives the notification script body as the final argument.
-   * Default: "powershell.exe" (Windows only).
-   */
-  command?: string;
-  /**
-   * Arguments to pass to the command before the notification script.
-   * Default: ["-NoProfile", "-Command"].
-   */
-  args?: string[];
-}
-
 export interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
-  notification?: NotificationConfig;
   [key: string]: unknown;
 }
 
@@ -120,6 +105,3 @@ export function loadSubagentConfig(): SubagentConfig {
   return loadCustomSettings().subagent ?? {};
 }
 
-export function loadNotificationConfig(): NotificationConfig {
-  return loadCustomSettings().notification ?? {};
-}

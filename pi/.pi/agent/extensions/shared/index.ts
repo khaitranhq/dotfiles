@@ -5,13 +5,11 @@ export {
   updateCustomSettings,
   loadAlwaysApprove,
   loadSubagentConfig,
-  loadNotificationConfig,
   configPath,
 } from "./config";
 export type {
   AlwaysApproveConfig,
   SubagentConfig,
-  NotificationConfig,
   CustomSettings,
 } from "./config";
 

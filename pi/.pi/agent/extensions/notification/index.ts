@@ -7,30 +7,17 @@
  * 2. Agent completion — when the agent finishes processing a prompt and
  *    is idle, with a snippet of the last assistant response.
  *
- * The notification command is configured in ~/.pi/agent/custom-settings.json
- * under `notification`.  Defaults to PowerShell on Windows.
- *
- *   // custom-settings.json
- *   {
- *     "notification": {
- *       "command": "powershell.exe",
- *       "args": ["-NoProfile", "-Command"]
- *     }
- *   }
- *
- * On non-Windows systems the extension is skipped unless a custom
- * `notification.command` is configured.
+ * Uses PowerShell toast notifications on Windows.  Non-Windows systems
+ * are skipped.
  */
 
 import { execFile } from "node:child_process";
-import * as path from "node:path";
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import {
   loadAlwaysApprove,
-  loadNotificationConfig,
   type AlwaysApproveConfig,
-  type NotificationConfig,
 } from "../shared/config";
+import { extractBaseCommand } from "../shared/command-utils";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -39,36 +26,6 @@ const TITLE = "Pi";
 /** Default notification command (Windows PowerShell). */
 const DEFAULT_COMMAND = "powershell.exe";
 const DEFAULT_ARGS: string[] = ["-NoProfile", "-Command"];
-
-// ── Config helpers ────────────────────────────────────────────────────
-
-/**
- * Extract the first "word" of a bash command for matching.
- * Handles compound commands (&&, ;, |) by taking the first segment.
- */
-function extractBaseCommand(fullCommand: string): string {
-  let cmd = fullCommand.trim();
-
-  // Split on common compound separators; keep only the first segment
-  for (const sep of ["&&", ";", "|", "||", "&"]) {
-    const idx = cmd.indexOf(sep);
-    if (idx !== -1) {
-      cmd = cmd.slice(0, idx);
-    }
-  }
-
-  const words = cmd.trim().split(/\s+/);
-  if (words.length === 0) return "";
-
-  // Skip leading env assignments (KEY=val …)
-  let first = words[0];
-  let i = 0;
-  while (first.includes("=") && i < words.length - 1) {
-    first = words[++i];
-  }
-
-  return path.basename(first);
-}
 
 /**
  * Determine whether the given tool call requires user approval ("ask").
@@ -150,18 +107,9 @@ function createToastScript(title: string, message: string): string {
   ].join("\n");
 }
 
-function notify(
-  title: string,
-  message: string,
-  config: NotificationConfig,
-): void {
-  const command = config.command ?? DEFAULT_COMMAND;
-  const args = [...(config.args ?? DEFAULT_ARGS)];
+function notify(title: string, message: string): void {
   const script = createToastScript(title, message);
-
-  // If the command is powershell, embed the script as a -Command arg.
-  // For other commands, pass the script via stdin or let args handle it.
-  execFile(command, [...args, script], (err) => {
+  execFile(DEFAULT_COMMAND, [...DEFAULT_ARGS, script], (err) => {
     if (err) {
       // Silently ignore — notification is best-effort
     }
@@ -169,11 +117,8 @@ function notify(
 }
 
 export default function(pi: ExtensionAPI) {
-  const notifyCfg = loadNotificationConfig();
-
-  // Skip if no notification command is configured AND we're not on Windows.
-  // On Windows the default powershell command works out of the box.
-  if (process.platform !== "win32" && !notifyCfg.command) return;
+  // Skip on non-Windows — powershell toast notifications are Windows-only.
+  if (process.platform !== "win32") return;
 
   // Reload config on session start so changes take effect without restart.
   let alwaysApprove = loadAlwaysApprove();
@@ -186,7 +131,7 @@ export default function(pi: ExtensionAPI) {
   // Auto-approved tools/commands silently skip notifications.
   pi.on("tool_call", async (event) => {
     if (!isPermissionAsk(event, alwaysApprove)) return;
-    notify(TITLE, describeToolCall(event), notifyCfg);
+    notify(TITLE, describeToolCall(event));
   });
 
   // Notify when the agent finishes processing a prompt.
@@ -206,6 +151,6 @@ export default function(pi: ExtensionAPI) {
       }
     }
     const body = preview ? `Done: ${preview}…` : "Done — ready for you.";
-    notify(TITLE, body, notifyCfg);
+    notify(TITLE, body);
   });
 }
