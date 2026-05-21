@@ -43,7 +43,11 @@ import {
   type AlwaysApproveConfig,
   type CustomSettings,
 } from "../shared/config";
-import { extractAllCommandSegments, isCommandApproved } from "../shared/command-utils";
+import {
+  extractAllCommandSegments,
+  extractCommandBasis,
+  isCommandApproved,
+} from "../shared/command-utils";
 import { notifyPermissionRequired } from "../notification/index";
 
 // ── Set helpers ───────────────────────────────────────────────────────
@@ -161,15 +165,20 @@ export default function (pi: ExtensionAPI) {
 
       case "🔓 Always approve": {
         // Persist to custom-settings.yaml under always_approve.
-        // For compound commands, persist every segment's full text
-        // so word-prefix matching can distinguish subcommands.
+        // For compound commands, extract the command basis (command +
+        // subcommand, stripping flags/paths/args) from each segment
+        // so that future invocations with different flags or arguments
+        // still match via word-prefix matching.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);
           if (segments.length > 0) {
             for (const seg of segments) {
-              updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", seg));
-              alwaysApproveCommands.add(seg);
+              const basis = extractCommandBasis(seg);
+              if (basis) {
+                updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", basis));
+                alwaysApproveCommands.add(basis);
+              }
             }
           } else {
             updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
@@ -183,14 +192,16 @@ export default function (pi: ExtensionAPI) {
       }
 
       case "🕐 Approve in this session only": {
-        // For compound commands, persist every segment's full text
-        // in session approvals for word-prefix matching.
+        // For compound commands, extract the command basis from each
+        // segment so that future invocations with different flags or
+        // arguments still match via word-prefix matching.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);
           if (segments.length > 0) {
             for (const seg of segments) {
-              sessionApprovals.add(seg);
+              const basis = extractCommandBasis(seg);
+              if (basis) sessionApprovals.add(basis);
             }
           } else {
             sessionApprovals.add(toolName);

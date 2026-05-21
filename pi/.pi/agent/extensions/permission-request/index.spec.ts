@@ -245,15 +245,15 @@ describe("permission-request extension", () => {
   describe("always approve persistence for compound commands", () => {
     beforeEach(() => initExtension());
 
-    it('adds full segment texts to always_approve when "Always approve" is selected', async () => {
+    it('adds command basis to always_approve when "Always approve" is selected', async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
 
       await toolCallHandler(bashEvent("cd /tmp && pnpm install"), uiCtx);
 
-      // Full segment texts should now be in always_approve
+      // Command basis (stripping paths/arguments) should be stored
       const aa = loadAlwaysApprove();
-      expect(aa.bashCommands).toContain("cd /tmp");
+      expect(aa.bashCommands).toContain("cd");
       expect(aa.bashCommands).toContain("pnpm install");
     });
 
@@ -271,14 +271,39 @@ describe("permission-request extension", () => {
       expect(result).toBeUndefined();
     });
 
-    it("persists subcommand as full segment text", async () => {
+    it("persists subcommand as command basis, stripping arguments", async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
 
       await toolCallHandler(bashEvent("git push origin main"), uiCtx);
 
       const aa = loadAlwaysApprove();
-      expect(aa.bashCommands).toContain("git push origin main");
+      // Full segment was "git push origin main", basis is "git push"
+      expect(aa.bashCommands).toContain("git push");
+    });
+
+    it("matches future commands with different flags via basis", async () => {
+      const uiCtx = mockCtx();
+      uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
+
+      // User approves "git diff --cached"
+      await toolCallHandler(bashEvent("git diff --cached"), uiCtx);
+
+      // Later runs "git diff --stat" — should auto-approve without prompt
+      const result = await toolCallHandler(bashEvent("git diff --stat"), mockCtx());
+      expect(result).toBeUndefined();
+    });
+
+    it("matches future commands with different arguments via basis", async () => {
+      const uiCtx = mockCtx();
+      uiCtx.ui.select.mockResolvedValue("🔓 Always approve");
+
+      // User approves "git push origin main"
+      await toolCallHandler(bashEvent("git push origin main"), uiCtx);
+
+      // Later runs "git push --force" — should auto-approve
+      const result = await toolCallHandler(bashEvent("git push --force"), mockCtx());
+      expect(result).toBeUndefined();
     });
   });
 
@@ -287,7 +312,7 @@ describe("permission-request extension", () => {
   describe("session-only approval for compound commands", () => {
     beforeEach(() => initExtension());
 
-    it('adds all base commands to session approvals when "Approve in this session" is selected', async () => {
+    it('adds command basis to session approvals when "Approve in this session" is selected', async () => {
       const uiCtx = mockCtx();
       uiCtx.ui.select.mockResolvedValue("🕐 Approve in this session only");
 
@@ -298,6 +323,19 @@ describe("permission-request extension", () => {
       // Second call: same chain should now pass without prompt
       vi.clearAllMocks();
       const result = await toolCallHandler(bashEvent("cd /tmp && pnpm install"), mockCtx());
+      expect(result).toBeUndefined();
+    });
+
+    it("matches future commands with different flags in same session", async () => {
+      const uiCtx = mockCtx();
+      uiCtx.ui.select.mockResolvedValue("🕐 Approve in this session only");
+
+      // User approves "git diff --cached"
+      await toolCallHandler(bashEvent("git diff --cached"), uiCtx);
+
+      // Later runs "git diff --stat" in same session — should auto-approve
+      vi.clearAllMocks();
+      const result = await toolCallHandler(bashEvent("git diff --stat"), mockCtx());
       expect(result).toBeUndefined();
     });
 

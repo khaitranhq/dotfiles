@@ -94,12 +94,57 @@ export function extractAllCommandSegments(fullCommand: string): string[] {
 }
 
 /**
+ * Extract the command basis from a segment — the command name plus
+ * subcommand words, with flags, paths, and file arguments stripped.
+ *
+ * Takes consecutive non-flag, non-path words from the start of the
+ * segment, up to a maximum of 2 words (command + one subcommand level).
+ *
+ * A word is excluded when it:
+ *   1. Starts with "-" (flag/option)
+ *   2. Starts with "/", "./", "../", or "~" (path)
+ *   3. Ends with a common file extension like .ts, .txt, .js, .yaml
+ *
+ * Examples:
+ *   extractCommandBasis("git diff --cached")     → "git diff"
+ *   extractCommandBasis("git push origin main")  → "git push"
+ *   extractCommandBasis("ls -la")                → "ls"
+ *   extractCommandBasis("cd /tmp")               → "cd"
+ *   extractCommandBasis("pnpm install")           → "pnpm install"
+ *   extractCommandBasis("npx tsc --noEmit")       → "npx tsc"
+ *   extractCommandBasis("cat file.txt")           → "cat"
+ */
+export function extractCommandBasis(segment: string): string {
+  const words = segment.trim().split(/\s+/);
+  const basis: string[] = [];
+  for (const word of words) {
+    const isFirst = basis.length === 0;
+    // Always include the first word (the command itself, may be a full path)
+    if (!isFirst) {
+      // Stop at flags/options
+      if (word.startsWith("-")) break;
+      // Stop at paths
+      if (/^(?:\.\.?)?[/~]/.test(word)) break;
+      // Stop at filenames with extensions
+      if (/\.[a-zA-Z0-9]{1,10}$/.test(word)) break;
+    }
+    basis.push(word);
+    // Limit to 2 words (command + subcommand)
+    if (basis.length >= 2) break;
+  }
+  return basis.join(" ");
+}
+
+/**
  * Check whether a command segment is approved against a set of
  * allow-listed entries.
  *
- * Uses word-prefix matching: an entry matches if every word of the
- * entry equals the corresponding word of the segment.  This lets
- * "git diff" match "git diff --cached" while rejecting "git log".
+ * Uses bidirectional word-prefix matching: an entry matches if all
+ * words of the shorter side equal the corresponding words of the
+ * longer side.  This lets "git diff" match "git diff --cached"
+ * (entry is prefix of segment) and also "git diff --cached" match
+ * "git diff" (segment is prefix of entry, for backward compat with
+ * older entries that included full argument text).
  *
  * Single-word entries like "ls" still match "ls -la" as before.
  *
@@ -108,16 +153,18 @@ export function extractAllCommandSegments(fullCommand: string): string[] {
  *   isCommandApproved("git log",           Set(["git diff"]))   → false
  *   isCommandApproved("ls -la",            Set(["ls"]))         → true
  *   isCommandApproved("npx tsc --noEmit",  Set(["npx tsc"]))    → true
+ *   isCommandApproved("git push",          Set(["git push origin main"])) → true
  */
 export function isCommandApproved(segment: string, approved: Set<string>): boolean {
   const segmentWords = segment.split(/\s+/);
 
   for (const entry of approved) {
     const entryWords = entry.split(/\s+/);
-    if (entryWords.length === 0 || entryWords.length > segmentWords.length) continue;
+    const minLen = Math.min(entryWords.length, segmentWords.length);
+    if (minLen === 0) continue;
 
     let match = true;
-    for (let i = 0; i < entryWords.length; i++) {
+    for (let i = 0; i < minLen; i++) {
       if (entryWords[i] !== segmentWords[i]) {
         match = false;
         break;

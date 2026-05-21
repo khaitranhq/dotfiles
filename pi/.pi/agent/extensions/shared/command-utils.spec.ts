@@ -4,6 +4,7 @@ import {
   extractBaseCommand,
   extractAllBaseCommands,
   extractAllCommandSegments,
+  extractCommandBasis,
   isCommandApproved,
   findRmIndex,
   extractRmPaths,
@@ -163,6 +164,55 @@ describe("extractAllCommandSegments", () => {
   });
 });
 
+// ── extractCommandBasis ────────────────────────────────────────────
+
+describe("extractCommandBasis", () => {
+  it("returns command + subcommand, stripping flags", () => {
+    expect(extractCommandBasis("git diff --cached")).toBe("git diff");
+    expect(extractCommandBasis("git diff")).toBe("git diff");
+    expect(extractCommandBasis("npx tsc --noEmit")).toBe("npx tsc");
+  });
+
+  it("strips flags even from simple commands", () => {
+    expect(extractCommandBasis("ls -la")).toBe("ls");
+    expect(extractCommandBasis("grep -r pattern")).toBe("grep");
+  });
+
+  it("strips paths", () => {
+    expect(extractCommandBasis("cd /tmp")).toBe("cd");
+    expect(extractCommandBasis("go test ./...")).toBe("go test");
+    expect(extractCommandBasis("ls ~/projects")).toBe("ls");
+    expect(extractCommandBasis("cat ../file")).toBe("cat");
+  });
+
+  it("strips filenames with extensions", () => {
+    expect(extractCommandBasis("cat file.txt")).toBe("cat");
+    expect(extractCommandBasis("node index.js")).toBe("node");
+    expect(extractCommandBasis("python script.py")).toBe("python");
+  });
+
+  it("returns full segment for command + subcommand with no flags", () => {
+    expect(extractCommandBasis("pnpm install")).toBe("pnpm install");
+    expect(extractCommandBasis("git push origin main")).toBe("git push");
+    expect(extractCommandBasis("docker compose up")).toBe("docker compose");
+  });
+
+  it("limits to 2 words max", () => {
+    expect(extractCommandBasis("git push origin main")).toBe("git push");
+    expect(extractCommandBasis("docker compose up -d")).toBe("docker compose");
+  });
+
+  it("handles empty or whitespace input", () => {
+    expect(extractCommandBasis("")).toBe("");
+    expect(extractCommandBasis("   ")).toBe("");
+  });
+
+  it("handles full-path commands with subcommand", () => {
+    // Full path is the command, second word is the subcommand
+    expect(extractCommandBasis("/usr/bin/git status")).toBe("/usr/bin/git status");
+  });
+});
+
 // ── isCommandApproved ──────────────────────────────────────────────
 
 describe("isCommandApproved", () => {
@@ -182,12 +232,17 @@ describe("isCommandApproved", () => {
   it("rejects segment whose words differ from entry", () => {
     expect(isCommandApproved("git log", approved)).toBe(false);
     expect(isCommandApproved("git push", approved)).toBe(false);
-    expect(isCommandApproved("git", approved)).toBe(false);
   });
 
-  it("rejects when segment is shorter than entry", () => {
-    // "git diff" entry has 2 words, "git" has 1 → no match
-    expect(isCommandApproved("git", new Set(["git diff"]))).toBe(false);
+  it("matches when segment is shorter than entry (bidirectional)", () => {
+    // Entry has full args, segment has fewer — still match on shared prefix
+    expect(isCommandApproved("git diff", new Set(["git diff --cached"]))).toBe(true);
+    expect(isCommandApproved("git push", new Set(["git push origin main"]))).toBe(true);
+  });
+
+  it("rejects when shorter segment words differ", () => {
+    // "git diff" entry vs "git log" segment — 2nd word differs
+    expect(isCommandApproved("git log", new Set(["git diff --cached"]))).toBe(false);
   });
 
   it("matches npx subcommands", () => {

@@ -51,9 +51,10 @@ always_approve:
     - golangci-lint
     - yamllint
     - yq
-    - rg -n "Slash Commands|/tools|/agent"
-      /home/khaitran/dotfiles/pi/CUSTOM-SETTINGS.md
-    - tail -10
+    - tail
+    - actionlint
+    - zizmor
+    - npx vitest
   tools:
     - read
     - write
