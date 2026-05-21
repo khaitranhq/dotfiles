@@ -24,6 +24,7 @@ The shared config module (`.pi/agent/extensions/shared/config.ts`) provides a ce
 | [defender](#defender)                     | Block dangerous ops                                  | — (hardcoded)                                  | —                                         |
 | [subagent](#subagent)                     | Subagent & primary agent orchestration               | `subagent`, `tools`, `always_approve.subagent` | `/agent`                                  |
 | [mcp](#mcp)                               | MCP server integration                               | `mcp`                                          | `/mcp-status`, `/mcp-reload`, `/mcp-auth` |
+| [web-search](#web-search)                   | Web search & fetch via Tavily                        | `web_search`                                    | —                                         |
 | [input-ux](#input-ux)                     | `@` mention autocomplete & input history             | —                                              | —                                         |
 | [question](#question)                     | Interactive questions tool                           | —                                              | —                                         |
 | [notification](#notification)             | Desktop toast notifications                          | —                                              | —                                         |
@@ -326,6 +327,52 @@ The format is: `<prefix>_<server>_<tool>` (sanitized: lowercase, `[^a-zA-Z0-9_]`
 
 ---
 
+## Web Search
+
+**File:** `.pi/agent/extensions/web-search/index.ts`
+
+Provides two LLM-callable tools powered by Tavily:
+
+- **`web_search`** — Search the web via Tavily Search API. Returns titles, URLs, and content snippets.
+- **`web_fetch`** — Extract clean, readable text from a URL via Tavily Extract API. Falls back to direct HTTP fetch with HTML tag-stripping when Tavily Extract is unavailable.
+
+**Security features:** HTTPS enforced, internal/private network URLs blocked, Content-Type whitelisting, input sanitization, timeout & size caps on all operations.
+
+**Token efficiency:** Strips `<script>`, `<style>`, `<nav>`, `<footer>`, `<header>`, `<aside>` tags before text extraction. Large content (>50 KB) written to temp files with instructions to use `rg`/`read` instead of passing all text to the LLM.
+
+### API Key
+
+The Tavily API key is configured via the **`TAVILY_API_KEY` environment variable only**.
+
+```bash
+export TAVILY_API_KEY="tvly-..."
+```
+
+Get a free key at [https://tavily.com](https://tavily.com).
+
+### Settings
+
+```yaml
+web_search:
+  maxResults: 5
+  searchTimeout: 30000
+  fetchTimeout: 30000
+  maxContentBytes: 50000
+```
+
+| Key                 | Type     | Default  | Description                                  |
+| ------------------- | -------- | -------- | -------------------------------------------- |
+| `maxResults`        | `number` | `5`      | Default max search results (1–10)            |
+| `searchTimeout`     | `number` | `30000`  | Search timeout in ms                         |
+| `fetchTimeout`      | `number` | `30000`  | Fetch timeout in ms                          |
+| `maxContentBytes`   | `number` | `50000`  | Max output bytes before temp-file fallback   |
+
+### Commands
+
+None. The extension registers tools only — no slash commands.
+
+---
+
 ## Input UX
 
 **File:** `.pi/agent/extensions/input-ux/index.ts`
@@ -542,6 +589,13 @@ tools:
     planner:
       deny:
         - write
+
+# ── Web Search ──────────────────────────────────────────────────────
+web_search:
+  maxResults: 5
+  searchTimeout: 30000
+  fetchTimeout: 30000
+  maxContentBytes: 50000
 
 # ── MCP ────────────────────────────────────────────────────────────
 mcp:

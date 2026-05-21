@@ -20,6 +20,24 @@ local lsp_config = {
 	},
 	omnisharp = {},
 	oxfmt = {
+		root_dir = function(bufnr, on_dir)
+			local fname = vim.api.nvim_buf_get_name(bufnr)
+
+			-- Oxfmt resolves configuration by walking upward and using the nearest config file
+			-- to the file being processed. We therefore compute the root directory by locating
+			-- the closest `.oxfmtrc.json` / `.oxfmtrc.jsonc` / `oxfmt.config.ts` (or `package.json` fallback) above the buffer.
+			local util = require("lspconfig.util")
+			local root_markers = util.insert_package_json(
+				{ ".oxfmtrc.json", ".oxfmtrc.jsonc", "oxfmt.config.ts" },
+				{ "oxfmt", "vite%-plus" },
+				fname
+			)
+
+			root_markers = util.root_markers_with_field(root_markers, { "vite.config.ts" }, "vite%-plus", fname)
+
+			local found = vim.fs.find(root_markers, { path = fname, upward = true })[1]
+			on_dir(found and vim.fs.dirname(found) or vim.fn.getcwd())
+		end,
 		filetypes = {
 			"javascript",
 			"javascriptreact",
