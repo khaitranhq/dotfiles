@@ -5,10 +5,6 @@
 local opt = vim.opt
 local g = vim.g
 
-vim.o.winborder = "rounded"
-
--- EDITOR BEHAVIOR
-
 -- Indentation and formatting
 opt.tabstop = 2 -- Number of spaces that a <Tab> in the file counts for
 opt.shiftwidth = 2 -- Number of spaces to use for each step of (auto)indent
@@ -16,24 +12,11 @@ opt.expandtab = true -- Use spaces instead of tabs
 opt.smartindent = true -- Smart autoindenting when starting a new line
 
 -- Line numbers and visual guides
-opt.number = true -- Show absolute line numbers
 opt.relativenumber = true -- Show relative line numbers
 opt.signcolumn = "yes" -- Always show sign column to prevent layout shifts
 
--- Search behavior
-opt.ignorecase = true -- Ignore case in search patterns
-opt.smartcase = true -- Override ignorecase if search contains uppercase
-opt.hlsearch = true -- Highlight search results
-opt.incsearch = true -- Show search matches as you type
-
--- Text rendering and display
-opt.conceallevel = 2 -- Hide markup characters in supported file types
 opt.wrap = true
 opt.showbreak = "↪ "
-opt.linebreak = true
-opt.scrolloff = 8 -- Keep 8 lines visible above/below cursor
-opt.sidescrolloff = 8 -- Keep 8 columns visible left/right of cursor
-opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
 -- Whitespace visualization
 opt.list = true -- Show invisible characters
@@ -41,11 +24,6 @@ opt.listchars = {
 	trail = "·", -- Show trailing spaces with a middle dot
 	tab = "▎ ",
 } -- Hide end-of-buffer tildes
-
--- Window and buffer behavior
-opt.splitbelow = true -- Horizontal splits open below current window
-opt.splitright = true -- Vertical splits open to the right of current window
-opt.showtabline = 0
 
 -- SYSTEM INTEGRATION
 
@@ -99,19 +77,6 @@ opt.backup = false -- Disable backup files
 opt.updatetime = 250 -- Faster completion and diagnostics (default: 4000ms)
 opt.timeoutlen = 500 -- Faster which-key popup (default: 1000ms)
 opt.ttimeoutlen = 10 -- Faster key sequence completion
-
--- Rendering optimizations
-opt.synmaxcol = 300 -- Limit syntax highlighting for long lines
-
--- Memory and processing
-opt.maxmempattern = 20000 -- Maximum memory for pattern matching
-opt.shada = {
-	"!", -- Save and restore global variables
-	"'100", -- Save marks for last 100 files
-	"<50", -- Max lines saved for each register (default 50)
-	"s10", -- Max KB for each item (10KB instead of default 100KB)
-	"h", -- Disable hlsearch on startup
-}
 
 -- SPELL CHECKING
 
@@ -251,4 +216,5 @@ vim.diagnostic.config({
 			[vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
 		},
 	},
+	virtual_text = true,
 })
