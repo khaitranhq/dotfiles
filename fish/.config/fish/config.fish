@@ -101,8 +101,6 @@ alias pup='pulumi up --yes --skip-preview'
 alias dbc='db_connect'
 alias tf='terraform'
 alias y='yazi'
-alias ta='task-add'
-alias oc="opencode"
 alias rpi='pi --provider github-copilot --model gpt-5.4'
 alias opi='pi --provider opencode-go --model deepseek-v4-pro'
 

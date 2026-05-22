@@ -58,6 +58,7 @@ always_approve:
     - oxfmt
     - npm search
     - npx oxlint
+    - sed
   tools:
     - read
     - write

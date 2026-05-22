@@ -27,11 +27,9 @@ local lsp_config = {
 			-- to the file being processed. We therefore compute the root directory by locating
 			-- the closest `.oxfmtrc.json` / `.oxfmtrc.jsonc` / `oxfmt.config.ts` (or `package.json` fallback) above the buffer.
 			local util = require("lspconfig.util")
-			local root_markers = util.insert_package_json(
-				{ ".oxfmtrc.json", ".oxfmtrc.jsonc", "oxfmt.config.ts" },
-				{ "oxfmt", "vite%-plus" },
-				fname
-			)
+			local root_markers =
+				util.insert_package_json({ ".oxfmtrc.json", ".oxfmtrc.jsonc", "oxfmt.config.ts" }, "oxfmt", fname)
+			root_markers = util.insert_package_json(root_markers, "vite%-plus", fname)
 
 			root_markers = util.root_markers_with_field(root_markers, { "vite.config.ts" }, "vite%-plus", fname)
 
