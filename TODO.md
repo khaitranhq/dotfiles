@@ -20,6 +20,7 @@
 pi/.pi/agent/extensions/subagent/index.ts
 
 - [ ] [ID: 05] Toggle tools for specific subagent and global
+  - Need to test
 
 ### Tool approval
 

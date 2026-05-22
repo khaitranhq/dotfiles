@@ -28,10 +28,29 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
         return 1
     end
 
+    # Extract Jira ticket ID from branch name (formats: PROJ-123/description or PROJ-123-description)
+    set branch_name (git branch --show-current)
+    set jira_ticket ""
+    if echo "$branch_name" | grep -qP '^[A-Z][A-Z0-9]+-\d+[/-]'
+        set jira_ticket (echo "$branch_name" | grep -oP '^[A-Z][A-Z0-9]+-\d+')
+    end
+
+    if test -n "$jira_ticket"
+        echo "🔍 Detected Jira ticket ID: $jira_ticket"
+    else
+        echo "🔍 No Jira ticket ID detected in branch name"
+    end
+
+    # Build prompt with branch context for Jira ticket awareness
+    set ai_prompt "Generate a short but concise conventional commit message from this staged diff. Output only the commit message, no explanation, no markdown."
+    if test -n "$jira_ticket"
+        set ai_prompt "Generate a short but concise commit message from this staged diff. The commit message must start with \"$jira_ticket: \". IMPORTANT: do NOT include any conventional commit prefix like 'fix:' or 'feat:' — the Jira ticket ID serves as the prefix. Output only the commit message, no explanation, no markdown."
+    end
+
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --model opencode-go/deepseek-v4-flash "Generate a short but concise conventional commit message from this staged diff. Output only the commit message, no explanation, no markdown."' \
-        _ "$diff_content")"
+        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --model opencode-go/deepseek-v4-flash "$2"' \
+        _ "$diff_content" "$ai_prompt")"
 
     set generate_message_exit_code $status
 
@@ -46,6 +65,13 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     if test -z "$generated_message"
         echo "❌ Error: Generated commit message is empty" >&2
         return 1
+    end
+
+    # Ensure Jira ticket ID is prepended (fallback if AI didn't include it)
+    if test -n "$jira_ticket"
+        if not echo "$generated_message" | grep -q "^$jira_ticket:"
+            set generated_message "$jira_ticket: $generated_message"
+        end
     end
 
     # Display the generated commit message
