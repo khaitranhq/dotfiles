@@ -59,6 +59,9 @@ always_approve:
     - npm search
     - npx oxlint
     - sed
+    - "true"
+    - nl
+    - gh run
   tools:
     - read
     - write
