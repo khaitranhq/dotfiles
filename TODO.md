@@ -6,8 +6,6 @@
 
 ## Neovim
 
-- [ ] [ID: 02] Lsp - Format request failed. No matching language servers
-
 ## PI agent
 
 ### MCP
