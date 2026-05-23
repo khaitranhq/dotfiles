@@ -5,6 +5,8 @@
 local opt = vim.opt
 local g = vim.g
 
+opt.winborder = "rounded" -- Use single line borders for floating windows
+
 -- Indentation and formatting
 opt.tabstop = 2 -- Number of spaces that a <Tab> in the file counts for
 opt.shiftwidth = 2 -- Number of spaces to use for each step of (auto)indent

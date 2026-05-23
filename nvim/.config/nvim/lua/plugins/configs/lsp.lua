@@ -13,12 +13,20 @@ local lsp_config = {
 	},
 	docker_language_server = {},
 	bashls = {},
+	yamlls = {
+		settings = {
+			yaml = {
+				schemas = {
+					["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*.{yml,yaml}",
+				},
+			},
+		},
+	},
 	ts_ls = {
 		on_attach = function(client, _)
 			client.server_capabilities.documentFormattingProvider = false
 		end,
 	},
-	omnisharp = {},
 	oxfmt = {
 		root_dir = function(bufnr, on_dir)
 			local fname = vim.api.nvim_buf_get_name(bufnr)
@@ -94,6 +102,30 @@ local lsp_config = {
 					tidy = false,
 					upgrade_dependency = false,
 					vendor = false,
+				},
+			},
+		},
+	},
+	efm = {
+		init_options = { documentFormatting = true },
+		filetypes = { "lua", "go", "sh", "bash", "fish" },
+		settings = {
+			languages = {
+				lua = {
+					{ formatCommand = "stylua -", formatStdin = true },
+				},
+				go = {
+					{ formatCommand = "golines", formatStdin = true },
+				},
+				-- TOOD: test
+				sh = {
+					{ formatCommand = "shfmt -filename", formatStdin = true },
+				},
+				bash = {
+					{ formatCommand = "shfmt -filename", formatStdin = true },
+				},
+				fish = {
+					{ formatCommand = "fish_indent", formatStdin = false },
 				},
 			},
 		},

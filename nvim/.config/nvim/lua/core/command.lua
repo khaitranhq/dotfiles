@@ -14,11 +14,6 @@ M.setup = function()
   })
 
   vim.api.nvim_create_user_command("Trouble", vim.diagnostic.setqflist, {})
-
-  vim.api.nvim_create_user_command("InstallTools", function()
-    require("plugins.configs.lsp").install_servers()
-    require("plugins.configs.none-ls").install_tools()
-  end, {})
 end
 
 return M
