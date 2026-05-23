@@ -15,10 +15,10 @@ set -Ux KUBECONFIG "$HOME/.config/kubectl/config.yaml"
 
 # others
 set -Ux KUBE_EDITOR nvim
-set -Ux VISUAL "nvim"
-set -Ux EDITOR "nvim"
+set -Ux VISUAL nvim
+set -Ux EDITOR nvim
 
-set -x OPENCODE_EXPERIMENTAL_LSP_TOOL "true"
+set -x OPENCODE_EXPERIMENTAL_LSP_TOOL true
 set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
 set -x BROWSER '/mnt/c/Users/khai.tran/AppData/Local/BraveSoftware/Brave-Browser/Application/brave.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
@@ -42,7 +42,7 @@ set agent_ok 0
 if set -q SSH_AUTH_SOCK
     if test -S $SSH_AUTH_SOCK
         if set -q SSH_AGENT_PID
-            if ps -p $SSH_AGENT_PID > /dev/null 2>&1
+            if ps -p $SSH_AGENT_PID >/dev/null 2>&1
                 set agent_ok 1
             end
         end
@@ -53,7 +53,7 @@ if test $agent_ok -ne 1
     if test -f $HOME/.ssh/ssh-agent.fish
         source $HOME/.ssh/ssh-agent.fish
         if set -q SSH_AGENT_PID
-            if ps -p $SSH_AGENT_PID > /dev/null 2>&1
+            if ps -p $SSH_AGENT_PID >/dev/null 2>&1
                 set agent_ok 1
             else
                 rm -f $HOME/.ssh/ssh-agent.fish
@@ -66,7 +66,7 @@ if test $agent_ok -ne 1
     mkdir -p $HOME/.ssh
     # produce fish "set -x VAR 'value'" lines from sh output
     # Use awk to avoid quoting issues in fish
-    ssh-agent -s | awk -F'[=;]' '/=/{print "set -x " $1 " \047" $2 "\047"}' > $HOME/.ssh/ssh-agent.fish
+    ssh-agent -s | awk -F'[=;]' '/=/{print "set -x " $1 " \047" $2 "\047"}' >$HOME/.ssh/ssh-agent.fish
     source $HOME/.ssh/ssh-agent.fish
 end
 
@@ -78,7 +78,7 @@ add-keys-ssh-agent
 
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish
-  source $HOME/.config/fish/ai.fish
+    source $HOME/.config/fish/ai.fish
 end
 
 #=========================Aliases=========================

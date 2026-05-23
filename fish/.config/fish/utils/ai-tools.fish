@@ -93,7 +93,7 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     echo ""
 
-    gum input --placeholder="Press Enter to continue..." --prompt="" --no-show-help > /dev/null
+    gum input --placeholder="Press Enter to continue..." --prompt="" --no-show-help >/dev/null
 
     return $commit_exit_code
 end
