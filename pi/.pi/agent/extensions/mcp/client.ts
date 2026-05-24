@@ -87,6 +87,7 @@ export class McpClient {
     mcpLogInfo(this.config.name, `Redirect URL: ${this.oauthProvider.redirectUrl}`);
 
     this.transport = this.createTransport();
+    mcpLogInfo(this.config.name, "Transport created");
 
     this.transport.onerror = (error: Error) => {
       const detail = `${error.constructor?.name ?? "Error"}: ${error.message || "(empty)"}${error.stack ? "\n" + error.stack : ""}`;
@@ -132,6 +133,7 @@ export class McpClient {
    */
   private async connectWithOAuth(): Promise<void> {
     try {
+      mcpLogInfo(this.config.name, "Attempting initial connection");
       await this.client.connect(this.transport!);
     } catch (err) {
       const detail = `${(err as any)?.constructor?.name ?? "Error"}: ${(err instanceof Error ? err.message : String(err)) || "(empty)"}${err instanceof Error && err.stack ? "\n" + err.stack : ""}`;

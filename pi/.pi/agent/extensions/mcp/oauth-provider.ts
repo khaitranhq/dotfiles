@@ -40,6 +40,7 @@ interface OAuthClientInformationMixed {
 export interface PiOAuthConfig {
   clientId?: string;
   clientSecret?: string;
+  clientName?: string;
   scopes?: string[];
   tokenStorePath?: string;
 }
@@ -97,12 +98,17 @@ export class PiOAuthProvider implements OAuthClientProvider {
   // ── Client metadata ──────────────────────────────────────────────
 
   get clientMetadata(): OAuthClientMetadata {
-    return {
+    const metadata: OAuthClientMetadata = {
       redirect_uris: this._redirectUrl ? [this._redirectUrl] : [],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: this.oauthConfig.clientSecret ? "client_secret_basic" : "none",
+      client_name: this.oauthConfig.clientName ?? `pi-mcp-${this.serverName}`,
     };
+    if (this.oauthConfig.scopes && this.oauthConfig.scopes.length > 0) {
+      metadata.scope = this.oauthConfig.scopes.join(" ");
+    }
+    return metadata;
   }
 
   // ── Client registration ──────────────────────────────────────────

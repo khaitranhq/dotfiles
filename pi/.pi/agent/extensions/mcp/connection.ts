@@ -245,6 +245,7 @@ export async function connectAllServers(
   // Disconnect existing clients
   for (const [, client] of state.clients) {
     client.disconnect();
+    mcpLogInfo("mcp", `Disconnected from server "${client.info?.name}"`);
   }
   state.clients.clear();
   state.toolMap.clear();
