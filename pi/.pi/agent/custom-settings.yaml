@@ -1,5 +1,14 @@
 mcp:
-  servers: []
+  servers:
+    - name: "jira"
+      transport: "http"
+      url: "https://jira.example.com/mcp"
+      enabled: true
+      oauth:
+        enabled: true
+        scopes:
+          - "read:jira-work"
+          - "write:jira-work"
 always_approve:
   bashCommands:
     - find
@@ -62,6 +71,8 @@ always_approve:
     - "true"
     - nl
     - gh run
+    - xargs
+    - jq
   tools:
     - read
     - write
@@ -72,3 +83,43 @@ always_approve:
     - mcp_jira_getjiraissue
     - web_search
     - web_fetch
+tools:
+  agents:
+    atlassian:
+      allow:
+        - read
+        - bash
+        - web_search
+        - web_fetch
+        - question
+        - mcp_jira_atlassianuserinfo
+        - mcp_jira_getaccessibleatlassianresources
+        - mcp_jira_getconfluencepage
+        - mcp_jira_searchconfluenceusingcql
+        - mcp_jira_getconfluencespaces
+        - mcp_jira_getpagesinconfluencespace
+        - mcp_jira_getconfluencepagefootercomments
+        - mcp_jira_getconfluencepageinlinecomments
+        - mcp_jira_getconfluencecommentchildren
+        - mcp_jira_getconfluencepagedescendants
+        - mcp_jira_createconfluencepage
+        - mcp_jira_updateconfluencepage
+        - mcp_jira_createconfluencefootercomment
+        - mcp_jira_createconfluenceinlinecomment
+        - mcp_jira_getjiraissue
+        - mcp_jira_editjiraissue
+        - mcp_jira_createjiraissue
+        - mcp_jira_gettransitionsforjiraissue
+        - mcp_jira_getjiraissueremoteissuelinks
+        - mcp_jira_getvisiblejiraprojects
+        - mcp_jira_getjiraprojectissuetypesmetadata
+        - mcp_jira_getjiraissuetypemetawithfields
+        - mcp_jira_addcommenttojiraissue
+        - mcp_jira_transitionjiraissue
+        - mcp_jira_searchjiraissuesusingjql
+        - mcp_jira_lookupjiraaccountid
+        - mcp_jira_addworklogtojiraissue
+        - mcp_jira_getissuelinktypes
+        - mcp_jira_createissuelink
+        - mcp_jira_search
+        - mcp_jira_fetch
