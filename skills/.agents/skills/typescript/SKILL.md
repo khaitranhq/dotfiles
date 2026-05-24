@@ -41,22 +41,30 @@ Use `npx tsc --noEmit` to validate TypeScript without generating output JavaScri
 
 ### Linting and Formatting
 
-Always run comprehensive checks combining TypeScript type checking with linting and formatting tools:
+Always run comprehensive checks combining TypeScript type checking with linting and formatting tools.
 
-**Preferred approach (if available):**
-```bash
-npx tsc --noEmit && npx biome check
-```
+**Tool priority — detect and use the first matching approach:**
 
-**Fallback approach (if biome is not available):**
-```bash
-npx tsc --noEmit && npx prettier --check . && npx eslint .
-```
+1. **oxlint + oxfmt (required if config exists):** If the project has an oxlint config (`.oxlintrc.json`, `.oxlintrc`, `oxlintrc.json`, `oxlintrc.yaml`, `oxlintrc.yml`, or `oxlint` key in `package.json`) or an oxfmt config (`.oxfmtrc.json`, `.oxfmtrc`, `oxfmtrc.json`, `oxfmtrc.yaml`, `oxfmtrc.yml`, or `oxfmt` key in `package.json`), oxlint and oxfmt are mandatory — use them:
+   ```bash
+   npx tsc --noEmit && npx oxlint && npx oxfmt --check .
+   ```
+   If only oxlint config exists, use oxlint; if only oxfmt config exists, use oxfmt. When both exist, use both.
 
-**Minimal approach (if prettier and eslint are not available):**
-```bash
-npx tsc --noEmit
-```
+2. **biome (if available):** If biome is configured (e.g. `biome.json`, `biome.jsonc`) and no oxlint/oxfmt config exists:
+   ```bash
+   npx tsc --noEmit && npx biome check
+   ```
+
+3. **prettier + eslint (fallback):** If neither oxlint/oxfmt nor biome is available:
+   ```bash
+   npx tsc --noEmit && npx prettier --check . && npx eslint .
+   ```
+
+4. **tsc only (minimal):** If no linter or formatter is available:
+   ```bash
+   npx tsc --noEmit
+   ```
 
 ### Validation Workflow
 

@@ -1,6 +1,6 @@
 ---
 name: coding
-description: Provides baseline coding guardrails and design principles for safe, maintainable code changes across languages. Use whenever the agent will create, modify, refactor, review, or delete code; when behavior changes and tests are practical, pair it with the tdd skill and work test-first.
+description: Provides baseline coding guardrails and design principles for safe, maintainable code changes across languages. Use whenever the agent will create, modify, refactor, review, or delete code; for code changes, always load the tdd skill too and default to red-green-refactor unless automation is genuinely impractical.
 license: MIT
 metadata:
   author: OpenCode
@@ -38,24 +38,28 @@ metadata:
 
 # Coding Principles & Best Practices Skill
 
-## Activation
+## Activation (MANDATORY)
 
-Load this skill for every task that creates, modifies, refactors, reviews, or deletes code. Treat it as the baseline skill for code changes, and combine it with language- or framework-specific skills when relevant. When the task changes behavior and automated tests are practical, also load the `tdd` skill and follow a red-green-refactor loop.
+This skill must be loaded for every task that creates, modifies, refactors, reviews, or deletes code. It is the baseline skill for code changes. Combine it with language- or framework-specific skills when relevant.
+
+For any code change, the `tdd` skill must also be loaded. Use **red → green → refactor** as the default workflow. Do not treat TDD as optional. Only skip full test-first execution when automation is genuinely impractical because of tooling gaps, legacy constraints, or missing hooks; when that happens, still keep the change testable where possible, add the nearest practical coverage, and explicitly explain the limitation.
 
 ## Purpose
 
-This skill provides a reference for foundational coding principles and best practices that apply across languages and domains. Use it to guide design decisions, refactoring, code reviews, and implementation. These principles complement language-specific skills (e.g., golang, typescript) by providing the overarching philosophy, while also setting the default expectation that code stays testable and behavior changes are verified with tests whenever practical.
+This skill defines **mandatory** coding principles that apply across languages and domains. Every principle in this skill is a **hard requirement** — not a suggestion, not a guideline, not "consider if convenient." Violating any principle is a defect. These principles complement language-specific skills (e.g., golang, typescript) by providing the overarching philosophy, while also making TDD the default execution model for code changes: define behavior, prove it with a failing test, make it pass with minimal code, then refactor safely.
 
 ## Core Principles
 
-### 1. SOLID Principles
+> **⚠️ These principles are MANDATORY. Every principle below is a hard requirement. Code that violates any of them is defective. No exceptions without explicit justification.**
+
+### 1. SOLID Principles (MANDATORY)
 
 #### S — Single Responsibility Principle (SRP)
 
-> A class/module/function should have one, and only one, reason to change.
+> A class/module/function must have one, and only one, reason to change.
 
 **Rules:**
-- Each module or function should do exactly one thing
+- Each module or function must do exactly one thing
 - A "responsibility" is a reason to change; isolate separate concerns
 - If a function name requires "and" (e.g., `saveAndNotify`), it likely violates SRP
 
@@ -82,7 +86,7 @@ func sendWelcomeEmail(user User) error {
 
 #### O — Open/Closed Principle (OCP)
 
-> Software entities should be open for extension but closed for modification.
+> Software entities must be open for extension but closed for modification.
 
 **Rules:**
 - Add new behavior by extending (via interfaces, composition, plugins), not by modifying existing code
@@ -148,12 +152,12 @@ class Square implements Shape {
 
 #### I — Interface Segregation Principle (ISP)
 
-> No client should be forced to depend on methods it does not use.
+> No client must be forced to depend on methods it does not use.
 
 **Rules:**
 - Keep interfaces small and focused (typically 1–3 methods)
 - Break large "god interfaces" into role-based interfaces
-- Clients should only depend on the interfaces they actually need
+- Clients must only depend on the interfaces they actually need
 
 **Example:**
 
@@ -179,13 +183,13 @@ type Plane struct { /* implements Drivable + Flyable */ }
 
 #### D — Dependency Inversion Principle (DIP)
 
-> High-level modules should not depend on low-level modules. Both should depend on abstractions.
+> High-level modules must not depend on low-level modules. Both must depend on abstractions.
 
 **Rules:**
 - Depend on interfaces/abstract classes, not concrete implementations
 - Use dependency injection to provide implementations at runtime
 - Avoid `new` in business logic; let a DI container or factory wire dependencies
-- High-level policy should define the interface; low-level modules implement it
+- High-level policy must define the interface; low-level modules implement it
 
 **Example:**
 
@@ -218,7 +222,7 @@ class SmtpEmailClient implements MessageSender {
 }
 ```
 
-### 2. DRY — Don't Repeat Yourself
+### 2. DRY — Don't Repeat Yourself (MANDATORY)
 
 > Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.
 
@@ -252,7 +256,7 @@ function getFullPrice(items: Item[]): number { return sumBy(items, "price") * 1.
 function getFullWeight(items: Item[]): number { return sumBy(items, "weight") * 1.05; }
 ```
 
-### 3. KISS — Keep It Simple, Stupid
+### 3. KISS — Keep It Simple, Stupid (MANDATORY)
 
 > Simplicity is a prerequisite for reliability, maintainability, and understandability.
 
@@ -302,7 +306,7 @@ func getEvens(numbers []int) []int {
 }
 ```
 
-### 4. YAGNI — You Aren't Gonna Need It
+### 4. YAGNI — You Aren't Gonna Need It (MANDATORY)
 
 > Always implement things when you actually need them, never when you just foresee that you need them.
 
@@ -313,7 +317,7 @@ func getEvens(numbers []int) []int {
 - If a requirement isn't in the current sprint/iteration, don't build for it
 - Refactoring later when you have concrete needs is cheaper than maintaining speculative code now
 
-### 5. Composition Over Inheritance
+### 5. Composition Over Inheritance (MANDATORY)
 
 > Favor object composition over class inheritance for code reuse and flexibility.
 
@@ -345,12 +349,12 @@ class RobotDog implements Breather, Barker, Charger {
 }
 ```
 
-### 6. Law of Demeter (Principle of Least Knowledge)
+### 6. Law of Demeter / Principle of Least Knowledge (MANDATORY)
 
-> A method should only talk to its immediate friends, not strangers.
+> A method must only talk to its immediate friends, not strangers.
 
 **Rules:**
-- A method `m` of object `O` should only call methods of: `O` itself, `m`'s parameters, objects created within `m`, `O`'s direct component objects
+- A method `m` of object `O` must only call methods of: `O` itself, `m`'s parameters, objects created within `m`, `O`'s direct component objects
 - Avoid method chaining: `a.getB().getC().doSomething()` — this is a "train wreck"
 - Tell, don't ask: tell objects to perform actions rather than asking for their internals to do it yourself
 
@@ -375,9 +379,9 @@ function checkout(user: User, order: Order): void {
 }
 ```
 
-### 7. Separation of Concerns (SoC)
+### 7. Separation of Concerns / SoC (MANDATORY)
 
-> A program should be separated into distinct sections, each addressing a separate concern.
+> A program must be separated into distinct sections, each addressing a separate concern.
 
 **Rules:**
 - Separate business logic from presentation, persistence, and infrastructure
@@ -436,15 +440,15 @@ type UserRepository interface {
 }
 ```
 
-### 8. Fail Fast
+### 8. Fail Fast (MANDATORY)
 
-> Code should detect and report errors as early as possible.
+> Code must detect and report errors as early as possible.
 
 **Rules:**
 - Validate inputs at system boundaries (API, CLI, user input) before processing
 - Use assertions and preconditions at function entry points
 - Throw specific, descriptive errors immediately — don't let invalid state propagate
-- Programming errors should be surfaced loudly, not silently swallowed
+- Programming errors must be surfaced loudly, not silently swallowed
 
 **Example:**
 
@@ -467,21 +471,23 @@ func process(order *Order) error {
 }
 ```
 
-### 9. Testability & TDD
+### 9. TDD & Testability (MANDATORY)
 
-> Code should be easy to verify, and behavior changes should be driven by tests whenever practical.
+> TDD is the default workflow for code changes: prove behavior with a failing test, make it pass with minimal code, then refactor safely.
 
 **Rules:**
-- Prefer test-driven development for new behavior, bug fixes, and refactors that can be verified through automated tests
-- Follow **red → green → refactor** in small vertical slices when TDD is practical
+- Always load the `tdd` skill alongside this skill for code changes
+- Start behavior changes with a failing automated test whenever a realistic test harness or automation hook exists
+- Follow **red → green → refactor** in small vertical slices; do not batch many tests before implementation
+- For bug fixes, reproduce the bug with a failing test first when practical
+- For refactors, establish or extend a safety net before changing behavior-critical code
 - Write tests against public interfaces and observable behavior, not private implementation details
 - Design code for testability: explicit dependencies, narrow interfaces, deterministic behavior, and small seams around I/O
-- Add or update automated tests for behavior changes unless there is a concrete reason they are not practical
-- If tests are not added, explicitly document why in the handoff, PR, or final response and describe what validation was performed instead
+- If full TDD is genuinely impractical, state why, add the nearest practical automated coverage, and describe the fallback validation performed
 
-### 10. Naming Conventions
+### 10. Naming Conventions (MANDATORY)
 
-> Names should reveal intent. Good names save hours of documentation.
+> Names must reveal intent. Good names save hours of documentation.
 
 **Rules:**
 - **Classes/Modules**: Noun phrases that describe what the thing *is* (e.g., `OrderRepository`, `EmailSender`)
@@ -491,7 +497,7 @@ func process(order *Order) error {
 - **Use domain language**: If the business calls it a "Policy", don't name it `InsuranceRule`
 - **Length vs. scope**: Short names for short scopes, descriptive names for wide scopes
 
-### 11. Code Smells (Recognize & Avoid)
+### 11. Code Smells — Recognize & Eliminate (MANDATORY)
 
 | Smell | Description | Fix |
 |-------|-------------|-----|
@@ -506,19 +512,25 @@ func process(order *Order) error {
 | **Magic Numbers** | Hardcoded unexplained values | Extract to named constants |
 | **Dead Code** | Unused variables, functions, imports | Delete it |
 
-## Design Workflow
+## Mandatory Workflow
 
 ### When Starting a New Feature
 
+Follow these steps in order. Every step is required.
+
 1. **Define the behavior first** — What should the system do, and how will you prove it?
-2. **Write the first test first when practical** — Prefer a small red → green → refactor cycle for behavior changes
+2. **Write the first failing test first** — Default to a small red → green → refactor cycle for behavior changes
 3. **Define the contract** — What are the inputs, outputs, and public interfaces?
-4. **Apply SOLID** — Identify responsibilities; design interfaces; plan dependencies
-5. **Keep it simple** (KISS) — What's the simplest thing that works?
-6. **Avoid speculative generality** (YAGNI) — Only build what's needed now
-7. **Name everything well** — Good names clarify intent before implementation
+4. **Implement the smallest slice** — Write only enough code to make the current test pass
+5. **Apply SOLID** — Identify responsibilities; design interfaces; plan dependencies
+6. **Keep it simple** (KISS) — What's the simplest thing that works?
+7. **Avoid speculative generality** (YAGNI) — Only build what's needed now
+8. **Refactor under green tests** — Improve structure only after the behavior is proven
+9. **Name everything well** — Good names clarify intent before implementation
 
 ### When Refactoring
+
+Follow these steps in order. Every step is required.
 
 1. **Identify the smell** — What's wrong? Use the smell table above
 2. **Ensure tests exist** — Refactor under the safety net of passing tests; add characterization tests first when needed
@@ -528,8 +540,9 @@ func process(order *Order) error {
 
 ### During Code Review
 
-Use this checklist:
+Every code review must verify all items on this checklist. Missing any check is a review defect.
 
+- [ ] **TDD flow**: Was behavior driven by failing tests, or is there a clear reason full TDD was impractical?
 - [ ] **SRP**: Does each function/class have one reason to change?
 - [ ] **DRY**: Is any knowledge duplicated?
 - [ ] **KISS**: Is there a simpler approach that meets the same requirements?
@@ -542,9 +555,9 @@ Use this checklist:
 - [ ] **Comments**: Does the code explain itself, or are comments masking complexity?
 - [ ] **No smells**: Does the code pass the smell checklist?
 
-## Validation After Code Changes
+## Mandatory Validation After Code Changes
 
-After making any code change — whether implementing a new feature, refactoring, or fixing a bug — run validation tools to catch issues early.
+After every code change — whether implementing a new feature, refactoring, or fixing a bug — run validation tools to catch issues early. This step is not optional.
 
 ### Required Validation Steps
 
@@ -561,7 +574,9 @@ After making any code change — whether implementing a new feature, refactoring
 
 Each language has its own ecosystem of formatters, linters, and build tools. **Load the language-specific skill** (e.g., `golang`, `typescript`, `python`) for detailed information about the exact tools, their configuration, and invocation commands for that language. The language skill will also cover project-specific setup and conventions.
 
-## Constraints
+## Constraints (Derived from Core Principles)
+
+> **These constraints are non-negotiable. Every code change must satisfy every applicable MUST DO and violate no MUST NOT DO.**
 
 ### MUST DO
 
@@ -571,13 +586,13 @@ Each language has its own ecosystem of formatters, linters, and build tools. **L
 - **Keep it simple** — Choose the simplest solution that satisfies current requirements
 - **Use meaningful names** — Names must reveal intent and use domain language
 - **Validate early** — Check preconditions at function boundaries; fail fast
-- **Follow TDD when practical** — Prefer red → green → refactor for behavior changes, bug fixes, and non-trivial refactors
+- **Use TDD by default** — For code changes, load `tdd` and work red → green → refactor unless automation is genuinely impractical
 - **Keep code testable** — Structure code so behavior can be exercised through stable public interfaces and isolated seams around I/O
-- **Add or update tests** — Behavior changes should ship with automated coverage when practical
+- **Add or update tests** — Behavior changes must ship with automated coverage when practical
 - **Explain missing tests** — If automated tests are not added, explicitly state why and what validation replaced them
 - **Separate concerns** — Business logic, presentation, persistence, and infrastructure must be in separate layers
 - **Prefer composition** — Use composition over inheritance for behavior reuse (limit inheritance depth)
-- **Apply Law of Demeter** — Methods should only talk to immediate dependencies; avoid method chaining
+- **Apply Law of Demeter** — Methods must only talk to immediate dependencies; avoid method chaining
 - **Review against this skill** — Use the code review checklist when reviewing PRs
 - **Validate after changes** — After every code change, run the formatter, linter, and dry-build/type-check (e.g., `go build -o /dev/null`, `tsc --noEmit`) to catch issues early. Load the language-specific skill for exact tool commands
 
@@ -590,13 +605,16 @@ Each language has its own ecosystem of formatters, linters, and build tools. **L
 - **Use magic numbers** — Don't embed unexplained literals in code; extract to named constants
 - **Write "clever" code** — Don't sacrifice readability for cleverness or micro-optimization
 - **Deep inheritance** — Don't create inheritance hierarchies deeper than 2 levels
-- **Leak abstractions** — Low-level details (DB queries, HTTP status codes) should not leak into business logic
+- **Leak abstractions** — Low-level details (DB queries, HTTP status codes) must not leak into business logic
 - **Skip tests silently** — Don't ship behavior changes without automated tests or an explicit explanation
 - **Rewrite without tests** — Don't refactor code without adequate test coverage
 - **Ignore code smells** — Address smells when you encounter them; don't leave them for later
 
-## When to Use This Skill
+## When This Skill Applies
 
+This skill is **always in effect** for any coding task. Load it for every task that creates, modifies, refactors, reviews, or deletes code. It is not optional — it is the baseline standard that all code must meet.
+
+Applies to:
 - Designing architecture for new features or projects
 - Refactoring existing code
 - Conducting code reviews
