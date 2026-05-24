@@ -17,7 +17,7 @@ let _parser: Parser | null = null;
 function getParser(): Parser {
   if (!_parser) {
     _parser = new Parser();
-    _parser.setLanguage(Bash);
+    _parser.setLanguage(Bash as unknown as Parser.Language);
   }
   return _parser;
 }

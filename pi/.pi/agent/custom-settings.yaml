@@ -1,8 +1,8 @@
 mcp:
   servers:
-    - name: "jira"
-      transport: "http"
-      url: "https://jira.example.com/mcp"
+    # - name: "jira"
+    #   transport: "http"
+    #   url: https://mcp.atlassian.com/v1/mcp/authv2
 always_approve:
   bashCommands:
     - find

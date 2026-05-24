@@ -4,9 +4,9 @@
 
 ### ⚠️ MANDATORY: Load Skills After Context Gathering
 
-**After understanding the task and gathering enough context, agents MUST load relevant skills using the `skill` tool.**
+**After understanding the task and gathering enough context, agents MUST load relevant skills by using the `read` tool to read the skill's SKILL.md file at the location listed in the available_skills section of the system prompt.**
 
-This is a hard requirement, not optional. Once you have a clear picture of the task, evaluate which available skills (golang, github-action, aws-iam-policies, d2, slidev, diagnose, etc.) match the request and load them before proceeding.
+This is a hard requirement, not optional. Once you have a clear picture of the task, evaluate which available skills (golang, github-action, aws-iam-policies, d2, slidev, diagnose, coding, typescript, etc.) match the request and `read` their SKILL.md files before proceeding.
 
 **Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Loading skill too early (before understanding the task) leads to irrelevant context. Loading them after context gathering ensures you pick the right skills for the actual work.
 
@@ -25,7 +25,7 @@ Before executing any task or prompt, agents must:
 
 1. **Analyze Requirements** - Carefully read and understand what the user is asking for
 2. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
-3. **Load Related Skills** - Use the `skill` tool to load any specialized skills that match the task requirements (e.g., load the `golang` skill for Go tasks, `github-action` skill for GitHub Actions, etc.) - **THIS IS MANDATORY**
+3. **Load Related Skills** - Use the `read` tool to load any specialized skills that match the task requirements (e.g., `read /home/khaitran/.agents/skills/golang/SKILL.md` for Go tasks, `read /home/khaitran/.agents/skills/github-action/SKILL.md` for GitHub Actions, etc.) by reading the skill file location shown in the system prompt — **THIS IS MANDATORY**
 4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
 
 **Why this order**: You cannot know which skills are relevant until you understand the request and have context. Loading skills too early may load irrelevant ones; loading them after context ensures precision. This ensures agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
