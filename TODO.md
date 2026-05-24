@@ -2,7 +2,17 @@
 
 ## Neovim
 
+- [ ] simple solution for dropbar.nvim alternative
+
+## Skills
+
+- [ ] load diagnostic skill properly
+- [ ] diagnostic skill: note findings to a file, not just after solving problem but also during the process
+- [ ] diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
+
 ## PI agent
+
+### Read tool with secret masking capability
 
 ### MCP
 
@@ -25,10 +35,6 @@ pi/.pi/agent/extensions/subagent/index.ts
   - accuracy
   - number of calling skills time
     => This can help identify bottlenecks and optimize the system for better performance.
-
-### Todo tool
-
-- [ ] [ID: 08] research how Opencode implements todo tool => design document
 
 ### General
 

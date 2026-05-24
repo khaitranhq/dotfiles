@@ -1,5 +1,16 @@
 # AGENTS.md — Pi Extensions
 
+## Mandatory: Lint and Format After Code Changes
+
+After any code change (edit, write, or file creation), you **MUST** run lint and format:
+
+1. **Lint** — `npm run lint` (runs `tsc --noEmit && oxlint`)
+2. **Format** — `oxfmt` on changed files
+
+Fix all errors before considering the change complete. Do not leave lint warnings or formatting issues behind.
+
+---
+
 ## Mandatory: Update README.md on Extension Changes
 
 When modifying any extension under `~/.pi/agent/extensions/`, you **MUST** update the corresponding `README.md` in that extension's folder.
