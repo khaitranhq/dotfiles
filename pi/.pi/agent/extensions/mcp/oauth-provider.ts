@@ -43,32 +43,33 @@ export interface PiOAuthConfig {
   clientName?: string;
   scopes?: string[];
   tokenStorePath?: string;
+  /** Fixed port for OAuth redirect callback. Default: 14815.
+   * Must match the callback URL registered in your OAuth app settings. */
+  redirectPort?: number;
 }
 
 function sanitizeForFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64);
 }
 
-/** Find an available TCP port on localhost. */
-function findAvailablePort(): Promise<number> {
-  return new Promise((resolve, reject) => {
+/** Default OAuth redirect port — register this in your OAuth app settings. */
+const DEFAULT_REDIRECT_PORT = 14815;
+
+/** Check if a port is available on localhost. */
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
     const srv = http.createServer();
-    srv.listen(0, "127.0.0.1", () => {
-      const addr = srv.address();
-      if (addr && typeof addr === "object") {
-        const port = addr.port;
-        srv.close(() => resolve(port));
-      } else {
-        srv.close(() => reject(new Error("Could not determine port")));
-      }
+    srv.on("error", () => resolve(false));
+    srv.listen(port, "127.0.0.1", () => {
+      srv.close(() => resolve(true));
     });
-    srv.on("error", reject);
   });
 }
 
 export class PiOAuthProvider implements OAuthClientProvider {
   private _redirectUrl: string | undefined;
   private _codeVerifier: string | null = null;
+  private _onAuthUrl: ((url: string) => void) | null = null;
   private readonly storePath: string;
   private readonly clientInfoPath: string;
   private readonly codeVerifierPath: string;
@@ -91,8 +92,30 @@ export class PiOAuthProvider implements OAuthClientProvider {
   }
 
   async setupRedirectUrl(): Promise<void> {
-    const port = await findAvailablePort();
-    this._redirectUrl = `http://localhost:${port}/callback`;
+    const desiredPort = this.oauthConfig.redirectPort ?? DEFAULT_REDIRECT_PORT;
+
+    if (await isPortAvailable(desiredPort)) {
+      this._redirectUrl = `http://localhost:${desiredPort}/callback`;
+    } else {
+      // Fall back to any available port — user should register a fixed port
+      // in their OAuth app settings to avoid callback URL mismatches.
+      const fallbackPort = await new Promise<number>((resolve, reject) => {
+        const srv = http.createServer();
+        srv.on("error", reject);
+        srv.listen(0, "127.0.0.1", () => {
+          const addr = srv.address();
+          const p = addr && typeof addr === "object" ? addr.port : 0;
+          srv.close(() => resolve(p));
+        });
+      });
+      mcpLogError(
+        this.serverName,
+        `Port ${desiredPort} is in use. Falling back to port ${fallbackPort}. ` +
+          `⚠️  This redirect URL may not match your registered OAuth callback. ` +
+          `Set oauth.redirectPort in your config or free port ${desiredPort}.`,
+      );
+      this._redirectUrl = `http://localhost:${fallbackPort}/callback`;
+    }
   }
 
   // ── Client metadata ──────────────────────────────────────────────
@@ -103,7 +126,7 @@ export class PiOAuthProvider implements OAuthClientProvider {
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: this.oauthConfig.clientSecret ? "client_secret_basic" : "none",
-      client_name: this.oauthConfig.clientName ?? `pi-mcp-${this.serverName}`,
+      client_name: this.oauthConfig.clientName ?? `khaitran-mcp-${this.serverName}`,
     };
     if (this.oauthConfig.scopes && this.oauthConfig.scopes.length > 0) {
       metadata.scope = this.oauthConfig.scopes.join(" ");
@@ -171,6 +194,13 @@ export class PiOAuthProvider implements OAuthClientProvider {
     }
   }
 
+  // ── Auth URL callback ────────────────────────────────────────────
+
+  /** Register a callback to show the authorization URL on UI (e.g. when browser can't open). */
+  setOnAuthUrl(fn: (url: string) => void): void {
+    this._onAuthUrl = fn;
+  }
+
   // ── Authorization redirect ───────────────────────────────────────
 
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
@@ -178,16 +208,19 @@ export class PiOAuthProvider implements OAuthClientProvider {
     mcpLogInfo(this.serverName, `Opening browser for OAuth authorization...`);
 
     const { exec } = await import("node:child_process");
+    let openCmd: string;
     const platform = process.platform;
-    const openCmd =
+    openCmd =
       platform === "darwin"
         ? `open "${url}"`
         : platform === "win32"
           ? `start "" "${url}"`
           : `xdg-open "${url}"`;
+    mcpLogInfo(this.serverName, `Executing command: ${openCmd}`);
     exec(openCmd, (err) => {
       if (err) {
         mcpLogInfo(this.serverName, `Could not open browser automatically. Visit:\n  ${url}`);
+        this._onAuthUrl?.(url);
       }
     });
   }

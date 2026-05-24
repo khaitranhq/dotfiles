@@ -63,6 +63,10 @@ export class McpClient {
     private readonly defaultTimeout = 30000,
   ) {
     this.oauthProvider = new PiOAuthProvider(config.name, config.oauth);
+    this.oauthProvider.setOnAuthUrl((url) => {
+      this.logInfo(`Could not open browser. Authorize here:
+  ${url}`);
+    });
     this.client = new Client({ name: "pi-mcp-extension", version: "1.0.0" }, {});
   }
 
@@ -157,7 +161,7 @@ export class McpClient {
   }
 
   /** Start an HTTP server to capture the OAuth redirect, return the code. */
-  private waitForAuthCallback(): Promise<string> {
+  private async waitForAuthCallback(): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       this._authCodeResolve = resolve;
       this._authCodeReject = reject;

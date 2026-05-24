@@ -46,6 +46,11 @@ mcp:
         clientId: "pre-registered-client-id"
         clientSecret: "client-secret"
         tokenStorePath: "/path/to/tokens.json"
+
+    - name: "atlassian-fixed-port"
+      url: "https://mcp.atlassian.com/v1/mcp/authv2"
+      oauth:
+        redirectPort: 14815
 ```
 
 ### Server config fields
@@ -72,6 +77,7 @@ All fields optional. If omitted entirely, OAuth is auto-detected:
 | `clientSecret` | Secret for confidential clients |
 | `scopes` | Scopes to request (default: server-defined) |
 | `tokenStorePath` | Custom path for persisted tokens |
+| `redirectPort` | Fixed port for OAuth callback (default: `14815`) |
 
 ## OAuth flow
 
