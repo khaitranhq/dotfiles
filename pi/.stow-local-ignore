@@ -1,6 +1,2 @@
-node_modules
-.oxfmtrc.json
-.oxlintrc.json
-package.json
-pnpm-lock.yaml
-TODO.md
+# Ignore everything except the .pi/ directory (recursively)
+^/[^.].*

@@ -56,6 +56,17 @@ const DEFAULTS: Required<McpConfig> = {
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
+/** Build default token store path for a server name. */
+function defaultTokenStorePath(serverName: string): string {
+  return path.join(
+    os.homedir(),
+    ".pi",
+    "agent",
+    "mcp-tokens",
+    `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
+  );
+}
+
 /** Sanitize a name for use in tool identifiers: keep only [a-zA-Z0-9_]. */
 function sanitizeName(name: string): string {
   return name
@@ -373,24 +384,24 @@ export default function (pi: ExtensionAPI) {
     clients.clear();
     toolMap.clear();
 
-    const enabledServers = (config.servers ?? []).filter((s) => (s as any).enabled !== false);
+    const servers = config.servers ?? [];
 
-    if (enabledServers.length === 0) {
+    if (servers.length === 0) {
       connecting = false;
       return;
     }
 
     // Connect to all servers in parallel
-    const results = await Promise.all(enabledServers.map((sc) => connectServer(sc, ctx)));
+    const results = await Promise.all(servers.map((sc) => connectServer(sc, ctx)));
 
     // Register tools from successfully connected servers
     let totalTools = 0;
 
-    for (let i = 0; i < enabledServers.length; i++) {
+    for (let i = 0; i < servers.length; i++) {
       const client = results[i];
       if (!client) continue;
 
-      const serverConfig = enabledServers[i];
+      const serverConfig = servers[i];
       clients.set(serverConfig.name, client);
 
       try {
@@ -417,9 +428,9 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     config = loadMcpConfig();
 
-    const enabledCount = (config.servers ?? []).filter((s) => (s as any).enabled !== false).length;
+    const serverCount = (config.servers ?? []).length;
 
-    if (enabledCount === 0) {
+    if (serverCount === 0) {
       if (ctx.hasUI) {
         ctx.ui.setStatus("mcp", "MCP: no servers configured");
       }
@@ -427,7 +438,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     if (ctx.hasUI) {
-      ctx.ui.setStatus("mcp", `MCP: connecting to ${enabledCount} server(s)...`);
+      ctx.ui.setStatus("mcp", `MCP: connecting to ${serverCount} server(s)...`);
     }
 
     await connectAllServers(ctx);
@@ -437,7 +448,7 @@ export default function (pi: ExtensionAPI) {
       const toolCount = toolMap.size;
       ctx.ui.setStatus(
         "mcp",
-        `MCP: ${connectedCount}/${enabledCount} server(s), ${toolCount} tool(s)`,
+        `MCP: ${connectedCount}/${serverCount} server(s), ${toolCount} tool(s)`,
       );
     }
   });
@@ -524,18 +535,16 @@ export default function (pi: ExtensionAPI) {
       const subCommand = parts[0]?.toLowerCase() ?? "status";
       const targetName = parts.slice(1).join(" ");
 
-      // Collect servers with OAuth config
-      const oauthServers = (config.servers ?? []).filter(
-        (s) =>
-          s.transport === "http" && (s as import("./mcp-client").HttpServerConfig).oauth?.enabled,
-      );
+      // All servers use OAuth
+      const oauthServers = config.servers ?? [];
 
       // ── status (default) ────────────────────────────────────────
       if (subCommand === "status" || !subCommand) {
         if (oauthServers.length === 0) {
           ctx.ui.notify(
-            "MCP OAuth: No servers configured with OAuth.\n" +
-              "Add 'oauth: { enabled: true }' to an HTTP server in ~/.pi/agent/custom-settings.yaml",
+            "MCP OAuth: No servers configured.\n" +
+              "Add a server to the 'mcp' section in ~/.pi/agent/custom-settings.yaml.\n" +
+              "OAuth is auto-detected from the server's /.well-known/oauth-authorization-server.",
             "info",
           );
           return;
@@ -545,7 +554,7 @@ export default function (pi: ExtensionAPI) {
 
         for (const serverConfig of oauthServers) {
           const client = clients.get(serverConfig.name);
-          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
+          const oauthConfig = serverConfig.oauth;
           const status = client?.getOAuthStatus();
 
           let authLine: string;
@@ -553,14 +562,7 @@ export default function (pi: ExtensionAPI) {
             // Client not connected — check config
             // Compute token store path to check manually
             const storePath =
-              oauthConfig.tokenStorePath ??
-              path.join(
-                os.homedir(),
-                ".pi",
-                "agent",
-                "mcp-tokens",
-                `${serverConfig.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
-              );
+              oauthConfig?.tokenStorePath ?? defaultTokenStorePath(serverConfig.name);
             let hasTokens = false;
             let expiresAt: number | undefined;
             try {
@@ -608,7 +610,7 @@ export default function (pi: ExtensionAPI) {
           lines.push(`  ${serverConfig.name}: ${authLine}`);
 
           // Show scopes if available
-          const scopes = status?.scopes ?? oauthConfig.scopes;
+          const scopes = status?.scopes ?? oauthConfig?.scopes;
           if (scopes && scopes.length > 0) {
             lines.push(`    Scopes: ${scopes.join(", ")}`);
           }
@@ -616,14 +618,8 @@ export default function (pi: ExtensionAPI) {
           // Show token store path
           const storePath =
             status?.tokenStorePath ??
-            oauthConfig.tokenStorePath ??
-            path.join(
-              os.homedir(),
-              ".pi",
-              "agent",
-              "mcp-tokens",
-              `${serverConfig.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
-            );
+            oauthConfig?.tokenStorePath ??
+            defaultTokenStorePath(serverConfig.name);
           lines.push(`    Tokens: ${storePath}`);
           lines.push("");
         }
@@ -660,18 +656,6 @@ export default function (pi: ExtensionAPI) {
           return;
         }
 
-        if (
-          serverConfig.transport !== "http" ||
-          !(serverConfig as import("./mcp-client").HttpServerConfig).oauth?.enabled
-        ) {
-          ctx.ui.notify(
-            `Server "${serverName}" does not have OAuth enabled.\n` +
-              `Add 'oauth: { enabled: true }' to its config in ~/.pi/agent/custom-settings.yaml`,
-            "warning",
-          );
-          return;
-        }
-
         // Disconnect existing client if connected
         const existingClient = clients.get(serverName);
         if (existingClient) {
@@ -688,16 +672,8 @@ export default function (pi: ExtensionAPI) {
           }
         } else {
           // Client not connected — just clear tokens on disk
-          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
-          const storePath =
-            oauthConfig.tokenStorePath ??
-            path.join(
-              os.homedir(),
-              ".pi",
-              "agent",
-              "mcp-tokens",
-              `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
-            );
+          const oauthConfig = serverConfig.oauth;
+          const storePath = oauthConfig?.tokenStorePath ?? defaultTokenStorePath(serverName);
           try {
             if (fs.existsSync(storePath)) {
               fs.unlinkSync(storePath);
@@ -782,21 +758,9 @@ export default function (pi: ExtensionAPI) {
 
         // Also clear token file directly in case it persists
         const serverConfig = (config.servers ?? []).find((s) => s.name === serverName);
-        if (
-          serverConfig &&
-          serverConfig.transport === "http" &&
-          (serverConfig as import("./mcp-client").HttpServerConfig).oauth?.enabled
-        ) {
-          const oauthConfig = (serverConfig as import("./mcp-client").HttpServerConfig).oauth!;
-          const storePath =
-            oauthConfig.tokenStorePath ??
-            path.join(
-              os.homedir(),
-              ".pi",
-              "agent",
-              "mcp-tokens",
-              `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
-            );
+        if (serverConfig) {
+          const oauthConfig = serverConfig.oauth;
+          const storePath = oauthConfig?.tokenStorePath ?? defaultTokenStorePath(serverName);
           try {
             if (fs.existsSync(storePath)) {
               fs.unlinkSync(storePath);

@@ -1,21 +1,15 @@
 /**
- * Lightweight MCP (Model Context Protocol) client.
+ * MCP (Model Context Protocol) client — OAuth-only remote HTTP transport.
  *
- * Supports three transports:
- *   - stdio:  Spawns a child process, communicates via newline-delimited
- *             JSON-RPC 2.0 on stdin/stdout.
- *   - sse:    Connects to an HTTP endpoint with Server-Sent Events for
- *             receiving responses and POST for sending requests.
- *   - http:   Streamable HTTP transport with optional OAuth 2.0 support
- *             (authorization code flow with PKCE, token refresh).
+ * Connects to remote MCP servers via Streamable HTTP with automatic OAuth 2.0
+ * detection (authorization code flow with PKCE, token refresh).
  *
- * Token-efficiency: No heavy SDK dependency — just Node.js built-ins.
- * Messages are logged at trace level only (stderr passthrough for stdio).
+ * OAuth is discovered automatically from the MCP server's
+ * /.well-known/oauth-authorization-server endpoint. No manual
+ * authorization-server or endpoint configuration is needed.
  */
 
-import { spawn, type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
-import { createInterface } from "node:readline";
 import * as crypto from "node:crypto";
 import * as http from "node:http";
 import * as fs from "node:fs";
@@ -24,63 +18,27 @@ import * as os from "node:os";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export interface StdioServerConfig {
-  transport: "stdio";
-  name: string;
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-  cwd?: string;
-  timeout?: number;
-}
-
-export interface SseServerConfig {
-  transport: "sse";
-  name: string;
-  url: string;
-  headers?: Record<string, string>;
-  timeout?: number;
-}
-
 export interface OAuthConfig {
-  /** Enable OAuth for this HTTP server. */
-  enabled: boolean;
-  /** URL to the OAuth authorization server metadata (.well-known).
-   * If omitted, the client will try to discover it from the MCP server. */
-  authorizationServer?: string;
-  /** Explicit authorization endpoint (overrides discovery). */
-  authorizationUrl?: string;
-  /** Explicit token endpoint (overrides discovery). */
-  tokenUrl?: string;
-  /** Dynamic client registration endpoint (overrides discovery). */
-  registrationUrl?: string;
   /** Pre-registered client ID (skips dynamic registration if provided). */
   clientId?: string;
   /** Client secret (for confidential clients). */
   clientSecret?: string;
-  /** Redirect URI for the authorization code callback.
-   * Defaults to http://localhost:<port>/callback with a random port. */
-  redirectUri?: string;
-  /** Fixed redirect port (default: random available port). */
-  redirectPort?: number;
-  /** Scopes to request. */
+  /** Scopes to request. If not specified, server defaults are used. */
   scopes?: string[];
   /** Path to a JSON file for persisting tokens across sessions.
    * Defaults to ~/.pi/agent/mcp-tokens/<server-name>.json */
   tokenStorePath?: string;
 }
 
-export interface HttpServerConfig {
-  transport: "http";
+export interface ServerConfig {
   name: string;
   url: string;
   headers?: Record<string, string>;
   timeout?: number;
-  /** Optional OAuth 2.0 configuration. */
+  /** Optional OAuth overrides. If omitted, OAuth is auto-detected from the
+   * server's /.well-known/oauth-authorization-server endpoint. */
   oauth?: OAuthConfig;
 }
-
-export type ServerConfig = StdioServerConfig | SseServerConfig | HttpServerConfig;
 
 export interface OAuthStatus {
   /** Whether OAuth is configured for this server. */
@@ -165,234 +123,6 @@ interface Transport extends EventEmitter {
   start(): Promise<void>;
   send(message: JsonRpcRequest | JsonRpcNotification): void | Promise<void>;
   close(): void;
-}
-
-// ── Stdio Transport ────────────────────────────────────────────────────
-
-class StdioTransport extends EventEmitter implements Transport {
-  private process: ChildProcess | null = null;
-
-  constructor(private readonly config: StdioServerConfig) {
-    super();
-  }
-
-  async start(): Promise<void> {
-    const { command, args = [], env, cwd } = this.config;
-
-    const childEnv = {
-      ...process.env,
-      ...Object.fromEntries(
-        Object.entries(env ?? {}).map(([k, v]) => [
-          k,
-          // Expand ${VAR} and $VAR in env values
-          v.replace(/\$\{?(\w+)\}?/g, (_, name) => process.env[name] ?? ""),
-        ]),
-      ),
-    };
-
-    this.process = spawn(command, args, {
-      stdio: ["pipe", "pipe", "pipe"],
-      env: childEnv,
-      cwd: cwd ?? process.cwd(),
-    });
-
-    // Read newline-delimited JSON from stdout
-    const rl = createInterface({
-      input: this.process.stdout!,
-      crlfDelay: Infinity,
-    });
-
-    rl.on("line", (line: string) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-      try {
-        const msg = JSON.parse(trimmed) as JsonRpcMessage;
-        if ("id" in msg && msg.id !== undefined && "method" in msg) {
-          // Server→Client request (unlikely but spec-compliant)
-          this.emit("request", msg);
-        } else if ("id" in msg && msg.id !== undefined) {
-          // Response to our request
-          this.emit("response", msg as JsonRpcResponse);
-        } else {
-          // Notification from server
-          this.emit("notification", msg as JsonRpcNotification);
-        }
-      } catch {
-        // Non-JSON line (likely log output) — ignore
-      }
-    });
-
-    // Passthrough stderr for debugging (suppressed in production)
-    this.process.stderr?.on("data", (_data: Buffer) => {
-      // MCP spec: stderr may contain log messages — ignore for token efficiency
-    });
-
-    this.process.on("exit", (code, signal) => {
-      this.emit("close", { code, signal });
-    });
-
-    this.process.on("error", (err) => {
-      this.emit("error", err);
-    });
-
-    // Wait briefly for the process to start
-    await new Promise<void>((resolve) => setTimeout(resolve, 100));
-  }
-
-  send(message: JsonRpcRequest | JsonRpcNotification): void {
-    if (!this.process || this.process.killed) {
-      throw new McpError("Transport closed");
-    }
-    const line = JSON.stringify(message) + "\n";
-    this.process.stdin!.write(line);
-  }
-
-  close(): void {
-    if (this.process && !this.process.killed) {
-      // Send SIGTERM, then SIGKILL after a grace period
-      this.process.kill("SIGTERM");
-      setTimeout(() => {
-        if (this.process && !this.process.killed) {
-          this.process.kill("SIGKILL");
-        }
-      }, 2000);
-    }
-    this.process = null;
-  }
-}
-
-// ── SSE Transport ──────────────────────────────────────────────────────
-
-class SseTransport extends EventEmitter implements Transport {
-  private messageEndpoint: string | null = null;
-  private endpointReceived = false;
-  private endpointPromise: Promise<void>;
-  private endpointResolve!: () => void;
-  private abortController: AbortController | null = null;
-
-  constructor(private readonly config: SseServerConfig) {
-    super();
-    this.endpointPromise = new Promise((resolve, reject) => {
-      this.endpointResolve = resolve;
-      // Timeout if no endpoint within 10s
-      setTimeout(() => {
-        if (!this.endpointReceived) {
-          reject(new McpError("SSE endpoint not received within 10s"));
-        }
-      }, 10000);
-    });
-  }
-
-  async start(): Promise<void> {
-    this.abortController = new AbortController();
-    const baseUrl = this.config.url.replace(/\/$/, "");
-
-    // Connect to SSE endpoint
-    const response = await fetch(baseUrl, {
-      headers: {
-        Accept: "text/event-stream",
-        ...this.config.headers,
-      },
-      signal: this.abortController.signal,
-    });
-
-    if (!response.ok) {
-      throw new McpError(`SSE connection failed: ${response.status} ${response.statusText}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) throw new McpError("SSE response has no body");
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    // Parse SSE stream in background
-    const readLoop = async () => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-
-          let eventType = "";
-          let data = "";
-
-          for (const line of lines) {
-            if (line.startsWith("event: ")) {
-              eventType = line.slice(7).trim();
-            } else if (line.startsWith("data: ")) {
-              data += line.slice(6);
-            } else if (line === "") {
-              // Empty line = event boundary
-              if (eventType === "endpoint") {
-                this.messageEndpoint = new URL(data.trim(), baseUrl).toString();
-                this.endpointReceived = true;
-                this.endpointResolve();
-                this.emit("ready");
-              } else if (eventType === "message" || eventType === "" || !eventType) {
-                try {
-                  const msg = JSON.parse(data.trim()) as JsonRpcMessage;
-                  if ("id" in msg && msg.id !== undefined && "method" in msg) {
-                    this.emit("request", msg);
-                  } else if ("id" in msg && msg.id !== undefined) {
-                    this.emit("response", msg as JsonRpcResponse);
-                  } else {
-                    this.emit("notification", msg as JsonRpcNotification);
-                  }
-                } catch {
-                  // Ignore parse errors
-                }
-              }
-              eventType = "";
-              data = "";
-            }
-          }
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          this.emit("error", err);
-        }
-      }
-    };
-
-    readLoop().catch(() => {});
-  }
-
-  async send(message: JsonRpcRequest | JsonRpcNotification): Promise<void> {
-    // Wait for the endpoint event if not yet received
-    if (!this.endpointReceived) {
-      await this.endpointPromise;
-    }
-    if (!this.messageEndpoint) {
-      throw new McpError("SSE transport not ready (no endpoint received)");
-    }
-
-    const body = JSON.stringify(message);
-
-    // Fire-and-forget POST (responses come via SSE)
-    fetch(this.messageEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...this.config.headers,
-      },
-      body,
-      signal: this.abortController?.signal,
-    }).catch((err) => {
-      if ((err as Error).name !== "AbortError") {
-        this.emit("error", err);
-      }
-    });
-  }
-
-  close(): void {
-    this.abortController?.abort();
-    this.abortController = null;
-    this.messageEndpoint = null;
-  }
 }
 
 // ── OAuth 2.0 helpers ─────────────────────────────────────────────────
@@ -515,6 +245,11 @@ class OAuthTokenManager {
     return null;
   }
 
+  /** Current tokens (may be expired). */
+  get current(): OAuthTokens | null {
+    return this.tokens;
+  }
+
   /** Clear stored tokens. */
   clear(): void {
     this.tokens = null;
@@ -529,49 +264,21 @@ class OAuthTokenManager {
 }
 
 /**
- * Discover OAuth authorization server metadata from a well-known URL.
+ * Discover OAuth authorization server metadata from the MCP server's
+ * well-known endpoint. This is the only discovery mechanism — no manual
+ * endpoint configuration is supported.
  */
-async function discoverOAuthMetadata(
-  serverUrl: string,
-  config: OAuthConfig,
-): Promise<OAuthMetadata> {
-  // If explicit endpoints are provided, use them directly
-  if (config.authorizationUrl && config.tokenUrl) {
-    return {
-      issuer: config.authorizationServer ?? "",
-      authorization_endpoint: config.authorizationUrl,
-      token_endpoint: config.tokenUrl,
-      registration_endpoint: config.registrationUrl,
-    };
-  }
-
-  // Try config-provided authorization server metadata URL
-  if (config.authorizationServer) {
-    const metaUrl = config.authorizationServer.replace(/\/$/, "");
-    const resp = await fetch(metaUrl);
-    if (!resp.ok) {
-      throw new McpError(`OAuth metadata discovery failed (${resp.status}): ${metaUrl}`);
-    }
-    return (await resp.json()) as OAuthMetadata;
-  }
-
-  // Try to discover from the MCP server's well-known endpoint
+async function discoverOAuthMetadata(serverUrl: string): Promise<OAuthMetadata> {
   const wellKnownUrl = new URL("/.well-known/oauth-authorization-server", serverUrl).toString();
 
-  try {
-    const resp = await fetch(wellKnownUrl);
-    if (resp.ok) {
-      return (await resp.json()) as OAuthMetadata;
-    }
-  } catch {
-    // Discovery failed, will fall back to explicit config
+  const resp = await fetch(wellKnownUrl);
+  if (!resp.ok) {
+    throw new McpError(
+      `OAuth discovery failed (${resp.status}) at ${wellKnownUrl}. ` +
+        `Ensure the MCP server exposes a /.well-known/oauth-authorization-server endpoint.`,
+    );
   }
-
-  throw new McpError(
-    "OAuth authorization server not discoverable. " +
-      "Provide authorizationServer, authorizationUrl/tokenUrl, " +
-      "or ensure the MCP server exposes .well-known/oauth-authorization-server",
-  );
+  return (await resp.json()) as OAuthMetadata;
 }
 
 /**
@@ -781,13 +488,9 @@ async function runOAuthFlow(
   tokenManager: OAuthTokenManager,
   log?: (msg: string) => void,
 ): Promise<OAuthTokens> {
-  // 1. Determine redirect URI
-  let redirectPort = oauth.redirectPort;
-  if (!redirectPort) {
-    redirectPort = await findAvailablePort();
-  }
-
-  const redirectUri = oauth.redirectUri ?? `http://localhost:${redirectPort}/callback`;
+  // 1. Find an available port for redirect
+  const redirectPort = await findAvailablePort();
+  const redirectUri = `http://localhost:${redirectPort}/callback`;
 
   const scopes = oauth.scopes ?? [];
 
@@ -817,9 +520,6 @@ async function runOAuthFlow(
         "authorization server supports dynamic client registration.",
     );
   }
-
-  // Update token manager with the correct clientId for future refreshes
-  // We store clientId in the token store path lookup
 
   // 3. Generate PKCE parameters
   const codeVerifier = generateCodeVerifier();
@@ -905,107 +605,152 @@ async function runOAuthFlow(
   }
 }
 
-// ── HTTP Transport (Streamable HTTP + OAuth) ───────────────────────────
+// ── OAuth HTTP Transport ───────────────────────────────────────────────
 
-class HttpTransport extends EventEmitter implements Transport {
+class OAuthHttpTransport extends EventEmitter implements Transport {
   private abortController: AbortController | null = null;
   private accessToken: string | null = null;
-  private tokenManager: OAuthTokenManager | null = null;
+  private tokenManager: OAuthTokenManager;
   private oauthMetadata: OAuthMetadata | null = null;
   private oauthClientId: string | null = null;
-  private oauthReady = false;
+  private authenticated = false;
+  private authenticating = false;
   private sessionId: string | null = null;
   private baseUrl: string;
-  private isOAuth: boolean;
 
-  constructor(private readonly config: HttpServerConfig) {
+  constructor(private readonly config: ServerConfig) {
     super();
     this.baseUrl = config.url.replace(/\/$/, "");
-    this.isOAuth = config.oauth?.enabled === true;
-
-    if (this.isOAuth && config.oauth) {
-      const oauth = config.oauth;
-      const storePath =
-        oauth.tokenStorePath ??
-        path.join(
-          os.homedir(),
-          ".pi",
-          "agent",
-          "mcp-tokens",
-          `${sanitizeForFilename(config.name)}.json`,
-        );
-      this.tokenManager = new OAuthTokenManager(storePath);
-    }
+    const storePath =
+      config.oauth?.tokenStorePath ??
+      path.join(
+        os.homedir(),
+        ".pi",
+        "agent",
+        "mcp-tokens",
+        `${sanitizeForFilename(config.name)}.json`,
+      );
+    this.tokenManager = new OAuthTokenManager(storePath);
   }
 
   async start(): Promise<void> {
-    // If OAuth is enabled, perform the auth flow first
-    if (this.isOAuth && this.config.oauth) {
-      await this.performOAuthFlow();
-    }
-
     this.abortController = new AbortController();
-  }
-
-  private async performOAuthFlow(): Promise<void> {
-    const oauth = this.config.oauth!;
     const log = (msg: string) => this.emit("oauthLog", msg);
 
-    // 1. Discover OAuth metadata
-    log("Discovering OAuth authorization server...");
-    this.oauthMetadata = await discoverOAuthMetadata(this.baseUrl, oauth);
-
-    // 2. Check for cached tokens first
-    const cached = this.tokenManager!.load();
-    if (cached) {
-      const accessToken = await this.tokenManager!.getAccessToken(
-        this.oauthMetadata.token_endpoint,
-        oauth.clientId ?? "",
-        oauth.clientSecret,
-      );
-      if (accessToken) {
-        this.accessToken = accessToken;
-        this.oauthClientId = oauth.clientId ?? "";
-        this.oauthReady = true;
+    // 1. Try cached tokens first
+    const cached = this.tokenManager.load();
+    if (cached?.access_token) {
+      // Token is still valid (with 5s buffer)
+      if (!cached.expires_at || Date.now() < cached.expires_at - 5000) {
+        this.accessToken = cached.access_token;
+        this.authenticated = true;
+        this.oauthClientId = this.config.oauth?.clientId ?? "";
         log("Using cached OAuth tokens");
         return;
       }
+
+      // Token expired — will try refresh after discovery
+      log("Cached token expired, attempting refresh...");
     }
 
-    // 3. Run the full authorization flow
-    const tokens = await runOAuthFlow(oauth, this.oauthMetadata, this.tokenManager!, log);
+    // 2. No valid cached token — discover OAuth from well-known
+    log("Discovering OAuth authorization server...");
+    this.oauthMetadata = await discoverOAuthMetadata(this.baseUrl);
 
-    this.accessToken = tokens.access_token;
-    this.oauthClientId = oauth.clientId ?? "";
-    this.oauthReady = true;
-  }
-
-  private async ensureValidToken(): Promise<void> {
-    if (!this.isOAuth || this.oauthReady) return;
-
-    if (this.tokenManager && this.oauthMetadata) {
-      const token = await this.tokenManager.getAccessToken(
-        this.oauthMetadata.token_endpoint,
-        this.oauthClientId ?? "",
-        this.config.oauth?.clientSecret,
-      );
-      if (token) {
-        this.accessToken = token;
-        this.oauthReady = true;
+    // 3. Try refreshing cached token with discovered endpoint
+    if (cached?.refresh_token) {
+      try {
+        const newTokens = await refreshAccessToken(
+          this.oauthMetadata.token_endpoint,
+          cached.refresh_token,
+          this.config.oauth?.clientId ?? "",
+          this.config.oauth?.clientSecret,
+        );
+        this.tokenManager.save(newTokens);
+        this.accessToken = newTokens.access_token;
+        this.authenticated = true;
+        this.oauthClientId = this.config.oauth?.clientId ?? "";
+        log("Refreshed OAuth tokens");
         return;
+      } catch {
+        log("Token refresh failed, starting new authorization...");
+        this.tokenManager.clear();
       }
     }
 
-    // Re-run the OAuth flow if token is missing/expired
-    if (this.config.oauth) {
-      await this.performOAuthFlow();
+    // 4. Run full OAuth flow
+    const tokens = await runOAuthFlow(
+      this.config.oauth ?? {},
+      this.oauthMetadata,
+      this.tokenManager,
+      log,
+    );
+    this.accessToken = tokens.access_token;
+    this.authenticated = true;
+    this.oauthClientId = this.config.oauth?.clientId ?? "";
+  }
+
+  /** Re-authenticate (called on 401 from send). */
+  private async ensureAuthenticated(): Promise<void> {
+    if (this.authenticated && this.accessToken) return;
+    if (this.authenticating) {
+      throw new McpError("Authentication already in progress, retry");
+    }
+
+    this.authenticating = true;
+    try {
+      const log = (msg: string) => this.emit("oauthLog", msg);
+
+      // If we have metadata, try refresh first
+      if (this.oauthMetadata) {
+        const cached = this.tokenManager.load();
+        if (cached?.refresh_token) {
+          try {
+            const tokens = await refreshAccessToken(
+              this.oauthMetadata.token_endpoint,
+              cached.refresh_token,
+              this.config.oauth?.clientId ?? this.oauthClientId ?? "",
+              this.config.oauth?.clientSecret,
+            );
+            this.tokenManager.save(tokens);
+            this.accessToken = tokens.access_token;
+            this.authenticated = true;
+            log("Refreshed OAuth tokens");
+            return;
+          } catch {
+            log("Token refresh failed, re-authenticating...");
+            this.tokenManager.clear();
+          }
+        }
+
+        // Run full OAuth flow
+        const tokens = await runOAuthFlow(
+          this.config.oauth ?? {},
+          this.oauthMetadata,
+          this.tokenManager,
+          log,
+        );
+        this.accessToken = tokens.access_token;
+        this.authenticated = true;
+      } else {
+        // No metadata yet — discover first, then run full flow
+        this.oauthMetadata = await discoverOAuthMetadata(this.baseUrl);
+
+        const tokens = await runOAuthFlow(
+          this.config.oauth ?? {},
+          this.oauthMetadata,
+          this.tokenManager,
+          log,
+        );
+        this.accessToken = tokens.access_token;
+        this.authenticated = true;
+      }
+    } finally {
+      this.authenticating = false;
     }
   }
 
   async send(message: JsonRpcRequest | JsonRpcNotification): Promise<void> {
-    // Ensure we have a valid token before sending
-    await this.ensureValidToken();
-
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json, text/event-stream",
@@ -1056,9 +801,6 @@ class HttpTransport extends EventEmitter implements Transport {
               return;
             } else if ("id" in message && message.id !== undefined) {
               // Response has no id but we know it — synthesize a proper response
-              // so the pending callback can be settled (JSON-RPC allows omitting
-              // id for parse errors, but servers sometimes omit it for other
-              // errors too).
               this.emit("response", {
                 jsonrpc: "2.0",
                 id: message.id,
@@ -1075,14 +817,13 @@ class HttpTransport extends EventEmitter implements Transport {
           // Not valid JSON-RPC — fall through to transport error handling
         }
 
-        // Check for OAuth errors
-        if (response.status === 401 && this.isOAuth && this.config.oauth) {
-          // Token may have expired — try to refresh and retry once.
-          // Clear session ID: a new token may need a fresh session.
-          this.oauthReady = false;
+        // Check for OAuth errors — token may have expired or be missing
+        if (response.status === 401) {
+          // Re-authenticate and retry once
+          this.authenticated = false;
           this.accessToken = null;
           this.sessionId = null;
-          await this.ensureValidToken();
+          await this.ensureAuthenticated();
 
           // Retry the request with new token
           const retryHeaders: Record<string, string> = {
@@ -1119,7 +860,6 @@ class HttpTransport extends EventEmitter implements Transport {
                 this.emit("response", retryErrMsg as JsonRpcResponse);
                 return;
               } else if ("id" in message && message.id !== undefined) {
-                // Synthesize response with known id
                 this.emit("response", {
                   jsonrpc: "2.0",
                   id: message.id,
@@ -1138,28 +878,6 @@ class HttpTransport extends EventEmitter implements Transport {
           throw new McpError(
             `HTTP request failed (${retryResp.status}): ${retryErrText.slice(0, 200)}`,
           );
-        }
-
-        // MCP auth-required check: if server returns 401/403 with JSON-RPC error
-        // containing auth info, try to discover and run OAuth if not already done
-        if ([401, 403].includes(response.status) && !this.isOAuth) {
-          try {
-            const errorBody = JSON.parse(errText);
-            // Check for MCP auth required pattern
-            if (
-              errorBody.error ||
-              errText.includes("auth") ||
-              errText.includes("unauthorized") ||
-              errText.includes("OAuth")
-            ) {
-              throw new McpError(
-                `Server requires authentication (HTTP ${response.status}). ` +
-                  `Add oauth config to your MCP server settings.`,
-              );
-            }
-          } catch (err) {
-            if (err instanceof McpError) throw err;
-          }
         }
 
         throw new McpError(`HTTP request failed (${response.status}): ${errText.slice(0, 200)}`);
@@ -1265,16 +983,15 @@ class HttpTransport extends EventEmitter implements Transport {
 
   /** Clear cached OAuth tokens (forces re-auth on next connect). */
   clearOAuthTokens(): void {
-    this.tokenManager?.clear();
+    this.tokenManager.clear();
     this.accessToken = null;
-    this.oauthReady = false;
+    this.authenticated = false;
     this.oauthMetadata = null;
     this.sessionId = null;
   }
 
-  /** Get the path to the persisted token store, if any. */
-  getTokenStorePath(): string | null {
-    if (!this.isOAuth) return null;
+  /** Get the path to the persisted token store. */
+  getTokenStorePath(): string {
     return (
       this.config.oauth?.tokenStorePath ??
       path.join(
@@ -1289,10 +1006,10 @@ class HttpTransport extends EventEmitter implements Transport {
 
   /** Return OAuth diagnostic info for the current transport. */
   getOAuthStatus(): OAuthStatus {
-    const cached = this.tokenManager?.load() ?? null;
+    const cached = this.tokenManager.load();
     return {
-      configured: this.isOAuth,
-      authenticated: this.oauthReady,
+      configured: true,
+      authenticated: this.authenticated,
       hasTokens: cached !== null,
       tokenExpiry: cached?.expires_at,
       scopes: cached?.scope?.split(" ") ?? this.config.oauth?.scopes,
@@ -1304,7 +1021,7 @@ class HttpTransport extends EventEmitter implements Transport {
     this.abortController?.abort();
     this.abortController = null;
     this.accessToken = null;
-    this.oauthReady = false;
+    this.authenticated = false;
     this.sessionId = null;
   }
 }
@@ -1317,7 +1034,7 @@ function sanitizeForFilename(name: string): string {
 // ── MCP Client ─────────────────────────────────────────────────────────
 
 export class McpClient {
-  private transport: Transport | null = null;
+  private transport: OAuthHttpTransport | null = null;
   private nextId = 1;
   private pending = new Map<
     number,
@@ -1354,7 +1071,7 @@ export class McpClient {
     if (this.closed) throw new McpError("Client closed");
 
     try {
-      this.transport = this.createTransport();
+      this.transport = new OAuthHttpTransport(this.config);
 
       // Wire up response handler
       this.transport.on("response", (msg: JsonRpcResponse) => {
@@ -1383,6 +1100,7 @@ export class McpClient {
         this.logInfo(`OAuth: ${msg}`);
       });
 
+      // Start transport — this may trigger OAuth flow if no valid tokens
       await this.transport.start();
 
       // MCP initialization handshake
@@ -1420,19 +1138,6 @@ export class McpClient {
       this.transport?.close();
       this.transport = null;
       throw err;
-    }
-  }
-
-  private createTransport(): Transport {
-    switch (this.config.transport) {
-      case "stdio":
-        return new StdioTransport(this.config);
-      case "sse":
-        return new SseTransport(this.config);
-      case "http":
-        return new HttpTransport(this.config);
-      default:
-        throw new McpError(`Unsupported transport: ${(this.config as any).transport}`);
     }
   }
 
@@ -1538,71 +1243,53 @@ export class McpClient {
     return this.config.name;
   }
 
-  /** Whether this server is configured with OAuth. */
-  get hasOAuth(): boolean {
-    return (
-      this.config.transport === "http" && (this.config as HttpServerConfig).oauth?.enabled === true
-    );
-  }
-
-  /** Get the OAuth config for this server, if any. */
-  get oauthConfig(): OAuthConfig | null {
-    if (this.config.transport === "http") {
-      return (this.config as HttpServerConfig).oauth ?? null;
-    }
-    return null;
-  }
-
   /** Get OAuth authentication status for diagnostics. */
   getOAuthStatus(): OAuthStatus | null {
-    if (this.transport instanceof HttpTransport) {
-      return (this.transport as HttpTransport).getOAuthStatus();
+    if (this.transport) {
+      return this.transport.getOAuthStatus();
     }
-    if (this.hasOAuth) {
-      // Transport not yet created — check config + token file
-      const storePath =
-        this.oauthConfig?.tokenStorePath ??
-        path.join(
-          os.homedir(),
-          ".pi",
-          "agent",
-          "mcp-tokens",
-          `${sanitizeForFilename(this.config.name)}.json`,
-        );
-      let hasTokens = false;
-      let tokenExpiry: number | undefined;
-      try {
-        if (fs.existsSync(storePath)) {
-          const raw = fs.readFileSync(storePath, "utf-8");
-          const parsed = JSON.parse(raw);
-          if (parsed.access_token) {
-            hasTokens = true;
-            tokenExpiry = parsed.expires_at;
-          }
+    // Transport not yet created — check config + token file
+    const storePath =
+      this.config.oauth?.tokenStorePath ??
+      path.join(
+        os.homedir(),
+        ".pi",
+        "agent",
+        "mcp-tokens",
+        `${sanitizeForFilename(this.config.name)}.json`,
+      );
+    let hasTokens = false;
+    let tokenExpiry: number | undefined;
+    try {
+      if (fs.existsSync(storePath)) {
+        const raw = fs.readFileSync(storePath, "utf-8");
+        const parsed = JSON.parse(raw);
+        if (parsed.access_token) {
+          hasTokens = true;
+          tokenExpiry = parsed.expires_at;
         }
-      } catch {
-        // Ignore
       }
-      return {
-        configured: true,
-        authenticated: false,
-        hasTokens,
-        tokenExpiry,
-        scopes: this.oauthConfig?.scopes,
-        tokenStorePath: storePath,
-      };
+    } catch {
+      // Ignore
     }
-    return null;
+    return {
+      configured: true,
+      authenticated: false,
+      hasTokens,
+      tokenExpiry,
+      scopes: this.config.oauth?.scopes,
+      tokenStorePath: storePath,
+    };
   }
 
   /** Clear OAuth tokens (forces re-auth on next connect). */
   clearOAuthTokens(): void {
-    if (this.transport instanceof HttpTransport) {
-      (this.transport as HttpTransport).clearOAuthTokens();
-    } else if (this.hasOAuth) {
+    if (this.transport) {
+      this.transport.clearOAuthTokens();
+    } else {
       // Transport not created yet — delete token file directly
       const storePath =
-        this.oauthConfig?.tokenStorePath ??
+        this.config.oauth?.tokenStorePath ??
         path.join(
           os.homedir(),
           ".pi",

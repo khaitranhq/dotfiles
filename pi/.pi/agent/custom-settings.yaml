@@ -3,12 +3,6 @@ mcp:
     - name: "jira"
       transport: "http"
       url: "https://jira.example.com/mcp"
-      enabled: true
-      oauth:
-        enabled: true
-        scopes:
-          - "read:jira-work"
-          - "write:jira-work"
 always_approve:
   bashCommands:
     - find

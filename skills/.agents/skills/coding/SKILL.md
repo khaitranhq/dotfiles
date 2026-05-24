@@ -1,12 +1,39 @@
 ---
 name: coding
-description: Provides baseline coding guardrails and design principles for safe, maintainable code changes across languages. Use whenever the agent will create, modify, refactor, review, or delete code; for code changes, always load the tdd skill too and default to red-green-refactor unless automation is genuinely impractical.
+description: MANDATORY baseline coding guardrails and design principles for safe, maintainable code changes across all languages. Load this skill for ANY coding task — when the user asks to write, create, fix, change, update, edit, modify, add, remove, delete, rewrite, refactor, review, clean up, implement, build, enhance, patch, or debug code. Also load when the user mentions code, coding, feature, bug, or any code-related work. For code changes, always pair with the tdd skill and default to red-green-refactor unless automation is impractical.
 license: MIT
 metadata:
   author: OpenCode
   version: "1.0.0"
   domain: general
   triggers:
+    - fix
+    - change
+    - update
+    - add
+    - remove
+    - delete
+    - rewrite
+    - write code
+    - write
+    - create code
+    - create
+    - modify code
+    - modify
+    - edit code
+    - edit
+    - implement
+    - build
+    - enhance
+    - patch
+    - debug
+    - refactor
+    - review code
+    - clean up
+    - code
+    - coding
+    - feature
+    - bug
     - coding principles
     - best practices
     - SOLID
@@ -14,8 +41,6 @@ metadata:
     - KISS
     - YAGNI
     - clean code
-    - clean up
-    - clean
     - tidy
     - format
     - reformat
@@ -27,9 +52,6 @@ metadata:
     - code quality
     - implement feature
     - bug fix
-    - create code
-    - modify code
-    - edit code
     - code change
   role: advisor
   scope: implementation
