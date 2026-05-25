@@ -242,47 +242,54 @@ export async function connectAllServers(
   if (loadingRef.current) return;
   loadingRef.current = true;
 
-  // Disconnect existing clients
-  for (const [, client] of state.clients) {
-    client.disconnect();
-    mcpLogInfo("mcp", `Disconnected from server "${client.info?.name}"`);
-  }
-  state.clients.clear();
-  state.toolMap.clear();
-
-  const servers = state.config.servers ?? [];
-
-  if (servers.length === 0) {
-    loadingRef.current = false;
-    return;
-  }
-
-  // Connect to all servers in parallel
-  const results = await Promise.all(servers.map((sc) => connectServer(sc, ctx)));
-
-  let totalTools = 0;
-
-  for (let i = 0; i < servers.length; i++) {
-    const client = results[i];
-    if (!client) continue;
-
-    const serverConfig = servers[i];
-    state.clients.set(serverConfig.name, client);
-
-    try {
-      const toolCount = await registerServerTools(pi, client, serverConfig, state, ctx);
-      totalTools += toolCount;
-      mcpLogInfo(serverConfig.name, `${toolCount} tool(s) registered`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      mcpLogError(serverConfig.name, `Tool listing failed: ${msg}`);
-      ctx?.ui?.notify?.(`MCP server "${serverConfig.name}" tool listing failed: ${msg}`, "warning");
+  try {
+    // Disconnect existing clients
+    for (const [, client] of state.clients) {
+      client.disconnect();
+      mcpLogInfo("mcp", `Disconnected from server "${client.info?.name}"`);
     }
-  }
+    state.clients.clear();
+    state.toolMap.clear();
 
-  loadingRef.current = false;
+    const servers = state.config.servers ?? [];
 
-  if (totalTools > 0) {
-    ctx?.ui?.notify?.(`MCP: ${state.clients.size} server(s), ${totalTools} tool(s) ready`, "info");
+    if (servers.length === 0) {
+      return;
+    }
+
+    // Connect to all servers in parallel
+    const results = await Promise.all(servers.map((sc) => connectServer(sc, ctx)));
+
+    let totalTools = 0;
+
+    for (let i = 0; i < servers.length; i++) {
+      const client = results[i];
+      if (!client) continue;
+
+      const serverConfig = servers[i];
+      state.clients.set(serverConfig.name, client);
+
+      try {
+        const toolCount = await registerServerTools(pi, client, serverConfig, state, ctx);
+        totalTools += toolCount;
+        mcpLogInfo(serverConfig.name, `${toolCount} tool(s) registered`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        mcpLogError(serverConfig.name, `Tool listing failed: ${msg}`);
+        ctx?.ui?.notify?.(
+          `MCP server "${serverConfig.name}" tool listing failed: ${msg}`,
+          "warning",
+        );
+      }
+    }
+
+    if (totalTools > 0) {
+      ctx?.ui?.notify?.(
+        `MCP: ${state.clients.size} server(s), ${totalTools} tool(s) ready`,
+        "info",
+      );
+    }
+  } finally {
+    loadingRef.current = false;
   }
 }

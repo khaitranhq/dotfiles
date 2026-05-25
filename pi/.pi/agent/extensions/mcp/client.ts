@@ -311,8 +311,11 @@ export class McpClient {
     mcpLogInfo(this.config.name, "Disconnecting");
     this._connected = false;
     this._tools = null;
+    this._log = null;
     this.cleanupCallbackServer();
     if (this.transport) {
+      this.transport.onerror = undefined;
+      this.transport.onclose = undefined;
       this.transport.close().catch(() => {});
       this.transport = null;
     }

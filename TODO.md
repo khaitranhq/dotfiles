@@ -12,6 +12,8 @@
 
 ## PI agent
 
+### LLM Wiki - Knowledge base for LLMs
+
 ### Read tool with secret masking capability
 
 ### MCP

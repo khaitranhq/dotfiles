@@ -7,3 +7,4 @@
 .rgignore
 _tasks
 .ignore
+.codegraph
