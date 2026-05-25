@@ -18,6 +18,7 @@ local lsp_config = {
       yaml = {
         schemas = {
           ["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*.{yml,yaml}",
+          ["https://api.bitbucket.org/schemas/pipelines-configuration"] = "**/bitbucket-pipelines.yml",
         },
       },
     },

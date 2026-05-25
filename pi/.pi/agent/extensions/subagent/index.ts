@@ -1318,6 +1318,9 @@ export default function (pi: ExtensionAPI) {
       // Update system prompt on the next turn
       activePrimaryAgent = targetName;
 
+      // Notify other extensions (e.g. vertical-split) of agent change
+      pi.events.emit("agent:changed", { name: agent.name });
+
       ctx.ui.notify(`Switched to primary agent: ${agent.name} (${agent.source})`, "info");
       ctx.ui.setStatus("agent", `agent: ${agent.name}`);
     },
@@ -1352,6 +1355,7 @@ export default function (pi: ExtensionAPI) {
     if (!agent) {
       // Agent no longer exists; clear it
       activePrimaryAgent = null;
+      pi.events.emit("agent:changed", { name: "pi" });
       ctx.ui.setStatus("agent", undefined);
       return;
     }

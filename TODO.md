@@ -6,7 +6,6 @@
 
 ## Skills
 
-- [ ] [ID: 02] load diagnostic skill properly
 - [ ] [ID: 03] diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
 
 ## PI agent
@@ -40,6 +39,5 @@ pi/.pi/agent/extensions/subagent/index.ts
 
 ### General
 
-- [ ] [ID: 11] travel to find and load AGENTS.md
 - [ ] [ID: 12] fix UI to change layout to vertical split
 - [ ] [ID: 13] refactor tools
