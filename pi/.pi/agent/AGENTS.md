@@ -2,37 +2,38 @@
 
 ## Start Here
 
-### ⚠️ MANDATORY: Load Skills After Context Gathering
+### Pre-Execution Analysis: Explore → Plan
 
-**After understanding the task and gathering enough context, agents MUST load relevant skills by using the `read` tool to read the skill's SKILL.md file at the location listed in the available_skills section of the system prompt.**
+Before writing any code or making changes, agents must understand the problem and create a plan.
 
-This is a hard requirement, not optional. Once you have a clear picture of the task, evaluate which available skills (golang, github-action, aws-iam-policies, d2, slidev, diagnose, coding, typescript, etc.) match the request and `read` their SKILL.md files before proceeding.
-
-**Why**: Skills inject critical context, best practices, specialized workflows, and bundled resources that are essential for quality work. Loading skill too early (before understanding the task) leads to irrelevant context. Loading them after context gathering ensures you pick the right skills for the actual work.
-
-**How to choose which skills to load**:
-
-- Parse the user's request for key terms (language, tool, domain, problem type)
-- Cross-reference against the available skills listed in your system prompt
-- When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output
-- For compound tasks, load multiple skills (e.g., golang + tdd + coding for a Go project with tests)
-
----
-
-### Pre-Execution Analysis
-
-Before executing any task or prompt, agents must:
-
-1. **Analyze Requirements** - Carefully read and understand what the user is asking for
-2. **Check Related Context** - Use CodeGraph tools FIRST to understand the codebase structure, existing implementations, and relevant files:
+1. **Analyze Requirements** — Carefully read and understand what the user is asking for.
+2. **Explore Context** — Use CodeGraph tools FIRST to understand the codebase:
    - `codegraph_files` to explore project structure and locate files
    - `codegraph_context` to understand features, architecture, or bug context
    - `codegraph_search` to find symbol definitions
    - Only fall back to `rg`/`read` when the graph index is incomplete (verify with `codegraph_status`), or the query is purely textual (string literals, comments, config values)
-3. **Load Related Skills** - Use the `read` tool to load any specialized skills that match the task requirements (e.g., `read /home/khaitran/.agents/skills/golang/SKILL.md` for Go tasks, `read /home/khaitran/.agents/skills/github-action/SKILL.md` for GitHub Actions, etc.) by reading the skill file location shown in the system prompt — **THIS IS MANDATORY**
-4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
+3. **Plan the Task** — Break the work into concrete, verifiable tasks using `TodoWrite`. Each task must have clear success criteria. Do not start implementing until the plan is complete.
 
-**Why this order**: You cannot know which skills are relevant until you understand the request and have context. Loading skills too early may load irrelevant ones; loading them after context ensures precision. This ensures agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
+---
+
+### ⚠️ MANDATORY: Load Skills Per Implementation Task
+
+**When starting to implement each todo task, agents MUST load the relevant skills for that specific task by using the `read` tool to read the skill's SKILL.md file.**
+
+This is a hard requirement, not optional. Do NOT front-load all skills during planning. Instead, load skills on-demand as you begin each implementation task:
+
+- **Before Task 1**: Load skills relevant to Task 1 → implement Task 1
+- **Before Task 2**: Load skills relevant to Task 2 → implement Task 2
+- ...and so on
+
+**How to choose which skills to load for a task**:
+
+- Parse the task's scope: language, tool, domain, problem type
+- Cross-reference against the available skills listed in your system prompt
+- **Always load `coding` for any task that writes, modifies, reviews, refactors, or deletes code** — regardless of language. This is the non-negotiable baseline for all code work.
+- **Always pair `tdd` with `coding` for code changes** — red-green-refactor is the default workflow
+- When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output
+- For compound tasks, load multiple skills (e.g., `golang` + `tdd` + `coding` for a Go feature)
 
 ### Goal-Driven Execution
 
@@ -51,8 +52,6 @@ For multi-step tasks, state a brief plan:
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
 ## Hard Constraints
 
@@ -75,8 +74,6 @@ grep -r 'pattern' .            # use rg instead
 find . -name '*.go'
 grep -r 'pattern' .
 ```
-
-**Rationale**: `rg` is faster, respects `.gitignore`, handles large repos, and avoids binary-file noise.
 
 ### Git Commits
 
@@ -103,11 +100,9 @@ When processing YAML and JSON files, use the following tools in order of prefere
 
 ⚠️ **Do not use jq** - Since `yq` handles both YAML and JSON natively, using `jq` is redundant and can lead to inconsistent handling.
 
-This ensures proper YAML and JSON structure preservation and minimizes errors from text-based processing.
-
 ### YAML Validation
 
-All YAML files in this project must be validated using `yamllint` before being committed or merged. This ensures consistency and correctness of YAML syntax and structure across the codebase.
+All YAML files in this project must be validated using `yamllint` before being committed or merged.
 
 #### Configuration
 
@@ -136,15 +131,15 @@ Only fall back to `rg`, `read`, or filesystem operations when:
 
 **Tool selection priority:**
 
-| Goal | Primary Tool | Fallback |
-|------|-------------|----------|
-| Explore project structure | `codegraph_files` | `rg --files` |
-| Understand a feature/architecture | `codegraph_context` | `rg` + `read` |
-| Find symbol definition | `codegraph_search` → `codegraph_node` | `rg` + `read` |
-| Read related symbols | `codegraph_explore` | `read` (multiple files) |
-| Trace call path A→B | `codegraph_trace` | `rg` (manual tracing) |
-| Find callers/callees | `codegraph_callers` / `codegraph_callees` | `rg` |
-| Assess change impact | `codegraph_impact` | `rg` + manual analysis |
+| Goal                              | Primary Tool                              | Fallback                |
+| --------------------------------- | ----------------------------------------- | ----------------------- |
+| Explore project structure         | `codegraph_files`                         | `rg --files`            |
+| Understand a feature/architecture | `codegraph_context`                       | `rg` + `read`           |
+| Find symbol definition            | `codegraph_search` → `codegraph_node`     | `rg` + `read`           |
+| Read related symbols              | `codegraph_explore`                       | `read` (multiple files) |
+| Trace call path A→B               | `codegraph_trace`                         | `rg` (manual tracing)   |
+| Find callers/callees              | `codegraph_callers` / `codegraph_callees` | `rg`                    |
+| Assess change impact              | `codegraph_impact`                        | `rg` + manual analysis  |
 
 **Graph Freshness After Code Changes:**
 
@@ -153,8 +148,6 @@ After any code modification (`edit`, `write`, or `bash` command that alters sour
 1. Call `codegraph_status` to verify the index reflects the changes
 2. If the graph appears stale (file/symbol counts don't match expectations), cross-check findings with `rg`/`read` until the graph catches up
 3. Do NOT rely on stale CodeGraph results for subsequent decisions — always verify against live file content when in doubt
-
-**Rationale**: CodeGraph provides structured, relationship-aware code navigation that is fundamentally impossible with grep alone. It answers "how does X reach Y?" and "what breaks if I change Z?" — questions that text search cannot resolve.
 
 ## Working Style
 
@@ -207,8 +200,6 @@ Content in markdown files must be organized in single, logical sections to avoid
 - **Rules and guidelines** - Group related rules together in appropriate sections
 - **Examples** - Include with the rule they exemplify, not repeated elsewhere
 - **Cross-references** - Use links to reference content instead of repeating it
-
-This ensures the document remains maintainable, authoritative, and prevents conflicting information.
 
 ## Communication and Output
 
@@ -292,8 +283,6 @@ After completing any task, agents must provide a clear, readable summary of find
 - Monitor performance for 1 week
 - Gather user feedback on changes
 ```
-
-This ensures users can quickly understand what was accomplished, what changed, and any important notes about the work completed.
 
 ### English Learning Feedback
 

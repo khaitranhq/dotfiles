@@ -1,6 +1,6 @@
 ---
 name: coding
-description: MANDATORY baseline coding guardrails and design principles for safe, maintainable code changes across all languages. Load this skill for ANY coding task — when the user asks to write, create, fix, change, update, edit, modify, add, remove, delete, rewrite, refactor, review, clean up, implement, build, enhance, patch, or debug code. Also load when the user mentions code, coding, feature, bug, or any code-related work. For code changes, always pair with the tdd skill and default to red-green-refactor unless automation is impractical.
+description: MANDATORY for ALL code work — writing, editing, refactoring, reviewing, or deleting code in any language. Load this skill for every code-related task. Always pair with the tdd skill for code changes. Non-negotiable baseline.
 license: MIT
 metadata:
   author: OpenCode
