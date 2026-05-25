@@ -6,6 +6,8 @@ import * as os from "node:os";
 import type { ServerConfig } from "./client";
 import { loadCustomSettings, type CustomSettings } from "../shared/config";
 
+export { type ServerConfig, type HttpServerConfig, type StdioServerConfig } from "./client";
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface McpConfig {
@@ -41,7 +43,7 @@ export function defaultTokenStorePath(serverName: string): string {
     os.homedir(),
     ".pi",
     "agent",
-    "mcp-tokens",
+    "mcp",
     `${serverName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 64)}.json`,
   );
 }

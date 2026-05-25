@@ -1,8 +1,9 @@
 /**
  * MCP client — thin wrapper around @modelcontextprotocol/sdk.
  *
- * Handles connection lifecycle, OAuth callback capture, and exposes
- * listTools / callTool for pi's extension system.
+ * Handles connection lifecycle for both Streamable HTTP and stdio transports,
+ * OAuth callback capture (HTTP only), and exposes listTools / callTool
+ * for pi's extension system.
  */
 import * as http from "node:http";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -10,17 +11,43 @@ import {
   StreamableHTTPClientTransport,
   type StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  StdioClientTransport,
+  type StdioServerParameters,
+} from "@modelcontextprotocol/sdk/client/stdio.js";
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { PiOAuthProvider, type PiOAuthConfig } from "./oauth-provider";
 import { mcpLogInfo, mcpLogError } from "./logger";
 
-export interface ServerConfig {
+// ── Server config (discriminated union on transport) ─────────────────
+
+interface BaseServerConfig {
   name: string;
+  timeout?: number;
+}
+
+export interface HttpServerConfig extends BaseServerConfig {
+  transport?: "http";
   url: string;
   headers?: Record<string, string>;
-  timeout?: number;
   oauth?: PiOAuthConfig;
+}
+
+export interface StdioServerConfig extends BaseServerConfig {
+  transport: "stdio";
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+}
+
+export type ServerConfig = HttpServerConfig | StdioServerConfig;
+
+/** Determine the effective transport for a server config. */
+export function getTransport(config: ServerConfig): "http" | "stdio" {
+  return config.transport ?? "http";
 }
 
 export interface OAuthStatus {
@@ -48,8 +75,8 @@ export class McpError extends Error {
 
 export class McpClient {
   private client: Client;
-  private transport: StreamableHTTPClientTransport | null = null;
-  private oauthProvider: PiOAuthProvider;
+  private transport: Transport | null = null;
+  private oauthProvider: PiOAuthProvider | null = null;
   private _connected = false;
   private _tools: Tool[] | null = null;
   private _serverInfo: { name: string; version: string } | null = null;
@@ -62,11 +89,17 @@ export class McpClient {
     private readonly config: ServerConfig,
     private readonly defaultTimeout = 30000,
   ) {
-    this.oauthProvider = new PiOAuthProvider(config.name, config.oauth);
-    this.oauthProvider.setOnAuthUrl((url) => {
-      this.logInfo(`Could not open browser. Authorize here:
+    const transportType = getTransport(config);
+
+    if (transportType === "http") {
+      const httpConfig = config as HttpServerConfig;
+      this.oauthProvider = new PiOAuthProvider(httpConfig.name, httpConfig.oauth);
+      this.oauthProvider.setOnAuthUrl((url) => {
+        this.logInfo(`Could not open browser. Authorize here:
   ${url}`);
-    });
+      });
+    }
+
     this.client = new Client({ name: "pi-mcp-extension", version: "1.0.0" }, {});
   }
 
@@ -84,28 +117,14 @@ export class McpClient {
   async connect(): Promise<void> {
     if (this._connected) return;
 
-    mcpLogInfo(this.config.name, `Connecting to ${this.config.url}`);
-    mcpLogInfo(this.config.name, `Token store: ${this.oauthProvider.tokenStorePath}`);
-    mcpLogInfo(this.config.name, `Has tokens: ${this.oauthProvider.tokens() !== undefined}`);
-    await this.oauthProvider.setupRedirectUrl();
-    mcpLogInfo(this.config.name, `Redirect URL: ${this.oauthProvider.redirectUrl}`);
+    const transportType = getTransport(this.config);
+    mcpLogInfo(this.config.name, `Connecting via ${transportType}...`);
 
-    this.transport = this.createTransport();
-    mcpLogInfo(this.config.name, "Transport created");
-
-    this.transport.onerror = (error: Error) => {
-      const detail = `${error.constructor?.name ?? "Error"}: ${error.message || "(empty)"}${error.stack ? "\n" + error.stack : ""}`;
-      mcpLogError(this.config.name, `Transport error: ${detail}`);
-      this.logInfo(`Transport error: ${detail}`);
-    };
-
-    this.transport.onclose = () => {
-      this._connected = false;
-      mcpLogInfo(this.config.name, "Transport closed");
-    };
-
-    // Connect with OAuth callback handling
-    await this.connectWithOAuth();
+    if (transportType === "stdio") {
+      await this.connectStdio();
+    } else {
+      await this.connectHttp();
+    }
 
     const serverVersion = this.client.getServerVersion();
     this._serverInfo = serverVersion
@@ -118,16 +137,48 @@ export class McpClient {
     mcpLogInfo(this.config.name, msg);
   }
 
-  private createTransport(): StreamableHTTPClientTransport {
-    const opts: StreamableHTTPClientTransportOptions = {
-      authProvider: this.oauthProvider,
-    };
+  // ── HTTP transport ───────────────────────────────────────────────
 
-    if (this.config.headers) {
-      opts.requestInit = { headers: this.config.headers };
+  private async connectHttp(): Promise<void> {
+    const httpConfig = this.config as HttpServerConfig;
+
+    mcpLogInfo(this.config.name, `Connecting to ${httpConfig.url}`);
+    if (this.oauthProvider) {
+      mcpLogInfo(this.config.name, `Token store: ${this.oauthProvider.tokenStorePath}`);
+      mcpLogInfo(this.config.name, `Has tokens: ${this.oauthProvider.tokens() !== undefined}`);
+      await this.oauthProvider.setupRedirectUrl();
+      mcpLogInfo(this.config.name, `Redirect URL: ${this.oauthProvider.redirectUrl}`);
     }
 
-    return new StreamableHTTPClientTransport(new URL(this.config.url), opts);
+    const httpTransport = this.createHttpTransport();
+    this.transport = httpTransport;
+    mcpLogInfo(this.config.name, "HTTP transport created");
+
+    this.transport.onerror = (error: Error) => {
+      const detail = `${error.constructor?.name ?? "Error"}: ${error.message || "(empty)"}${error.stack ? "\n" + error.stack : ""}`;
+      mcpLogError(this.config.name, `Transport error: ${detail}`);
+      this.logInfo(`Transport error: ${detail}`);
+    };
+
+    this.transport.onclose = () => {
+      this._connected = false;
+      mcpLogInfo(this.config.name, "Transport closed");
+    };
+
+    await this.connectWithOAuth(httpTransport);
+  }
+
+  private createHttpTransport(): StreamableHTTPClientTransport {
+    const httpConfig = this.config as HttpServerConfig;
+    const opts: StreamableHTTPClientTransportOptions = {
+      authProvider: this.oauthProvider ?? undefined,
+    };
+
+    if (httpConfig.headers) {
+      opts.requestInit = { headers: httpConfig.headers };
+    }
+
+    return new StreamableHTTPClientTransport(new URL(httpConfig.url), opts);
   }
 
   /**
@@ -135,14 +186,14 @@ export class McpClient {
    * If the server requires authorization, starts a local HTTP server
    * to capture the authorization code callback, then retries.
    */
-  private async connectWithOAuth(): Promise<void> {
+  private async connectWithOAuth(httpTransport: StreamableHTTPClientTransport): Promise<void> {
     try {
       mcpLogInfo(this.config.name, "Attempting initial connection");
-      await this.client.connect(this.transport!);
+      await this.client.connect(httpTransport);
     } catch (err) {
       const detail = `${(err as any)?.constructor?.name ?? "Error"}: ${(err instanceof Error ? err.message : String(err)) || "(empty)"}${err instanceof Error && err.stack ? "\n" + err.stack : ""}`;
       mcpLogError(this.config.name, `connectWithOAuth error: ${detail}`);
-      if (!(err instanceof UnauthorizedError) || !this.transport) {
+      if (!(err instanceof UnauthorizedError)) {
         throw err;
       }
 
@@ -151,14 +202,51 @@ export class McpClient {
       this.logInfo("OAuth authorization required — waiting for browser callback...");
 
       const authCode = await this.waitForAuthCallback();
-      await this.transport.finishAuth(authCode);
+      await httpTransport.finishAuth(authCode);
 
       // Recreate transport for a clean reconnection
-      this.transport.close().catch(() => {});
-      this.transport = this.createTransport();
-      await this.client.connect(this.transport);
+      httpTransport.close().catch(() => {});
+      const newTransport = this.createHttpTransport();
+      this.transport = newTransport;
+      await this.client.connect(newTransport);
     }
   }
+
+  // ── Stdio transport ──────────────────────────────────────────────
+
+  private async connectStdio(): Promise<void> {
+    const stdioConfig = this.config as StdioServerConfig;
+    mcpLogInfo(
+      this.config.name,
+      `Spawning: ${stdioConfig.command} ${(stdioConfig.args ?? []).join(" ")}`,
+    );
+
+    const params: StdioServerParameters = {
+      command: stdioConfig.command,
+      args: stdioConfig.args,
+      env: stdioConfig.env,
+      cwd: stdioConfig.cwd,
+    };
+
+    const stdioTransport = new StdioClientTransport(params);
+    this.transport = stdioTransport;
+    mcpLogInfo(this.config.name, "Stdio transport created");
+
+    stdioTransport.onerror = (error: Error) => {
+      const detail = `${error.constructor?.name ?? "Error"}: ${error.message || "(empty)"}${error.stack ? "\n" + error.stack : ""}`;
+      mcpLogError(this.config.name, `Transport error: ${detail}`);
+      this.logInfo(`Transport error: ${detail}`);
+    };
+
+    stdioTransport.onclose = () => {
+      this._connected = false;
+      mcpLogInfo(this.config.name, "Stdio transport closed");
+    };
+
+    await this.client.connect(stdioTransport);
+  }
+
+  // ── OAuth callback server (HTTP only) ────────────────────────────
 
   /** Start an HTTP server to capture the OAuth redirect, return the code. */
   private async waitForAuthCallback(): Promise<string> {
@@ -166,7 +254,7 @@ export class McpClient {
       this._authCodeResolve = resolve;
       this._authCodeReject = reject;
 
-      const redirectUrl = this.oauthProvider.redirectUrl as string;
+      const redirectUrl = this.oauthProvider!.redirectUrl as string;
       const redirectPort = new URL(redirectUrl).port;
 
       const server = http.createServer((req, res) => {
@@ -288,7 +376,8 @@ export class McpClient {
 
   // ── OAuth ──────────────────────────────────────────────────────────
 
-  getOAuthStatus(): OAuthStatus {
+  getOAuthStatus(): OAuthStatus | null {
+    if (!this.oauthProvider) return null;
     const tokens = this.oauthProvider.tokens();
     return {
       configured: true,
@@ -301,8 +390,15 @@ export class McpClient {
   }
 
   clearOAuthTokens(): void {
+    if (!this.oauthProvider) return;
     mcpLogInfo(this.config.name, "Clearing OAuth tokens");
     this.oauthProvider.clear();
+  }
+
+  // ── Transport info ────────────────────────────────────────────────
+
+  get transportType(): "http" | "stdio" {
+    return getTransport(this.config);
   }
 
   // ── Teardown ───────────────────────────────────────────────────────

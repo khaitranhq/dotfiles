@@ -9,6 +9,7 @@ import * as fs from "node:fs";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 import { loadMcpConfig, defaultTokenStorePath } from "./config";
+import { getTransport, type HttpServerConfig } from "./client";
 import { mcpLogInfo, mcpLogError } from "./logger";
 import {
   connectServer,
@@ -37,7 +38,10 @@ export function registerMcpStatusCommand(pi: ExtensionAPI, state: ConnectionStat
           .filter(([, v]) => v.client === client)
           .map(([toolName, v]) => `  ${toolName} → ${v.originalName}`);
 
-        const header = info ? `${name} (${info.name} v${info.version})` : name;
+        const transportLabel = `[${client.transportType}]`;
+        const header = info
+          ? `${name} (${info.name} v${info.version}) ${transportLabel}`
+          : `${name} ${transportLabel}`;
 
         lines.push(`  ${header}`);
         if (serverTools.length === 0) {
@@ -104,11 +108,15 @@ export function registerMcpAuthCommand(pi: ExtensionAPI, state: ConnectionState)
       const subCommand = parts[0]?.toLowerCase() ?? "status";
       const targetName = parts.slice(1).join(" ");
 
-      const oauthServers = state.config.servers ?? [];
+      const allServers = state.config.servers ?? [];
+      const httpServers = allServers.filter(
+        (s): s is HttpServerConfig => getTransport(s) === "http",
+      );
+      const stdioServers = allServers.filter((s) => getTransport(s) === "stdio");
 
       // ── status ─────────────────────────────────────────────────
       if (subCommand === "status" || !subCommand) {
-        if (oauthServers.length === 0) {
+        if (allServers.length === 0) {
           ctx.ui.notify(
             "MCP OAuth: No servers configured.\n" +
               "Add a server to the 'mcp' section in ~/.pi/agent/custom-settings.yaml.\n" +
@@ -120,7 +128,17 @@ export function registerMcpAuthCommand(pi: ExtensionAPI, state: ConnectionState)
 
         const lines: string[] = ["MCP OAuth Status:", ""];
 
-        for (const serverConfig of oauthServers) {
+        if (stdioServers.length > 0) {
+          lines.push("  [stdio servers — no OAuth]", "");
+          for (const s of stdioServers) {
+            const client = state.clients.get(s.name);
+            const connected = client?.connected ? "✓ connected" : "✗ not connected";
+            lines.push(`    ${s.name}: ${connected}`);
+          }
+          lines.push("");
+        }
+
+        for (const serverConfig of httpServers) {
           const client = state.clients.get(serverConfig.name);
           const status = client?.getOAuthStatus();
 
@@ -194,26 +212,29 @@ export function registerMcpAuthCommand(pi: ExtensionAPI, state: ConnectionState)
       // ── login <name> ───────────────────────────────────────────
       if (subCommand === "login") {
         if (!targetName) {
-          if (oauthServers.length !== 1) {
-            const names = oauthServers.map((s) => s.name).join(", ");
+          if (httpServers.length !== 1) {
+            const names = httpServers.map((s) => s.name).join(", ");
             ctx.ui.notify(
               `Usage: /mcp-auth login <server-name>\n` +
-                `Available OAuth servers: ${names || "none"}`,
+                `Available OAuth (HTTP) servers: ${names || "none"}`,
               "warning",
             );
             return;
           }
         }
 
-        const serverName = targetName || oauthServers[0]?.name;
+        const serverName = targetName || httpServers[0]?.name;
         if (!serverName) {
-          ctx.ui.notify("No OAuth-enabled servers configured.", "warning");
+          ctx.ui.notify("No OAuth-enabled (HTTP) servers configured.", "warning");
           return;
         }
 
-        const serverConfig = (state.config.servers ?? []).find((s) => s.name === serverName);
+        const serverConfig = httpServers.find((s) => s.name === serverName);
         if (!serverConfig) {
-          ctx.ui.notify(`Server "${serverName}" not found in MCP config.`, "error");
+          ctx.ui.notify(
+            `Server "${serverName}" not found in MCP config or is not an HTTP server.`,
+            "error",
+          );
           return;
         }
 
@@ -280,20 +301,20 @@ export function registerMcpAuthCommand(pi: ExtensionAPI, state: ConnectionState)
       // ── logout <name> ──────────────────────────────────────────
       if (subCommand === "logout") {
         if (!targetName) {
-          if (oauthServers.length !== 1) {
-            const names = oauthServers.map((s) => s.name).join(", ");
+          if (httpServers.length !== 1) {
+            const names = httpServers.map((s) => s.name).join(", ");
             ctx.ui.notify(
               `Usage: /mcp-auth logout <server-name>\n` +
-                `Available OAuth servers: ${names || "none"}`,
+                `Available OAuth (HTTP) servers: ${names || "none"}`,
               "warning",
             );
             return;
           }
         }
 
-        const serverName = targetName || oauthServers[0]?.name;
+        const serverName = targetName || httpServers[0]?.name;
         if (!serverName) {
-          ctx.ui.notify("No OAuth-enabled servers configured.", "warning");
+          ctx.ui.notify("No OAuth-enabled (HTTP) servers configured.", "warning");
           return;
         }
 
@@ -313,7 +334,7 @@ export function registerMcpAuthCommand(pi: ExtensionAPI, state: ConnectionState)
           cleared = true;
         }
 
-        const serverConfig = (state.config.servers ?? []).find((s) => s.name === serverName);
+        const serverConfig = httpServers.find((s) => s.name === serverName);
         if (serverConfig) {
           const storePath = serverConfig.oauth?.tokenStorePath ?? defaultTokenStorePath(serverName);
           try {

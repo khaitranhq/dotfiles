@@ -24,7 +24,11 @@ This is a hard requirement, not optional. Once you have a clear picture of the t
 Before executing any task or prompt, agents must:
 
 1. **Analyze Requirements** - Carefully read and understand what the user is asking for
-2. **Check Related Context** - Examine the codebase structure, existing implementations, and relevant files to understand the current state
+2. **Check Related Context** - Use CodeGraph tools FIRST to understand the codebase structure, existing implementations, and relevant files:
+   - `codegraph_files` to explore project structure and locate files
+   - `codegraph_context` to understand features, architecture, or bug context
+   - `codegraph_search` to find symbol definitions
+   - Only fall back to `rg`/`read` when the graph index is incomplete (verify with `codegraph_status`), or the query is purely textual (string literals, comments, config values)
 3. **Load Related Skills** - Use the `read` tool to load any specialized skills that match the task requirements (e.g., `read /home/khaitran/.agents/skills/golang/SKILL.md` for Go tasks, `read /home/khaitran/.agents/skills/github-action/SKILL.md` for GitHub Actions, etc.) by reading the skill file location shown in the system prompt — **THIS IS MANDATORY**
 4. **Plan the Task** - Use the `TodoWrite` tool to create a structured task plan before starting work
 
@@ -154,6 +158,37 @@ The default yamllint configuration should be used. If a custom configuration is 
 yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
+
+### Knowledge Graph Tools
+
+**Always use CodeGraph tools FIRST for codebase exploration and understanding.**
+Only fall back to `rg`, `read`, or filesystem operations when:
+
+- The graph index is incomplete (verify with `codegraph_status` first)
+- The query is purely textual (string literals, comments, config values, regex patterns)
+- You need to read a specific file by path that CodeGraph did not return
+
+**Tool selection priority:**
+
+| Goal | Primary Tool | Fallback |
+|------|-------------|----------|
+| Explore project structure | `codegraph_files` | `rg --files` |
+| Understand a feature/architecture | `codegraph_context` | `rg` + `read` |
+| Find symbol definition | `codegraph_search` → `codegraph_node` | `rg` + `read` |
+| Read related symbols | `codegraph_explore` | `read` (multiple files) |
+| Trace call path A→B | `codegraph_trace` | `rg` (manual tracing) |
+| Find callers/callees | `codegraph_callers` / `codegraph_callees` | `rg` |
+| Assess change impact | `codegraph_impact` | `rg` + manual analysis |
+
+**Graph Freshness After Code Changes:**
+
+After any code modification (`edit`, `write`, or `bash` command that alters source files), the agent MUST:
+
+1. Call `codegraph_status` to verify the index reflects the changes
+2. If the graph appears stale (file/symbol counts don't match expectations), cross-check findings with `rg`/`read` until the graph catches up
+3. Do NOT rely on stale CodeGraph results for subsequent decisions — always verify against live file content when in doubt
+
+**Rationale**: CodeGraph provides structured, relationship-aware code navigation that is fundamentally impossible with grep alone. It answers "how does X reach Y?" and "what breaks if I change Z?" — questions that text search cannot resolve.
 
 ## Working Style
 

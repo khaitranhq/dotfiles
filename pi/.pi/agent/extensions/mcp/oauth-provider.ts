@@ -1,6 +1,6 @@
 /**
  * OAuth 2.0 provider for MCP — implements the SDK's OAuthClientProvider interface
- * with disk-based token/verifier/client storage under ~/.pi/agent/mcp-tokens/.
+ * with disk-based token/verifier/client storage under ~/.pi/agent/mcp/.
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -78,7 +78,7 @@ export class PiOAuthProvider implements OAuthClientProvider {
     private readonly serverName: string,
     private readonly oauthConfig: PiOAuthConfig = {},
   ) {
-    const base = path.join(os.homedir(), ".pi", "agent", "mcp-tokens");
+    const base = path.join(os.homedir(), ".pi", "agent", "mcp");
     const safeName = sanitizeForFilename(serverName);
     this.storePath = oauthConfig.tokenStorePath ?? path.join(base, `${safeName}.json`);
     this.clientInfoPath = path.join(base, `.${safeName}-client.json`);

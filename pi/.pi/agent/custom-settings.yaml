@@ -1,6 +1,6 @@
 mcp:
   servers:
-    - name: jira
+    - name: atlassian
       transport: http
       url: https://mcp.atlassian.com/v1/mcp/authv2
 always_approve:
@@ -78,6 +78,10 @@ always_approve:
     - web_search
     - web_fetch
     - todowrite
+    - mcp_codegraph_codegraph_search
+    - mcp_codegraph_codegraph_files
+    - mcp_codegraph_codegraph_node
+    - mcp_codegraph_codegraph_status
 tools:
   agents:
     atlassian:
