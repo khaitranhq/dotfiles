@@ -73,21 +73,22 @@ always_approve:
     - edit
     - subagent
     - question
-    - mcp_jira_getaccessibleatlassianresources
-    - mcp_jira_getjiraissue
     - web_search
     - web_fetch
     - todowrite
-    - mcp_codegraph_codegraph_search
-    - mcp_codegraph_codegraph_files
-    - mcp_codegraph_codegraph_node
-    - mcp_codegraph_codegraph_status
 tools:
+  global:
+    deny:
+      - mcp_atlassian_*
   agents:
     atlassian:
       allow:
         - read
         - bash
+        - write
+        - edit
         - web_search
         - web_fetch
         - question
+        - todowrite
+        - mcp_atlassian_*
