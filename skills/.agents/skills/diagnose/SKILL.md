@@ -88,21 +88,40 @@ Tool preference:
 
 **Perf branch.** For performance regressions, logs are usually wrong. Instead: establish a baseline measurement (timing harness, `performance.now()`, profiler, query plan), then bisect. Measure first, fix second.
 
-## Phase 5 — Fix + regression test
+## Phase 5 — Fix + regression test (TDD: red → green → refactor)
 
-Write the regression test **before the fix** — but only if there is a **correct seam** for it.
+### ⚠️ TDD IS MANDATORY — NO EXCEPTIONS
 
-A correct seam is one where the test exercises the **real bug pattern** as it occurs at the call site. If the only available seam is too shallow (single-caller test when the bug needs multiple callers, unit test that can't replicate the chain that triggered the bug), a regression test there gives false confidence.
+Every bug fix must follow **red → green → refactor**. This is a hard requirement, not optional.
 
-**If no correct seam exists, that itself is the finding.** Note it. The codebase architecture is preventing the bug from being locked down. Flag this for the next phase.
+**Red:** Write the failing test that reproduces the bug. Prove it fails.
+**Green:** Write the minimal code that makes it pass. No extra changes.
+**Refactor:** Clean up the code while tests stay green.
 
-If a correct seam exists:
+### Finding the test seam
 
-1. Turn the minimised repro into a failing test at that seam.
-2. Watch it fail.
-3. Apply the fix.
-4. Watch it pass.
+A correct seam is one where the test exercises the **real bug pattern** as it occurs at the call site.
+
+**If no correct seam exists, create one.** Refactor to extract testable units, add dependency injection points, or create an integration test harness. Do NOT skip testing — the absence of a seam is itself a defect that the fix should address.
+
+**If creating a seam is genuinely impractical** (closed-source dependency, hardware requirement, etc.), state why explicitly and create the closest practical automated test. Flag the seam gap for the post-mortem.
+
+### TDD workflow for bug fixes
+
+1. Turn the minimised repro into a failing test at the correct seam.
+2. **Watch it fail.** Verify the failure mode matches the reported bug.
+3. Apply the minimal fix.
+4. **Watch it pass.** Verify only the bug-reproducing test turns green.
 5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
+6. Run the full test suite — ensure no regressions.
+7. Refactor if needed under green tests.
+
+### What NOT to do
+
+- ❌ Fix first, test later
+- ❌ Skip test because "the fix is obvious"
+- ❌ Write test after fix and pretend it was TDD
+- ❌ Skip refactor because "it works now"
 
 ## Phase 6 — Cleanup + post-mortem
 

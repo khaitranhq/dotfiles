@@ -15,6 +15,8 @@ import { jsonSchemaToTypeBox } from "./schema";
 import type { McpConfig } from "./config";
 import { DEFAULTS } from "./config";
 import { makeToolName, buildToolDescription, buildPromptSnippet } from "./helpers";
+import { loadToolPermissions, type ToolPermissions } from "../shared/config";
+import { matchesToolPattern } from "../shared/command-utils";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -69,6 +71,35 @@ export async function connectServer(
   }
 }
 
+// ── Tool permission filtering ──────────────────────────────────────────
+
+/**
+ * Filter MCP tool names against tool permissions from custom-settings.yaml.
+ *
+ * Returns only tools that are NOT denied. A tool is denied when its full
+ * name matches a "deny" entry in the permissions map. Wildcards like
+ * `mcp_atlassian_*` are supported.
+ *
+ * This prevents denied tools from being registered at all — not just
+ * blocked at execution time. Both primary agent and subagent are affected.
+ */
+export function filterAllowedMcpTools(toolNames: string[], permissions: ToolPermissions): string[] {
+  if (!permissions || Object.keys(permissions).length === 0) return toolNames;
+
+  // Collect denied patterns (tool-level entries with value "deny")
+  const deniedPatterns = new Set<string>();
+  for (const [key, value] of Object.entries(permissions)) {
+    if (key === "bash") continue; // bash is a special sub-map, not a tool pattern
+    if (value === "deny") {
+      deniedPatterns.add(key);
+    }
+  }
+
+  if (deniedPatterns.size === 0) return toolNames;
+
+  return toolNames.filter((name) => !matchesToolPattern(name, deniedPatterns));
+}
+
 // ── Tool registration ──────────────────────────────────────────────────
 
 /**
@@ -92,8 +123,27 @@ export async function registerServerTools(
 
   const prefix = state.config.toolPrefix ?? DEFAULTS.toolPrefix;
 
+  // Filter out denied tools before registering
+  const toolPermissions = loadToolPermissions();
+  const allowedToolNames = filterAllowedMcpTools(
+    tools.map((t) => makeToolName(prefix, serverConfig.name, t.name)),
+    toolPermissions,
+  );
+  const deniedCount = tools.length - allowedToolNames.length;
+  if (deniedCount > 0) {
+    mcpLogInfo(
+      serverConfig.name,
+      `Skipping ${deniedCount} denied tool(s) based on tool permissions`,
+    );
+  }
+
+  const allowedToolNamesSet = new Set(allowedToolNames);
+
   for (const mcpTool of tools) {
     const toolName = makeToolName(prefix, serverConfig.name, mcpTool.name);
+
+    // Skip tools denied by tool permissions
+    if (!allowedToolNamesSet.has(toolName)) continue;
 
     const paramSchema: TSchema =
       mcpTool.inputSchema &&

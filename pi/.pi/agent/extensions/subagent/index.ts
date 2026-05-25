@@ -40,6 +40,7 @@ import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
 import { loadSubagentConfig, loadToolsConfig } from "../shared/config";
 import type { AgentToolOverride, ToolsConfig } from "../shared/config";
+import { matchesToolPattern } from "../shared/command-utils";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -502,7 +503,7 @@ async function runSingleAgent(
 const TaskItem = Type.Object({
   agent: Type.String({
     description:
-      "Name of the subagent to invoke. See ## Available subagents in the system prompt for the list.",
+      "Name of the subagent to invoke (from pi). See ## Available subagents in the system prompt for the list.",
   }),
   task: Type.String({ description: "Task to delegate to the subagent" }),
   cwd: Type.Optional(Type.String({ description: "Working directory for the subagent process" })),
@@ -511,7 +512,7 @@ const TaskItem = Type.Object({
 const ChainItem = Type.Object({
   agent: Type.String({
     description:
-      "Name of the subagent to invoke. See ## Available subagents in the system prompt for the list.",
+      "Name of the subagent to invoke (from pi). See ## Available subagents in the system prompt for the list.",
   }),
   task: Type.String({
     description: "Task with optional {previous} placeholder for the output of the prior step",
@@ -529,7 +530,7 @@ const SubagentParams = Type.Object({
   agent: Type.Optional(
     Type.String({
       description:
-        "Name of the subagent to invoke (single mode). See ## Available subagents in the system prompt for the list.",
+        "Name of the subagent to invoke (single mode). See ## Available subagents in the system prompt for the list. The calling agent is pi.",
     }),
   ),
   task: Type.Optional(Type.String({ description: "Task to delegate (single mode)" })),
@@ -599,6 +600,27 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
+    // Expand wildcard patterns (e.g. "mcp_atlassian_*") to actual tool names.
+    // Agent .md frontmatter tools map uses wildcards as permission keys, but
+    // --tools expects real tool names when spawning the subagent process.
+    if (effective) {
+      const allToolNames = resolveAll();
+      const expanded = new Set<string>();
+      for (const entry of effective) {
+        if (entry.includes("*")) {
+          const patternSet = new Set([entry]);
+          for (const name of allToolNames) {
+            if (matchesToolPattern(name, patternSet)) {
+              expanded.add(name);
+            }
+          }
+        } else {
+          expanded.add(entry);
+        }
+      }
+      effective = Array.from(expanded);
+    }
+
     return effective && effective.length > 0 ? effective : undefined;
   }
 
@@ -608,13 +630,13 @@ export default function (pi: ExtensionAPI) {
     name: "subagent",
     label: "Subagent",
     description: [
-      "Delegate tasks to specialized subagents with isolated context.",
+      "Delegate tasks from pi to specialized subagents with isolated context.",
       "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
       'Default agent scope is "user" (from ~/.pi/agent/agents). Use always_approve.subagent in custom-settings.yaml to change defaults.',
       'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
     ].join(" "),
     promptSnippet:
-      "Delegate task to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
+      "Delegate task from pi to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
     parameters: SubagentParams,
 
     async execute(_toolCallId, params, signal, onUpdate, ctx) {
