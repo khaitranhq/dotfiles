@@ -22,6 +22,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
+import type { ToolPermissions } from "../shared/config";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -33,7 +34,13 @@ export interface AgentConfig {
   description: string;
   mode: AgentMode;
   model?: string;
+  /** Tool availability list (comma-separated in old format, derived from map keys in new format). */
   tools?: string[];
+  /**
+   * Tool permission map (new `tools` map format in frontmatter).
+   * If undefined, defaults to custom-settings.yaml or "ask".
+   */
+  toolPermissions?: ToolPermissions;
   systemPrompt: string;
   source: "user" | "project";
   filePath: string;
@@ -72,23 +79,44 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
       continue;
     }
 
-    const { frontmatter, body } = parseFrontmatter<Record<string, string>>(content);
+    const { frontmatter, body } = parseFrontmatter<Record<string, unknown>>(content);
 
-    if (!frontmatter.name || !frontmatter.description) continue;
+    const name = typeof frontmatter.name === "string" ? frontmatter.name : "";
+    const description = typeof frontmatter.description === "string" ? frontmatter.description : "";
+    if (!name || !description) continue;
 
-    const mode: AgentMode = frontmatter.mode === "primary" ? "primary" : "subagent";
+    const mode: AgentMode =
+      typeof frontmatter.mode === "string" && frontmatter.mode === "primary"
+        ? "primary"
+        : "subagent";
 
-    const tools = frontmatter.tools
-      ?.split(",")
-      .map((t: string) => t.trim())
-      .filter(Boolean);
+    const model = typeof frontmatter.model === "string" ? frontmatter.model : undefined;
+
+    // Parse tools — supports both old comma-separated string and new map format
+    let tools: string[] | undefined;
+    let toolPermissions: ToolPermissions | undefined;
+
+    const rawTools = frontmatter.tools;
+    if (typeof rawTools === "string") {
+      // Old format: "read,bash,edit"
+      tools = rawTools
+        .split(",")
+        .map((t: string) => t.trim())
+        .filter(Boolean);
+    } else if (typeof rawTools === "object" && rawTools !== null && !Array.isArray(rawTools)) {
+      // New format: { bash: "allow", mcp_atlassian_*: "allow" }
+      toolPermissions = rawTools as ToolPermissions;
+      // Derive tool availability from permission map keys
+      tools = Object.keys(toolPermissions);
+    }
 
     agents.push({
-      name: frontmatter.name,
-      description: frontmatter.description,
+      name,
+      description,
       mode,
-      model: frontmatter.model || undefined,
+      model,
       tools: tools && tools.length > 0 ? tools : undefined,
+      toolPermissions,
       systemPrompt: body,
       source,
       filePath,

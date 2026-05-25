@@ -6,6 +6,7 @@ export {
   loadAlwaysApprove,
   loadSubagentConfig,
   loadToolsConfig,
+  loadToolPermissions,
   configPath,
 } from "./config";
 export type {
@@ -14,6 +15,9 @@ export type {
   AgentToolOverride,
   ToolsConfig,
   CustomSettings,
+  ToolPermission,
+  BashPermissions,
+  ToolPermissions,
 } from "./config";
 
 export {
@@ -31,9 +35,12 @@ export {
   extractBaseCommand,
   extractAllBaseCommands,
   extractAllCommandSegments,
+  extractCommandBasis,
   isCommandApproved,
   findRmIndex,
   extractRmPaths,
+  wildcardToRegex,
+  matchesToolPattern,
 } from "./command-utils";
 
 export default function () {

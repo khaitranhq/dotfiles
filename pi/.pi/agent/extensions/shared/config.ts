@@ -17,6 +17,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 // ── Supported settings (extend as needed) ─────────────────────────────
 
+/** @deprecated Replaced by {@link ToolPermissions}. Kept for migration. */
 export interface AlwaysApproveConfig {
   tools?: string[];
   bashCommands?: string[];
@@ -32,6 +33,8 @@ export interface SubagentConfig {
 /**
  * Per-agent tool override: allow (whitelist) or deny (blacklist).
  * Configured in custom-settings.yaml under `tools.agents.<agentName>`.
+ *
+ * @deprecated Replaced by {@link ToolPermissions}. Kept for migration.
  */
 export interface AgentToolOverride {
   allow?: string[];
@@ -41,21 +44,65 @@ export interface AgentToolOverride {
 /**
  * Tool toggle configuration.
  *
- * - `global`: applied to primary agent (via setActiveTools) and all subagent spawns.
- * - `agents`: per-agent overrides indexed by agent name.
- *
- * Only one of `allow` or `deny` should be set per entry. If both are set,
- * `allow` takes precedence.
+ * @deprecated Replaced by {@link ToolPermissions}. Kept for migration.
  */
 export interface ToolsConfig {
   global?: AgentToolOverride;
   agents?: Record<string, AgentToolOverride>;
 }
 
+// ── New tools permission format ───────────────────────────────────────
+
+/** Permission level for a tool or bash command: allow, deny, or ask (prompt). */
+export type ToolPermission = "allow" | "deny" | "ask";
+
+/**
+ * Bash command permissions keyed by command prefix.
+ * Example: `{ jq: "allow", rm: "deny" }`.
+ */
+export type BashPermissions = Record<string, ToolPermission>;
+
+/**
+ * Tool permission map — tool name (or wildcard) to permission level,
+ * or a BashPermissions sub-map for the `bash` tool.
+ *
+ * Example:
+ * ```yaml
+ * tools:
+ *   read: allow
+ *   write: allow
+ *   mcp_atlassian_*: deny
+ *   bash:
+ *     jq: allow
+ *     rm: deny
+ * ```
+ */
+export type ToolPermissions = Record<string, ToolPermission | BashPermissions>;
+
 export interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
-  tools?: ToolsConfig;
+  /**
+   * Tool permissions map (new format) or legacy ToolsConfig (old format).
+   *
+   * New format (replaces `always_approve` and `tools.global`):
+   * ```yaml
+   * tools:
+   *   read: allow
+   *   mcp_atlassian_*: deny
+   *   bash:
+   *     jq: allow
+   *     rm: deny
+   * ```
+   *
+   * Old format (@deprecated):
+   * ```yaml
+   * tools:
+   *   global:
+   *     allow: [read, write]
+   * ```
+   */
+  tools?: ToolsConfig | ToolPermissions;
   [key: string]: unknown;
 }
 
@@ -153,5 +200,66 @@ export function loadSubagentConfig(): SubagentConfig {
 }
 
 export function loadToolsConfig(): ToolsConfig {
-  return loadCustomSettings().tools ?? {};
+  const settings = loadCustomSettings();
+  const tools = settings.tools;
+  // If tools is the new ToolPermissions format, return empty (no legacy config)
+  if (!tools || isToolPermissions(tools)) return {};
+  return tools as ToolsConfig;
+}
+
+/**
+ * Check whether a tools config object is the new {@link ToolPermissions}
+ * format (map of tool → permission) rather than the old
+ * {@link ToolsConfig} format ({global, agents}).
+ */
+function isToolPermissions(obj: unknown): obj is ToolPermissions {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+  const keys = Object.keys(obj);
+  if (keys.length === 0) return false;
+  // Old format has "global" or "agents" keys
+  if (keys.includes("global") || keys.includes("agents")) return false;
+  // New format: all values are strings ("allow"/"deny"/"ask") or objects (bash sub-map)
+  return true;
+}
+
+/**
+ * Load the new tool permissions map from custom-settings.yaml.
+ *
+ * Checks the `tools` key first:
+ * - If it's the new format ({@link ToolPermissions} map), return it.
+ * - If it's the old format ({@link ToolsConfig}), fall through.
+ *
+ * Then migrates from `always_approve` if present.
+ */
+export function loadToolPermissions(): ToolPermissions {
+  const settings = loadCustomSettings();
+
+  // New format: `tools` as a ToolPermissions map
+  if (settings.tools && isToolPermissions(settings.tools)) {
+    return settings.tools as ToolPermissions;
+  }
+
+  // Migrate from always_approve
+  const aa = settings.always_approve;
+  if (aa) {
+    const perms: ToolPermissions = {};
+
+    if (aa.tools) {
+      for (const tool of aa.tools) {
+        perms[tool] = "allow";
+      }
+    }
+
+    if (aa.bashCommands && aa.bashCommands.length > 0) {
+      const bashPerms: BashPermissions = {};
+      for (const cmd of aa.bashCommands) {
+        bashPerms[cmd] = "allow";
+      }
+      perms["bash"] = bashPerms;
+    }
+
+    return perms;
+  }
+
+  return {};
 }

@@ -399,6 +399,12 @@ async function runSingleAgent(
         cwd: cwd ?? defaultCwd,
         shell: false,
         stdio: ["ignore", "pipe", "pipe"],
+        env: {
+          ...process.env,
+          ...(agent.toolPermissions
+            ? { PI_AGENT_TOOL_PERMISSIONS: JSON.stringify(agent.toolPermissions) }
+            : {}),
+        },
       });
       let buffer = "";
 

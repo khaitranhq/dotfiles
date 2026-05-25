@@ -1,146 +1,283 @@
 /**
  * Permission Request Extension
  *
- * Gates tool execution based on an always-approve list in
- * ~/.pi/agent/custom-settings.yaml.
+ * Gates tool execution based on tool permissions defined in:
+ *   1. Agent metadata `tools` section (passed via PI_AGENT_TOOL_PERMISSIONS env var)
+ *   2. `permissions` section in ~/.pi/agent/custom-settings.yaml
+ *   3. Defaults to "ask" (prompt the user)
  *
- * Every tool and bash command defaults to "ask" — the approval prompt
- * is shown.  Add tools or commands to the `always_approve` section to
- * skip the prompt permanently:
+ * Permission values: "allow" | "deny" | "ask"
  *
- *   always_approve.tools        – always allow these tools, no prompt
- *   always_approve.bashCommands – always allow these commands, no prompt
+ * New `permissions` format in custom-settings.yaml:
  *
- * Example ~/.pi/agent/custom-settings.yaml:
+ *   permissions:
+ *     read: allow
+ *     write: allow
+ *     edit: allow
+ *     mcp_atlassian_*: deny          # wildcard support
+ *     bash:
+ *       ls: allow
+ *       rg: allow
+ *       rm: deny
  *
- *   always_approve:
- *     tools:
- *       - read
- *       - edit
- *       - write
- *     bashCommands:
- *       - find
- *       - grep
- *       - ls
- *       - cd
- *       - rg
- *       - cat
+ * Agent metadata `tools` section (in .md frontmatter):
  *
- * For compound bash commands (&&, ;, |, ||, &) ALL segments must be approved.
+ *   tools:
+ *     bash: allow
+ *     mcp_atlassian_*: allow
  *
- * When a call is not always-approved, the user sees:
+ * When a call is not auto-allowed but is "ask", the user sees:
  *
  *   [1] Allow                     – execute this one call
  *   [2] Deny (with reason)        – block, optionally providing a reason
- *   [3] Always approve            – allow and persist to always_approve
+ *   [3] Always approve            – allow and persist to custom settings
  *   [4] Approve in this session   – allow for the rest of this session
  */
 
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import {
-  loadAlwaysApprove,
+  loadToolPermissions,
   updateCustomSettings,
-  type AlwaysApproveConfig,
+  type BashPermissions,
   type CustomSettings,
+  type ToolPermission,
+  type ToolPermissions,
 } from "../shared/config";
 import {
   extractAllCommandSegments,
   extractCommandBasis,
   isCommandApproved,
+  matchesToolPattern,
 } from "../shared/command-utils";
 import { notifyPermissionRequired } from "../notification/index";
 
-// ── Set helpers ───────────────────────────────────────────────────────
+// ── Agent tool permissions (from env var) ──────────────────────────────
 
-function addToAlwaysApprove(
-  settings: CustomSettings,
-  category: "tools" | "bashCommands",
-  name: string,
-): CustomSettings {
-  const aa: AlwaysApproveConfig = settings.always_approve ?? {};
-  const list = aa[category] ?? [];
-  if (!list.includes(name)) {
-    aa[category] = [...list, name];
+function loadAgentToolPermissions(): ToolPermissions | null {
+  try {
+    const raw = process.env.PI_AGENT_TOOL_PERMISSIONS;
+    if (!raw) return null;
+    return JSON.parse(raw) as ToolPermissions;
+  } catch {
+    return null;
   }
-  return { ...settings, always_approve: aa };
+}
+
+// ── Permission resolution ─────────────────────────────────────────────
+
+/**
+ * Look up a tool name in a permission map.
+ * Returns the permission value or null if not found.
+ * Supports wildcards (e.g. `mcp_atlassian_*`).
+ */
+function lookupPermission(toolName: string, perms: ToolPermissions | null): ToolPermission | null {
+  if (!perms) return null;
+
+  // Collect all tool-level keys (exclude bash special key)
+  for (const [key, value] of Object.entries(perms)) {
+    if (key === "bash") continue;
+    if (matchesToolPattern(toolName, new Set([key]))) {
+      if (typeof value === "string") return value as ToolPermission;
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve bash command permission from a permission map.
+ * Checks the `bash` sub-map for command prefix matches.
+ * Returns the permission value or null if not found.
+ */
+function resolveBashPermission(
+  command: string,
+  perms: ToolPermissions | null,
+): ToolPermission | null {
+  if (!perms) return null;
+
+  const bashPerms = perms["bash"];
+  if (!bashPerms || typeof bashPerms === "string") return null;
+
+  const bashMap = bashPerms as BashPermissions;
+
+  // Check allow entries
+  const allowEntries = new Set(
+    Object.entries(bashMap)
+      .filter(([, v]) => v === "allow")
+      .map(([k]) => k),
+  );
+  if (allowEntries.size > 0 && isCommandApproved(command, allowEntries)) return "allow";
+
+  // Check deny entries
+  const denyEntries = new Set(
+    Object.entries(bashMap)
+      .filter(([, v]) => v === "deny")
+      .map(([k]) => k),
+  );
+  if (denyEntries.size > 0 && isCommandApproved(command, denyEntries)) return "deny";
+
+  // Check ask entries
+  const askEntries = new Set(
+    Object.entries(bashMap)
+      .filter(([, v]) => v === "ask")
+      .map(([k]) => k),
+  );
+  if (askEntries.size > 0 && isCommandApproved(command, askEntries)) return "ask";
+
+  return null;
+}
+
+// ── Persistence helpers ────────────────────────────────────────────────
+
+/** Check whether a tools config is the new ToolPermissions map format. */
+function isToolPermissions(obj: unknown): obj is ToolPermissions {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+  const keys = Object.keys(obj);
+  if (keys.length === 0) return false;
+  if (keys.includes("global") || keys.includes("agents")) return false;
+  return true;
+}
+
+function addToolPermission(
+  settings: CustomSettings,
+  toolName: string,
+  permission: ToolPermission,
+): CustomSettings {
+  const perms: ToolPermissions = isToolPermissions(settings.tools)
+    ? { ...(settings.tools as ToolPermissions) }
+    : {};
+  perms[toolName] = permission;
+  return { ...settings, tools: perms };
+}
+
+function addBashPermission(
+  settings: CustomSettings,
+  command: string,
+  permission: ToolPermission,
+): CustomSettings {
+  const perms: ToolPermissions = isToolPermissions(settings.tools)
+    ? { ...(settings.tools as ToolPermissions) }
+    : {};
+  const bashPerms: BashPermissions =
+    typeof perms["bash"] === "object" && perms["bash"] !== null
+      ? { ...(perms["bash"] as BashPermissions) }
+      : {};
+  bashPerms[command] = permission;
+  perms["bash"] = bashPerms;
+  return { ...settings, tools: perms };
 }
 
 // ── Extension ─────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
-  // Per-session overrides: tools/commands granted session-only approval
+  // Per-session overrides: tool/command names granted session-only approval
   const sessionApprovals = new Set<string>();
 
-  // Live always-approve sets loaded from disk
-  let alwaysApproveTools = new Set<string>();
-  let alwaysApproveCommands = new Set<string>();
+  // Live permission maps loaded from disk
+  let settingsPerms: ToolPermissions = {};
 
-  function reloadAlwaysApprove(): void {
-    const aa = loadAlwaysApprove();
-    alwaysApproveTools = new Set(aa.tools ?? []);
-    alwaysApproveCommands = new Set(aa.bashCommands ?? []);
+  function reloadPermissions(): void {
+    settingsPerms = loadToolPermissions();
   }
 
-  reloadAlwaysApprove();
+  reloadPermissions();
 
   // ── Reload config on session start ─────────────────────────────────
   pi.on("session_start", async (_event) => {
     sessionApprovals.clear();
-    reloadAlwaysApprove();
+    reloadPermissions();
   });
 
   // ── Gate every tool call ───────────────────────────────────────────
   pi.on("tool_call", async (event: ToolCallEvent, ctx) => {
     const toolName = event.toolName;
 
-    // Determine whether this call is always-approved.
-    // For compound bash commands, ALL segments must be approved.
-    // Uses word-prefix matching so "git diff" matches "git diff --cached"
-    // but not "git log".
-    let alwaysApproved = false;
+    // Load agent-level permissions (from env var, set by subagent spawn)
+    const agentPerms = loadAgentToolPermissions();
 
+    // ── Bash: resolve command-level permission ──────────────────────
     if (toolName === "bash") {
       const command = (event.input as { command: string }).command;
       const segments = extractAllCommandSegments(command);
+
+      // For compound commands, ALL segments must be allowed
+      // and NONE may be denied (deny wins over allow).
+      let denied = false;
+
+      for (const seg of segments) {
+        // Check session approvals first
+        if (sessionApprovals.has(seg)) continue;
+        if (segments.every((s) => sessionApprovals.has(s))) return undefined;
+
+        // Check agent permissions
+        const agentBashPerm = resolveBashPermission(seg, agentPerms);
+        if (agentBashPerm === "deny") {
+          denied = true;
+          break;
+        }
+        if (agentBashPerm === "allow") continue;
+        if (agentBashPerm === "ask") {
+          // agent says ask, defer to settings
+        }
+
+        // Check settings permissions (only if agent didn't decide)
+        if (agentBashPerm === null) {
+          const settingsBashPerm = resolveBashPermission(seg, settingsPerms);
+          if (settingsBashPerm === "deny") {
+            denied = true;
+            break;
+          }
+          if (settingsBashPerm === "allow") continue;
+        }
+      }
+
+      if (denied) {
+        return { block: true, reason: `Bash command denied by tool permissions.` };
+      }
+
+      // If all segments have been handled (all allow/session-approved)
       if (
         segments.length > 0 &&
-        segments.every((s) => isCommandApproved(s, alwaysApproveCommands))
+        segments.every(
+          (s) =>
+            sessionApprovals.has(s) ||
+            resolveBashPermission(s, agentPerms) === "allow" ||
+            resolveBashPermission(s, settingsPerms) === "allow",
+        )
       ) {
-        alwaysApproved = true;
-      }
-    } else {
-      if (alwaysApproveTools.has(toolName)) {
-        alwaysApproved = true;
-      }
-    }
-
-    // Check session-only approvals — all segments must be approved
-    if (toolName === "bash") {
-      const command = (event.input as { command: string }).command;
-      const segments = extractAllCommandSegments(command);
-      if (segments.length > 0 && segments.every((s) => isCommandApproved(s, sessionApprovals))) {
         return undefined;
       }
     } else {
+      // ── Non-bash tool: resolve tool-level permission ──────────────
+
+      // Check session approvals
       if (sessionApprovals.has(toolName)) return undefined;
+
+      // Check agent permissions
+      const agentResult = lookupPermission(toolName, agentPerms);
+      if (agentResult === "deny") {
+        return { block: true, reason: `Tool "${toolName}" denied by agent permissions.` };
+      }
+      if (agentResult === "allow") return undefined;
+
+      // Check settings permissions (only if agent didn't decide)
+      if (agentResult === null) {
+        const settingsResult = lookupPermission(toolName, settingsPerms);
+        if (settingsResult === "deny") {
+          return { block: true, reason: `Tool "${toolName}" denied by tool permissions.` };
+        }
+        if (settingsResult === "allow") return undefined;
+      }
     }
 
-    // ── always-approve ──────────────────────────────────────────────
-    if (alwaysApproved) return undefined;
-
-    // ── ask ──────────────────────────────────────────────────────────
+    // ── Ask ──────────────────────────────────────────────────────────
     if (!ctx.hasUI) {
-      // Non-interactive mode: deny by default
       return {
         block: true,
         reason: `Tool "${toolName}" requires approval (no UI available).`,
       };
     }
 
-    // Build a human-readable description of what's being requested
     const desc = describeCall(event);
-
-    // Send desktop toast notification for this permission prompt
     notifyPermissionRequired(desc);
 
     const selected = await ctx.ui.select(`🔐 Permission required — ${desc}`, [
@@ -156,7 +293,7 @@ export default function (pi: ExtensionAPI) {
 
     switch (selected) {
       case "✅ Allow":
-        return undefined; // execute this one call
+        return undefined;
 
       case "❌ Deny (with reason)": {
         const reason = await ctx.ui.input("Reason for denial:", "e.g., not needed, dangerous, ...");
@@ -164,11 +301,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       case "🔓 Always approve": {
-        // Persist to custom-settings.yaml under always_approve.
-        // For compound commands, extract the command basis (command +
-        // subcommand, stripping flags/paths/args) from each segment
-        // so that future invocations with different flags or arguments
-        // still match via word-prefix matching.
+        // Persist to custom-settings.yaml under `permissions`.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);
@@ -176,25 +309,18 @@ export default function (pi: ExtensionAPI) {
             for (const seg of segments) {
               const basis = extractCommandBasis(seg);
               if (basis) {
-                updateCustomSettings((s) => addToAlwaysApprove(s, "bashCommands", basis));
-                alwaysApproveCommands.add(basis);
+                updateCustomSettings((s) => addBashPermission(s, basis, "allow"));
               }
             }
-          } else {
-            updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
-            alwaysApproveTools.add(toolName);
           }
         } else {
-          updateCustomSettings((s) => addToAlwaysApprove(s, "tools", toolName));
-          alwaysApproveTools.add(toolName);
+          updateCustomSettings((s) => addToolPermission(s, toolName, "allow"));
         }
+        reloadPermissions();
         return undefined;
       }
 
       case "🕐 Approve in this session only": {
-        // For compound commands, extract the command basis from each
-        // segment so that future invocations with different flags or
-        // arguments still match via word-prefix matching.
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);
@@ -220,7 +346,6 @@ export default function (pi: ExtensionAPI) {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
-/** Build a human-readable description of the tool call. */
 function describeCall(event: ToolCallEvent): string {
   const toolName = event.toolName;
   const input = event.input as Record<string, unknown>;

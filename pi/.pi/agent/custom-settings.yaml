@@ -3,92 +3,73 @@ mcp:
     - name: atlassian
       transport: http
       url: https://mcp.atlassian.com/v1/mcp/authv2
-always_approve:
-  bashCommands:
-    - find
-    - ls
-    - grep
-    - cat
-    - npx tsc
-    - wc
-    - fd
-    - cd
-    - pwd
-    - rg
-    - mkdir
-    - which
-    - readlink
-    - go env
-    - go version
-    - golines
-    - gofumpt
-    - golangci-lint
-    - gofmt
-    - go test
-    - go vet
-    - go build
-    - go list
-    - git diff
-    - git status
-    - git log
-    - git branch
-    - git show
-    - git rev-parse
-    - git config
-    - git remote
-    - git fetch
-    - git pull
-    - diff
-    - stat
-    - head
-    - d2
-    - go doc
-    - echo
-    - sort
-    - file
-    - strings
-    - command
-    - goimports
-    - gofumpt
-    - golines
-    - golangci-lint
-    - yamllint
-    - yq
-    - tail
-    - actionlint
-    - zizmor
-    - npx vitest
-    - oxfmt
-    - npm search
-    - npx oxlint
-    - sed
-    - "true"
-    - nl
-    - gh run
-    - xargs
-    - jq
-  tools:
-    - read
-    - write
-    - edit
-    - subagent
-    - question
-    - web_search
-    - web_fetch
-    - todowrite
 tools:
-  global:
-    deny:
-      - mcp_atlassian_*
-  agents:
-    atlassian:
-      allow:
-        - read
-        - bash
-        - write
-        - edit
-        - web_search
-        - web_fetch
-        - question
-        - todowrite
-        - mcp_atlassian_*
+  read: allow
+  write: allow
+  edit: allow
+  subagent: allow
+  question: allow
+  web_search: allow
+  web_fetch: allow
+  todowrite: allow
+  mcp_atlassian_*: deny
+  bash:
+    find: allow
+    ls: allow
+    grep: allow
+    cat: allow
+    wc: allow
+    fd: allow
+    cd: allow
+    pwd: allow
+    rg: allow
+    mkdir: allow
+    which: allow
+    readlink: allow
+    diff: allow
+    stat: allow
+    head: allow
+    tail: allow
+    echo: allow
+    sort: allow
+    file: allow
+    strings: allow
+    command: allow
+    sed: allow
+    "true": allow
+    nl: allow
+    xargs: allow
+    jq: allow
+    d2: allow
+    yq: allow
+    yamllint: allow
+    gh run: allow
+    go env: allow
+    go version: allow
+    go doc: allow
+    go test: allow
+    go vet: allow
+    go build: allow
+    go list: allow
+    gofmt: allow
+    gofumpt: allow
+    goimports: allow
+    golines: allow
+    golangci-lint: allow
+    git diff: allow
+    git status: allow
+    git log: allow
+    git branch: allow
+    git show: allow
+    git rev-parse: allow
+    git config: allow
+    git remote: allow
+    git fetch: allow
+    git pull: allow
+    npx tsc: allow
+    npx vitest: allow
+    npx oxlint: allow
+    npm search: allow
+    actionlint: allow
+    zizmor: allow
+    oxfmt: allow

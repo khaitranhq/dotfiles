@@ -8,6 +8,8 @@ import {
   isCommandApproved,
   findRmIndex,
   extractRmPaths,
+  wildcardToRegex,
+  matchesToolPattern,
 } from "./command-utils";
 
 // ── COMMAND_SEPARATORS ────────────────────────────────────────────────
@@ -341,5 +343,82 @@ describe("extractRmPaths", () => {
   it("handles empty or whitespace-only commands", () => {
     expect(extractRmPaths("")).toEqual([]);
     expect(extractRmPaths("   ")).toEqual([]);
+  });
+});
+
+// ── wildcardToRegex ───────────────────────────────────────────────────
+
+describe("wildcardToRegex", () => {
+  it("matches exact pattern", () => {
+    const re = wildcardToRegex("read");
+    expect(re.test("read")).toBe(true);
+    expect(re.test("write")).toBe(false);
+    expect(re.test("read_file")).toBe(false);
+  });
+
+  it("matches trailing wildcard", () => {
+    const re = wildcardToRegex("mcp_atlassian_*");
+    expect(re.test("mcp_atlassian_getpage")).toBe(true);
+    expect(re.test("mcp_atlassian_search")).toBe(true);
+    expect(re.test("mcp_atlassian_")).toBe(true);
+    expect(re.test("bash")).toBe(false);
+    expect(re.test("mcp_other")).toBe(false);
+  });
+
+  it("matches internal wildcard", () => {
+    const re = wildcardToRegex("mcp_*_tool");
+    expect(re.test("mcp_foo_tool")).toBe(true);
+    expect(re.test("mcp_bar_tool")).toBe(true);
+    expect(re.test("mcp_foo_bar_tool")).toBe(true);
+    expect(re.test("mcp_foo")).toBe(false);
+  });
+
+  it("matches everything with *", () => {
+    const re = wildcardToRegex("*");
+    expect(re.test("")).toBe(true);
+    expect(re.test("anything")).toBe(true);
+    expect(re.test("bash")).toBe(true);
+  });
+
+  it("escapes regex special characters", () => {
+    const re = wildcardToRegex("tool.name");
+    expect(re.test("tool.name")).toBe(true);
+    expect(re.test("toolXname")).toBe(false);
+  });
+});
+
+// ── matchesToolPattern ────────────────────────────────────────────────
+
+describe("matchesToolPattern", () => {
+  it("matches exact tool name", () => {
+    const patterns = new Set(["read", "write", "edit"]);
+    expect(matchesToolPattern("read", patterns)).toBe(true);
+    expect(matchesToolPattern("write", patterns)).toBe(true);
+    expect(matchesToolPattern("bash", patterns)).toBe(false);
+  });
+
+  it("matches wildcard pattern", () => {
+    const patterns = new Set(["mcp_atlassian_*"]);
+    expect(matchesToolPattern("mcp_atlassian_getpage", patterns)).toBe(true);
+    expect(matchesToolPattern("mcp_atlassian_search", patterns)).toBe(true);
+    expect(matchesToolPattern("bash", patterns)).toBe(false);
+  });
+
+  it("matches mix of exact and wildcard", () => {
+    const patterns = new Set(["read", "mcp_atlassian_*"]);
+    expect(matchesToolPattern("read", patterns)).toBe(true);
+    expect(matchesToolPattern("mcp_atlassian_foo", patterns)).toBe(true);
+    expect(matchesToolPattern("bash", patterns)).toBe(false);
+  });
+
+  it("returns false for empty set", () => {
+    expect(matchesToolPattern("read", new Set())).toBe(false);
+  });
+
+  it("matches * wildcard against everything", () => {
+    const patterns = new Set(["*"]);
+    expect(matchesToolPattern("anything", patterns)).toBe(true);
+    expect(matchesToolPattern("bash", patterns)).toBe(true);
+    expect(matchesToolPattern("", patterns)).toBe(true);
   });
 });

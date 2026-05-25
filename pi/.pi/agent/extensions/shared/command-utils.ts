@@ -176,6 +176,44 @@ export function isCommandApproved(segment: string, approved: Set<string>): boole
   return false;
 }
 
+// ── Wildcard tool-name matching ───────────────────────────────────────
+
+/**
+ * Convert a glob pattern with `*` wildcard to a RegExp.
+ * Only supports trailing `*` (prefix match), internal `*`, and `*` alone.
+ *
+ * Examples:
+ *   "mcp_atlassian_*"  → matches "mcp_atlassian_getpage", "mcp_atlassian_search"
+ *   "*"                → matches everything
+ *   "read"             → exact match only
+ */
+export function wildcardToRegex(pattern: string): RegExp {
+  // Escape regex special chars except *
+  let escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  // Replace * with .*
+  escaped = escaped.replace(/\*/g, ".*");
+  // Anchor to full string
+  return new RegExp(`^${escaped}$`);
+}
+
+/**
+ * Check whether a tool name matches any pattern in a set.
+ * Patterns may contain `*` wildcards (e.g., `mcp_atlassian_*`).
+ * Exact matches are also checked for entries without wildcards.
+ */
+export function matchesToolPattern(toolName: string, patterns: Set<string>): boolean {
+  // Fast path: exact match
+  if (patterns.has(toolName)) return true;
+
+  for (const pattern of patterns) {
+    if (!pattern.includes("*")) continue; // already checked exact
+    const regex = wildcardToRegex(pattern);
+    if (regex.test(toolName)) return true;
+  }
+
+  return false;
+}
+
 // ── AST walker ──────────────────────────────────────────────────────
 
 /**
