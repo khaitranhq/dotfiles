@@ -74,3 +74,5 @@ tools:
     zizmor: allow
     oxfmt: allow
     printf: allow
+    awk: allow
+    oxlint: allow

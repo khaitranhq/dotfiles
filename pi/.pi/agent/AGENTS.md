@@ -34,40 +34,6 @@ Before executing any task or prompt, agents must:
 
 **Why this order**: You cannot know which skills are relevant until you understand the request and have context. Loading skills too early may load irrelevant ones; loading them after context ensures precision. This ensures agents have all necessary context and specialized knowledge before executing the task, leading to better solutions and fewer mistakes.
 
-### Project Context Discovery
-
-**When working with files located outside the current working directory, the agent MUST discover and load AGENTS.md (or CLAUDE.md) files in parent directories of those files.**
-
-Pi automatically loads AGENTS.md files from the current working directory up to the filesystem root at startup. However, files the agent works with may reside in directory branches that contain their own AGENTS.md files not reachable from the cwd.
-
-**How to discover:**
-
-1. After identifying the set of files to work with, extract the unique directory branches.
-2. For each branch, walk up from the file's directory toward the root, checking for `AGENTS.md` or `CLAUDE.md` at each level.
-3. Use a single command to discover all files efficiently:
-   ```bash
-   # For files in /a/b/c/ and /a/e/f/, discover AGENTS.md up to root or project boundary:
-   find /a/b/c /a/e/f -name 'AGENTS.md' -o -name 'CLAUDE.md' 2>/dev/null
-   ```
-   Or use `rg`:
-   ```bash
-   rg --files -g 'AGENTS.md' -g 'CLAUDE.md' /a/b/c /a/e/f 2>/dev/null
-   ```
-4. Read each unique AGENTS.md/CLAUDE.md file once. Skip files already loaded by pi at startup (those in the cwd-to-root chain).
-5. Load the discovered files as additional project context before executing the task.
-
-**Example:**
-
-```
-Working with: /a/b/c/d.txt, /a/e/f/g.txt
-Startup loaded: /a/AGENTS.md (cwd is /a, pi walked up from there)
-Discovery finds: /a/e/AGENTS.md (not in cwd-to-root chain)
-Agent reads: /a/e/AGENTS.md
-Agent now has context from both AGENTS.md files.
-```
-
-**Why**: Files in different directory branches may be governed by different conventions, standards, and rules defined in local AGENTS.md files. Loading them ensures the agent follows all applicable guidance for the files it touches.
-
 ### Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
