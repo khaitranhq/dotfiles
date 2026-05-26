@@ -1,14 +1,17 @@
 /**
- * Tests for MCP connection tool filtering based on tool permissions.
+ * Tests for MCP connection tool filtering and client OAuth/header-auth behavior.
  *
  * Verifies that MCP tools matching "deny" patterns in custom-settings.yaml
  * are NOT registered — not just blocked at execution time.
  *
- * TDD: These tests must FAIL before the fix is implemented.
+ * Also verifies that McpClient distinguishes between OAuth and pure
+ * header-based authentication — PiOAuthProvider must only be created
+ * when oauth is explicitly configured.
  */
 import { describe, it, expect } from "vitest";
 import type { ToolPermissions } from "../shared/config";
 import { filterAllowedMcpTools } from "./connection";
+import { McpClient, type HttpServerConfig } from "./client";
 
 // ── Tests ─────────────────────────────────────────────────────────────
 
@@ -184,5 +187,48 @@ describe("filterAllowedMcpTools", () => {
 
     const result = filterAllowedMcpTools(atlassianTools, perms);
     expect(result).toEqual([]);
+  });
+});
+
+// ── OAuth vs header-based authentication ────────────────────────────
+
+describe("McpClient — OAuth vs header authentication", () => {
+  it("does NOT have OAuth status when oauth config is omitted (header-only auth)", () => {
+    const config: HttpServerConfig = {
+      name: "test-header-auth",
+      url: "https://example.com/mcp",
+      headers: { Authorization: "Bearer sk-test123" },
+    };
+
+    const client = new McpClient(config);
+    const status = client.getOAuthStatus();
+
+    expect(status).toBeNull();
+  });
+
+  it("HAS OAuth status when oauth config is explicitly provided", () => {
+    const config: HttpServerConfig = {
+      name: "test-oauth-auth",
+      url: "https://example.com/mcp",
+      oauth: { scopes: ["read"] },
+    };
+
+    const client = new McpClient(config);
+    const status = client.getOAuthStatus();
+
+    expect(status).not.toBeNull();
+    expect(status!.configured).toBe(true);
+  });
+
+  it("does NOT have OAuth status when using stdio transport", () => {
+    const client = new McpClient({
+      name: "test-stdio",
+      transport: "stdio",
+      command: "echo",
+    });
+
+    const status = client.getOAuthStatus();
+
+    expect(status).toBeNull();
   });
 });

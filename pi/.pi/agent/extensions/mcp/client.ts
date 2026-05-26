@@ -92,7 +92,7 @@ export class McpClient {
   ) {
     const transportType = getTransport(config);
 
-    if (transportType === "http") {
+    if (transportType === "http" && (config as HttpServerConfig).oauth) {
       const httpConfig = config as HttpServerConfig;
       this.oauthProvider = new PiOAuthProvider(httpConfig.name, httpConfig.oauth);
       this.oauthProvider.setOnAuthUrl((url) => {
