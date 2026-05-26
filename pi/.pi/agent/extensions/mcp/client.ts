@@ -20,6 +20,7 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { PiOAuthProvider, type PiOAuthConfig } from "./oauth-provider";
 import { mcpLogInfo, mcpLogError } from "./logger";
+import { expandEnv, expandEnvInRecord } from "./helpers";
 
 // ── Server config (discriminated union on transport) ─────────────────
 
@@ -170,15 +171,16 @@ export class McpClient {
 
   private createHttpTransport(): StreamableHTTPClientTransport {
     const httpConfig = this.config as HttpServerConfig;
+    const url = expandEnv(httpConfig.url);
     const opts: StreamableHTTPClientTransportOptions = {
       authProvider: this.oauthProvider ?? undefined,
     };
 
     if (httpConfig.headers) {
-      opts.requestInit = { headers: httpConfig.headers };
+      opts.requestInit = { headers: expandEnvInRecord(httpConfig.headers) };
     }
 
-    return new StreamableHTTPClientTransport(new URL(httpConfig.url), opts);
+    return new StreamableHTTPClientTransport(new URL(url), opts);
   }
 
   /**

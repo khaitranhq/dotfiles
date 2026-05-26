@@ -65,3 +65,30 @@ export function buildPromptSnippet(
   const fullName = makeToolName(prefix, serverName, mcpTool.name);
   return `${fullName}: ${shortDesc}`;
 }
+
+// ── Env variable expansion ────────────────────────────────────────────
+
+/**
+ * Replace `${ENV_VAR}` and `${ENV_VAR:-default}` patterns with their
+ * environment variable values. Unset vars become empty string (unless
+ * a default is provided via `:-` syntax).
+ */
+export function expandEnv(str: string): string {
+  return str.replace(
+    /\$\{(\w+)(?::-([^}]*))?\}/g,
+    (_match, varName: string, defaultValue: string | undefined) => {
+      const val = process.env[varName];
+      if (val !== undefined) return val;
+      return defaultValue ?? "";
+    },
+  );
+}
+
+/** Expand env vars in every value of a string record. */
+export function expandEnvInRecord(obj: Record<string, string>): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = expandEnv(value);
+  }
+  return result;
+}

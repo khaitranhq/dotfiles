@@ -7,12 +7,23 @@
 Before writing any code or making changes, agents must understand the problem and create a plan.
 
 1. **Analyze Requirements** — Carefully read and understand what the user is asking for.
-2. **Explore Context** — Use CodeGraph tools FIRST to understand the codebase:
-   - `codegraph_files` to explore project structure and locate files
-   - `codegraph_context` to understand features, architecture, or bug context
-   - `codegraph_search` to find symbol definitions
-   - Only fall back to `rg`/`read` when the graph index is incomplete (verify with `codegraph_status`), or the query is purely textual (string literals, comments, config values)
+2. **Explore Context** — Understand the codebase and domain:
+   - **Wiki first** — Check the project wiki/knowledge base for existing context, architecture decisions, known patterns, and past changes. Load the `wiki` skill and use it to search for relevant pages, entities, and concepts.
+   - **Code tools second** — Use `rg` and `read` to explore code structure, find definitions, and understand the codebase.
+   - **Update wiki during exploration** — If you discover undocumented patterns, conventions, architecture decisions, or new entities/concepts, update the wiki immediately. Knowledge compounds across sessions.
 3. **Plan the Task** — Break the work into concrete, verifiable tasks using `TodoWrite`. Each task must have clear success criteria. Do not start implementing until the plan is complete.
+
+---
+
+### Post-Implementation Wiki Update
+
+After completing implementation, update the project wiki:
+
+1. **Note what changed** — Files modified, functions added/removed, configuration changes, new dependencies
+2. **Note why** — The reason for the change (bug fix, feature request, refactor, optimization)
+3. **Note all effects** — Components affected, pages/concepts updated, new patterns introduced, breaking changes, performance impact
+4. **Update relevant pages** — Entity pages, concept pages, source pages that relate to the change
+5. **Append to log** — Chronological entry with summary, cross-references, and affected pages
 
 ---
 
@@ -30,10 +41,11 @@ This is a hard requirement, not optional. Do NOT front-load all skills during pl
 
 - Parse the task's scope: language, tool, domain, problem type
 - Cross-reference against the available skills listed in your system prompt
+- **Always load `wiki` for every task** — Check wiki at start for domain knowledge, past decisions, and project context. Update wiki during exploration and after implementation.
 - **Always load `coding` for any task that writes, modifies, reviews, refactors, or deletes code** — regardless of language. This is the non-negotiable baseline for all code work.
 - **Always pair `tdd` with `coding` for code changes** — red-green-refactor is the default workflow
 - When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output
-- For compound tasks, load multiple skills (e.g., `golang` + `tdd` + `coding` for a Go feature)
+- For compound tasks, load multiple skills (e.g., `wiki` + `golang` + `tdd` + `coding` for a Go feature)
 
 ### Goal-Driven Execution
 
@@ -120,34 +132,7 @@ yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
 
-### Knowledge Graph Tools
 
-**Always use CodeGraph tools FIRST for codebase exploration and understanding.**
-Only fall back to `rg`, `read`, or filesystem operations when:
-
-- The graph index is incomplete (verify with `codegraph_status` first)
-- The query is purely textual (string literals, comments, config values, regex patterns)
-- You need to read a specific file by path that CodeGraph did not return
-
-**Tool selection priority:**
-
-| Goal                              | Primary Tool                              | Fallback                |
-| --------------------------------- | ----------------------------------------- | ----------------------- |
-| Explore project structure         | `codegraph_files`                         | `rg --files`            |
-| Understand a feature/architecture | `codegraph_context`                       | `rg` + `read`           |
-| Find symbol definition            | `codegraph_search` → `codegraph_node`     | `rg` + `read`           |
-| Read related symbols              | `codegraph_explore`                       | `read` (multiple files) |
-| Trace call path A→B               | `codegraph_trace`                         | `rg` (manual tracing)   |
-| Find callers/callees              | `codegraph_callers` / `codegraph_callees` | `rg`                    |
-| Assess change impact              | `codegraph_impact`                        | `rg` + manual analysis  |
-
-**Graph Freshness After Code Changes:**
-
-After any code modification (`edit`, `write`, or `bash` command that alters source files), the agent MUST:
-
-1. Call `codegraph_status` to verify the index reflects the changes
-2. If the graph appears stale (file/symbol counts don't match expectations), cross-check findings with `rg`/`read` until the graph catches up
-3. Do NOT rely on stale CodeGraph results for subsequent decisions — always verify against live file content when in doubt
 
 ## Working Style
 

@@ -12,6 +12,11 @@
 
 ### LLM Wiki - Knowledge base for LLMs
 
+Vault: obsidian
+Ref:
+
+- [ ] follow [LLM wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) to build a skill
+
 ### Read tool with secret masking capability
 
 ### MCP

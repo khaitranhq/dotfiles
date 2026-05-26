@@ -3,6 +3,11 @@ mcp:
     - name: atlassian
       transport: http
       url: https://mcp.atlassian.com/v1/mcp/authv2
+    - name: obsidian
+      transport: http
+      url: http://127.0.0.1:27123/mcp/
+      headers:
+        Authorization: Bearer ${OBSIDIAN_MCP_TOKEN}
 tools:
   read: allow
   write: allow
@@ -13,6 +18,7 @@ tools:
   web_fetch: allow
   todowrite: allow
   mcp_atlassian_*: deny
+  mcp_obsidian_*: allow
   bash:
     find: allow
     ls: allow
