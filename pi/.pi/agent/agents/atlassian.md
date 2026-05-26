@@ -12,6 +12,7 @@ tools:
   web_fetch: allow
   question: allow
   todowrite: allow
+  mcp: allow
   mcp_atlassian_*: allow
 ---
 

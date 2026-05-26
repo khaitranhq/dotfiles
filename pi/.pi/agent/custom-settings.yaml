@@ -3,6 +3,7 @@ mcp:
     - name: atlassian
       transport: http
       url: https://mcp.atlassian.com/v1/mcp/authv2
+      directTools: true
     - name: obsidian
       transport: http
       url: http://127.0.0.1:27123/mcp/
