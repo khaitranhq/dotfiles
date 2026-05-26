@@ -1,6 +1,7 @@
 # AGENTS.md — Pi Extensions
 
 > **Note:** Files under `/home/khaitran/dotfiles/pi/.pi/agent/**` are symlinked to `~/.pi/agent/`. The dotfiles repo is the canonical source. Changes made here are reflected immediately in pi's runtime.
+> Run commands in`/home/khaitran/dotfiles/pi/.pi/agent/**` instead of `~/.pi/agent/**` to ensure changes are tracked in version control.
 
 ## Mandatory: Lint and Format After Code Changes
 
@@ -19,17 +20,17 @@ When modifying any extension under `~/.pi/agent/extensions/`, you **MUST** updat
 
 ### Extensions and their READMEs
 
-| Extension | README |
-|-----------|--------|
+| Extension            | README                                                |
+| -------------------- | ----------------------------------------------------- |
 | `permission-request` | `~/.pi/agent/extensions/permission-request/README.md` |
-| `defender` | `~/.pi/agent/extensions/defender/README.md` |
-| `subagent` | `~/.pi/agent/extensions/subagent/README.md` |
-| `mcp` | `~/.pi/agent/extensions/mcp/README.md` |
-| `web-search` | `~/.pi/agent/extensions/web-search/README.md` |
-| `input-ux` | `~/.pi/agent/extensions/input-ux/README.md` |
-| `question` | `~/.pi/agent/extensions/question/README.md` |
-| `notification` | `~/.pi/agent/extensions/notification/README.md` |
-| `shared` | `~/.pi/agent/extensions/shared/README.md` |
+| `defender`           | `~/.pi/agent/extensions/defender/README.md`           |
+| `subagent`           | `~/.pi/agent/extensions/subagent/README.md`           |
+| `mcp`                | `~/.pi/agent/extensions/mcp/README.md`                |
+| `web-search`         | `~/.pi/agent/extensions/web-search/README.md`         |
+| `input-ux`           | `~/.pi/agent/extensions/input-ux/README.md`           |
+| `question`           | `~/.pi/agent/extensions/question/README.md`           |
+| `notification`       | `~/.pi/agent/extensions/notification/README.md`       |
+| `shared`             | `~/.pi/agent/extensions/shared/README.md`             |
 
 ### What to update
 
