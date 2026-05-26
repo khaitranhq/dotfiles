@@ -74,3 +74,80 @@ Before committing or requesting review, ensure:
 3. All tests pass (if applicable to the task)
 
 This ensures consistent code quality and prevents runtime type errors.
+
+## Member Ordering
+
+Functions, methods, and declarations in classes and files must follow this strict top-to-bottom order:
+
+1. **Exported declarations** — `export` functions, classes, interfaces, types, constants, and `export default`
+2. **Public module-level declarations** — non-exported functions, interfaces, types, and constants used across the module
+3. **Private helpers** — internal implementation details (non-exported utility functions, private class methods)
+
+### In Files
+
+```typescript
+// ✅ Correct: exports → public → private
+
+// 1. Exported declarations
+export interface Config { … }
+export function loadConfig(): Config { … }
+export const DEFAULT_TIMEOUT = 5000;
+
+// 2. Public (non-exported, module-level)
+function normalizePath(p: string): string { … }
+const CACHE = new Map<string, unknown>();
+
+// 3. Private helpers
+function internalOnly(): void { … }
+```
+
+```typescript
+// ❌ Incorrect: private functions mixed among exports
+import { … } from "…";
+
+function privateHelper(): void { … }  // ← private before export
+
+export function publicApi(): void { … }
+```
+
+### In Classes
+
+```typescript
+// ✅ Correct: public → private
+class Service {
+  // Public methods
+  async connect(): Promise<void> { … }
+  disconnect(): void { … }
+
+  // Private methods
+  private async handshake(): Promise<void> { … }
+  private cleanup(): void { … }
+}
+```
+
+```typescript
+// ❌ Incorrect: private methods before public
+class Service {
+  private async handshake(): Promise<void> { … }  // ← private before public
+
+  async connect(): Promise<void> { … }
+}
+```
+
+### For Extension Entry Points
+
+When a file's primary purpose is an `export default function` that serves as an extension entry point, place it first after imports. All supporting declarations (types, constants, helper functions) follow below:
+
+```typescript
+// ✅ Correct: default export first, then supporting code
+import { … } from "…";
+
+export default function (pi: ExtensionAPI) {
+  // Entry point implementation
+}
+
+// Supporting declarations
+interface Options { … }
+const HELPERS = [ … ];
+function internalUtil(): void { … }
+```
