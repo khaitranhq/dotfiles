@@ -1,7 +1,7 @@
 // init/bootstrap.ts - MCP extension initialization
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../state.ts";
-import type { ToolMetadata } from "../types.ts";
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { McpExtensionState } from "../core/state.ts";
+import type { ToolMetadata } from "../core/types.ts";
 import { existsSync } from "node:fs";
 import { loadMcpConfig } from "../config/loader.ts";
 import { McpLifecycleManager } from "../client/lifecycle.ts";
@@ -18,19 +18,15 @@ import {
 } from "../config/cache.ts";
 import { McpServerManager } from "../client/manager.ts";
 import { buildToolMetadata } from "../tools/metadata.ts";
-import { parallelLimit } from "../utils.ts";
-import { logger } from "../logger.ts";
-import { getMissingConfiguredDirectToolServers } from "../proxy/direct.ts";
-import { authenticate, supportsOAuth, getAuthStatus } from "../client/oauth-flow.ts";
+import { parallelLimit } from "../core/utils.ts";
+import { logger } from "../core/logger.ts";
+import { getMissingConfiguredToolServers } from "../proxy/direct.ts";
+import { OAuthFlow, supportsOAuth } from "../client/oauth-flow.ts";
 
 const FAILURE_BACKOFF_MS = 60 * 1000;
 
-export async function initializeMcp(
-  pi: ExtensionAPI,
-  ctx: ExtensionContext,
-): Promise<McpExtensionState> {
-  const configPath = pi.getFlag("mcp-config") as string | undefined;
-  const config = loadMcpConfig(configPath, ctx.cwd);
+export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtensionState> {
+  const config = loadMcpConfig(undefined, ctx.cwd);
 
   const manager = new McpServerManager();
   const lifecycle = new McpLifecycleManager(manager);
@@ -94,11 +90,12 @@ export async function initializeMcp(
     const serverUrl = definition.url;
     if (!serverUrl) continue;
     try {
-      const authStatus = await getAuthStatus(name);
+      const flow = new OAuthFlow(name);
+      const authStatus = flow.authStatus;
       if (authStatus !== "authenticated") {
         logger.info(`Authenticating OAuth server: ${name} (status: ${authStatus})`);
         try {
-          const result = await authenticate(name, serverUrl, definition);
+          const result = await flow.authenticate(serverUrl, definition);
           logger.info(`OAuth authentication complete for ${name}: ${result}`);
         } catch (authError) {
           const message = authError instanceof Error ? authError.message : String(authError);
@@ -148,7 +145,7 @@ export async function initializeMcp(
   const envDirect = process.env.MCP_DIRECT_TOOLS;
   if (envDirect !== "__none__") {
     const currentCache = loadMetadataCache();
-    const missingCacheServers = getMissingConfiguredDirectToolServers(config, currentCache);
+    const missingCacheServers = getMissingConfiguredToolServers(config, currentCache);
 
     if (missingCacheServers.length > 0) {
       await parallelLimit(
@@ -170,7 +167,7 @@ export async function initializeMcp(
             return { name, ok: true };
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            logger.debug(`MCP: direct-tools bootstrap failed for ${name}: ${message}`);
+            logger.debug(`MCP: tools bootstrap failed for ${name}: ${message}`);
             return { name, ok: false };
           }
         },

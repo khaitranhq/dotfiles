@@ -1,30 +1,15 @@
 // tools/renderer.ts - Tool result rendering for TUI
-import type { AgentToolResult, ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
+import type {
+  AgentToolResult,
+  ToolRenderResultOptions,
+  Theme,
+  ToolRenderContext,
+} from "@earendil-works/pi-coding-agent";
+import type { Component } from "@earendil-works/pi-tui";
 import { Text } from "@earendil-works/pi-tui";
 
 type McpToolResultDetails = Record<string, unknown> & { error?: unknown };
 type McpToolContentBlock = AgentToolResult<McpToolResultDetails>["content"][number];
-
-interface RenderTheme {
-  fg: (name: string, text: string) => string;
-  bold?: (text: string) => string;
-}
-
-export interface McpProxyToolCallInput {
-  tool?: string;
-  args?: string;
-  connect?: string;
-  describe?: string;
-  search?: string;
-  regex?: boolean;
-  includeSchemas?: boolean;
-  server?: string;
-  action?: string;
-}
-
-interface McpToolRenderContext {
-  isError: boolean;
-}
 
 export interface McpToolResultDisplay {
   lines: string[];
@@ -63,37 +48,7 @@ function hasUsefulObjectContent(value: unknown): boolean {
   );
 }
 
-export function formatMcpProxyToolCallLines(
-  args: McpProxyToolCallInput,
-  maxInputChars = DEFAULT_MAX_CALL_INPUT_CHARS,
-): string[] {
-  if (args.action === "ui-messages") return [`mcp ${args.action}`];
-
-  if (args.tool) {
-    const target = args.server ? `${args.tool} @ ${args.server}` : args.tool;
-    const lines = [`mcp call ${target}`];
-    if (args.args) lines.push(formatJsonish(args.args, maxInputChars));
-    return lines;
-  }
-
-  if (args.connect) return [`mcp connect ${args.connect}`];
-  if (args.describe) return [`mcp describe ${args.describe}`];
-
-  if (args.search) {
-    let line = `mcp search ${args.search}`;
-    if (args.server) line += ` @ ${args.server}`;
-    if (args.regex === true) line += " (regex)";
-    if (args.includeSchemas === false) line += " (schemas hidden)";
-    return [line];
-  }
-
-  if (args.server) return [`mcp list ${args.server}`];
-  if (args.action) return [`mcp ${args.action}`];
-
-  return ["mcp status"];
-}
-
-export function formatMcpDirectToolCallLines(
+export function formatMcpToolCallLines(
   displayName: string,
   args: Record<string, unknown>,
   maxInputChars = DEFAULT_MAX_CALL_INPUT_CHARS,
@@ -102,20 +57,19 @@ export function formatMcpDirectToolCallLines(
   return [displayName, formatJsonish(args, maxInputChars)];
 }
 
-function renderToolCallLines(lines: string[], theme: RenderTheme) {
+function renderToolCallLines(lines: string[], theme: Theme) {
   const [title = "mcp", ...rest] = lines;
   const styledTitle = theme.fg("toolTitle", theme.bold ? theme.bold(title) : title);
   const styledRest = rest.map((line) => theme.fg("muted", line));
   return new Text([styledTitle, ...styledRest].join("\n"), 0, 0);
 }
 
-export function renderMcpProxyToolCall(args: McpProxyToolCallInput, theme: RenderTheme) {
-  return renderToolCallLines(formatMcpProxyToolCallLines(args), theme);
-}
-
-export function createMcpDirectToolCallRenderer(displayName: string) {
-  return (args: Record<string, unknown>, theme: RenderTheme) => {
-    return renderToolCallLines(formatMcpDirectToolCallLines(displayName, args), theme);
+export function createMcpToolCallRenderer(displayName: string) {
+  return (args: unknown, theme: Theme, _context: ToolRenderContext) => {
+    return renderToolCallLines(
+      formatMcpToolCallLines(displayName, args as Record<string, unknown>),
+      theme,
+    );
   };
 }
 
@@ -147,9 +101,9 @@ export function formatMcpToolResultLines(
 export function renderMcpToolResult(
   result: AgentToolResult<McpToolResultDetails>,
   options: ToolRenderResultOptions,
-  theme: RenderTheme,
-  context?: McpToolRenderContext,
-) {
+  theme: Theme,
+  context?: ToolRenderContext,
+): Component {
   if (options.isPartial) {
     return new Text(theme.fg("warning", "Running MCP tool..."), 0, 0);
   }

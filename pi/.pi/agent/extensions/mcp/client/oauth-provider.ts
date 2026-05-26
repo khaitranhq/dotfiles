@@ -13,56 +13,36 @@ import type {
   OAuthClientInformation,
   OAuthClientInformationFull,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
-import {
-  getAuthForUrl,
-  updateTokens,
-  updateClientInfo,
-  updateCodeVerifier,
-  updateOAuthState,
-  clearAllCredentials,
-  clearClientInfo,
-  clearTokens,
-  type StoredTokens,
-  type StoredClientInfo,
-} from "./oauth-auth.ts";
+import { AuthStorage, type StoredClientInfo } from "./oauth-auth.ts";
 
-// Callback server configuration
-const DEFAULT_OAUTH_CALLBACK_PORT = 19876;
-const DEFAULT_OAUTH_CALLBACK_PATH = "/callback";
+const DEFAULT_PORT = 19876;
+const DEFAULT_PATH = "/callback";
 
-let configuredOAuthCallbackPort = DEFAULT_OAUTH_CALLBACK_PORT;
-
+let configuredPort = DEFAULT_PORT;
 if (process.env.MCP_OAUTH_CALLBACK_PORT) {
-  const parsedPort = Number.parseInt(process.env.MCP_OAUTH_CALLBACK_PORT, 10);
-  if (Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535) {
-    configuredOAuthCallbackPort = parsedPort;
-  }
+  const p = Number.parseInt(process.env.MCP_OAUTH_CALLBACK_PORT, 10);
+  if (Number.isInteger(p) && p > 0 && p <= 65535) configuredPort = p;
 }
 
-let oauthCallbackPort = configuredOAuthCallbackPort;
-let oauthCallbackPath = DEFAULT_OAUTH_CALLBACK_PATH;
+let activePort = configuredPort;
+let activePath = DEFAULT_PATH;
 
 export function getConfiguredOAuthCallbackPort(): number {
-  return configuredOAuthCallbackPort;
+  return configuredPort;
 }
-
 export function getOAuthCallbackPort(): number {
-  return oauthCallbackPort;
+  return activePort;
 }
-
 export function setOAuthCallbackPort(port: number): void {
-  oauthCallbackPort = port;
+  activePort = port;
 }
-
 export function getOAuthCallbackPath(): string {
-  return oauthCallbackPath;
+  return activePath;
 }
-
 export function setOAuthCallbackPath(path: string): void {
-  oauthCallbackPath = path.startsWith("/") ? path : `/${path}`;
+  activePath = path.startsWith("/") ? path : `/${path}`;
 }
 
-/** Configuration options for OAuth */
 export interface McpOAuthConfig {
   grantType?: "authorization_code" | "client_credentials";
   clientId?: string;
@@ -73,17 +53,15 @@ export interface McpOAuthConfig {
   clientUri?: string;
 }
 
-/** Callbacks for OAuth flow interactions */
 export interface McpOAuthCallbacks {
   onRedirect: (url: URL) => void | Promise<void>;
 }
 
-/**
- * OAuth provider implementation for MCP servers.
- * Implements the OAuthClientProvider interface from the MCP SDK.
- */
+export { DEFAULT_PORT as DEFAULT_OAUTH_CALLBACK_PORT, DEFAULT_PATH as DEFAULT_OAUTH_CALLBACK_PATH };
+
 export class McpOAuthProvider implements OAuthClientProvider {
   private readonly redirectUrlSnapshot: string | undefined;
+  private readonly storage: AuthStorage;
 
   constructor(
     private serverName: string,
@@ -91,6 +69,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
     private config: McpOAuthConfig,
     private callbacks: McpOAuthCallbacks,
   ) {
+    this.storage = new AuthStorage(serverName);
     this.redirectUrlSnapshot =
       config.grantType === "client_credentials"
         ? undefined
@@ -102,18 +81,10 @@ export class McpOAuthProvider implements OAuthClientProvider {
     return this.config.grantType === "client_credentials";
   }
 
-  /**
-   * The redirect URL for OAuth callbacks.
-   * This must match the redirect_uri in client metadata.
-   */
   get redirectUrl(): string | undefined {
     return this.redirectUrlSnapshot;
   }
 
-  /**
-   * Client metadata for dynamic registration.
-   * Describes this client to the OAuth authorization server.
-   */
   get clientMetadata(): OAuthClientMetadata {
     if (this.usesClientCredentials) {
       return {
@@ -124,14 +95,9 @@ export class McpOAuthProvider implements OAuthClientProvider {
         token_endpoint_auth_method: this.config.clientSecret ? "client_secret_post" : "none",
       };
     }
-
-    const redirectUrl = this.redirectUrl;
-    if (!redirectUrl) {
-      throw new Error("redirectUrl is required for authorization_code flow");
-    }
-
+    if (!this.redirectUrl) throw new Error("redirectUrl is required for authorization_code flow");
     return {
-      redirect_uris: [redirectUrl],
+      redirect_uris: [this.redirectUrl],
       client_name: this.config.clientName ?? "Khai Tran Agent",
       client_uri: this.config.clientUri ?? "https://github.com/khaitranrh",
       grant_types: ["authorization_code", "refresh_token"],
@@ -140,64 +106,36 @@ export class McpOAuthProvider implements OAuthClientProvider {
     };
   }
 
-  /**
-   * Get client information (for pre-registered or dynamically registered clients).
-   * Returns undefined if no client info exists or if the server URL has changed.
-   */
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    // Check config first (pre-registered client)
     if (this.config.clientId) {
-      return {
-        client_id: this.config.clientId,
-        client_secret: this.config.clientSecret,
-      };
+      return { client_id: this.config.clientId, client_secret: this.config.clientSecret };
     }
-
-    // Check stored client info (from dynamic registration)
-    // Use getAuthForUrl to validate credentials are for the current server URL
-    const entry = await getAuthForUrl(this.serverName, this.serverUrl);
+    const entry = this.storage.getForUrl(this.serverUrl);
     if (entry?.clientInfo) {
-      // Check if client secret has expired
       if (
         entry.clientInfo.clientSecretExpiresAt &&
         entry.clientInfo.clientSecretExpiresAt < Date.now() / 1000
-      ) {
+      )
         return undefined;
-      }
-      return {
-        client_id: entry.clientInfo.clientId,
-        client_secret: entry.clientInfo.clientSecret,
-      };
+      return { client_id: entry.clientInfo.clientId, client_secret: entry.clientInfo.clientSecret };
     }
-
-    // No client info or URL changed - will trigger dynamic registration
     return undefined;
   }
 
-  /**
-   * Save client information from dynamic registration.
-   */
   async saveClientInformation(info: OAuthClientInformationFull): Promise<void> {
-    const redirectUris = info.redirect_uris ?? (this.redirectUrl ? [this.redirectUrl] : undefined);
-    const clientInfo: StoredClientInfo = {
+    const ci: StoredClientInfo = {
       clientId: info.client_id,
       clientSecret: info.client_secret,
       clientIdIssuedAt: info.client_id_issued_at,
       clientSecretExpiresAt: info.client_secret_expires_at,
-      redirectUris,
+      redirectUris: info.redirect_uris ?? (this.redirectUrl ? [this.redirectUrl] : undefined),
     };
-    updateClientInfo(this.serverName, clientInfo, this.serverUrl);
+    this.storage.clientInfo = ci;
   }
 
-  /**
-   * Get stored OAuth tokens.
-   * Returns undefined if no tokens exist or if the server URL has changed.
-   */
   async tokens(): Promise<OAuthTokens | undefined> {
-    // Use getAuthForUrl to validate tokens are for the current server URL
-    const entry = await getAuthForUrl(this.serverName, this.serverUrl);
+    const entry = this.storage.getForUrl(this.serverUrl);
     if (!entry?.tokens) return undefined;
-
     return {
       access_token: entry.tokens.accessToken,
       token_type: "Bearer",
@@ -209,115 +147,69 @@ export class McpOAuthProvider implements OAuthClientProvider {
     };
   }
 
-  /**
-   * Save OAuth tokens.
-   */
   async saveTokens(tokens: OAuthTokens): Promise<void> {
-    const storedTokens: StoredTokens = {
+    this.storage.tokens = {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: tokens.expires_in ? Date.now() / 1000 + tokens.expires_in : undefined,
       scope: tokens.scope,
     };
-    updateTokens(this.serverName, storedTokens, this.serverUrl);
   }
 
-  /**
-   * Redirect the user to the authorization URL.
-   * This opens the browser for the user to authenticate.
-   *
-   * Throws UnauthorizedError when called outside of a user-initiated flow
-   * (no oauthState saved by startAuth). That path is reached when the SDK
-   * falls through from a failed refresh into a fresh authorization_code
-   * flow, which library hosts cannot complete in-process.
-   */
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
-    if (this.usesClientCredentials) {
+    if (this.usesClientCredentials)
       throw new Error("redirectToAuthorization is not used for client_credentials flow");
-    }
-    // No saved oauthState means we're on the post-refresh authorize fallback.
-    const entry = await getAuthForUrl(this.serverName, this.serverUrl);
-    if (!entry?.oauthState) {
+    const entry = this.storage.getForUrl(this.serverUrl);
+    if (!entry?.oauthState)
       throw new UnauthorizedError(`Re-authentication required for MCP server: ${this.serverName}`);
-    }
-    // URL is passed to callback, not logged (may contain sensitive params)
     await this.callbacks.onRedirect(authorizationUrl);
   }
 
-  /**
-   * Save the PKCE code verifier.
-   */
   async saveCodeVerifier(codeVerifier: string): Promise<void> {
-    updateCodeVerifier(this.serverName, codeVerifier, this.serverUrl);
+    this.storage.codeVerifier = codeVerifier;
   }
 
-  /**
-   * Get the stored PKCE code verifier.
-   * @throws Error if no code verifier is stored
-   */
   async codeVerifier(): Promise<string> {
-    if (this.usesClientCredentials) {
+    if (this.usesClientCredentials)
       throw new Error("codeVerifier is not used for client_credentials flow");
-    }
-    const entry = await getAuthForUrl(this.serverName, this.serverUrl);
-    if (!entry?.codeVerifier) {
+    const entry = this.storage.getForUrl(this.serverUrl);
+    if (!entry?.codeVerifier)
       throw new Error(`No code verifier saved for MCP server: ${this.serverName}`);
-    }
     return entry.codeVerifier;
   }
 
-  /**
-   * Save the OAuth state parameter for CSRF protection.
-   */
   async saveState(state: string): Promise<void> {
-    updateOAuthState(this.serverName, state, this.serverUrl);
+    this.storage.oauthState = state;
   }
 
-  /**
-   * Get the stored OAuth state parameter.
-   * @throws UnauthorizedError if no flow is in progress (see redirectToAuthorization)
-   */
   async state(): Promise<string> {
-    if (this.usesClientCredentials) {
+    if (this.usesClientCredentials)
       throw new Error("state is not used for client_credentials flow");
-    }
-    const entry = await getAuthForUrl(this.serverName, this.serverUrl);
-    if (!entry?.oauthState) {
+    const entry = this.storage.getForUrl(this.serverUrl);
+    if (!entry?.oauthState)
       throw new UnauthorizedError(`Re-authentication required for MCP server: ${this.serverName}`);
-    }
     return entry.oauthState;
   }
 
-  /**
-   * Invalidate credentials when authentication fails.
-   * Clears tokens, client info, or all credentials based on the type.
-   */
   async invalidateCredentials(type: "all" | "client" | "tokens"): Promise<void> {
     switch (type) {
       case "all":
-        clearAllCredentials(this.serverName);
+        this.storage.clearAll();
         break;
       case "client":
-        clearClientInfo(this.serverName);
+        this.storage.clearClientInfo();
         break;
       case "tokens":
-        clearTokens(this.serverName);
+        this.storage.clearTokens();
         break;
     }
   }
 
   prepareTokenRequest(scope?: string): URLSearchParams | undefined {
-    if (!this.usesClientCredentials) {
-      return undefined;
-    }
-
+    if (!this.usesClientCredentials) return undefined;
     const params = new URLSearchParams({ grant_type: "client_credentials" });
-    const requestedScope = scope ?? this.config.scope;
-    if (requestedScope) {
-      params.set("scope", requestedScope);
-    }
+    const s = scope ?? this.config.scope;
+    if (s) params.set("scope", s);
     return params;
   }
 }
-
-export { DEFAULT_OAUTH_CALLBACK_PORT, DEFAULT_OAUTH_CALLBACK_PATH };

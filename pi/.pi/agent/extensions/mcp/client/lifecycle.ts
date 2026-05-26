@@ -1,7 +1,7 @@
 // client/lifecycle.ts - Server lifecycle management
-import type { ServerDefinition } from "../types.ts";
+import type { ServerDefinition } from "../core/types.ts";
 import type { McpServerManager } from "./manager.ts";
-import { logger } from "../logger.ts";
+import { logger } from "../core/logger.ts";
 
 export type ReconnectCallback = (serverName: string) => void;
 

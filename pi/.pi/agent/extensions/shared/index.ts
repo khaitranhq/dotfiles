@@ -8,6 +8,8 @@ export {
   loadToolsConfig,
   loadToolPermissions,
   configPath,
+  getAgentDir,
+  getAgentPath,
 } from "./config";
 export type {
   AlwaysApproveConfig,
@@ -44,6 +46,12 @@ export {
   wildcardToRegex,
   matchesToolPattern,
 } from "./command-utils";
+
+export { interpolateEnvVars, interpolateEnvRecord, resolveConfigPath } from "./env-utils";
+
+export { parallelLimit } from "./async-utils";
+
+export { truncateAtWord } from "./text-utils";
 
 export default function () {
   /* intentionally empty — shared module, not an extension */

@@ -6,7 +6,7 @@
 
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from "node:fs";
 import { dirname } from "node:path";
-import { getAgentPath } from "./agent-dir.ts";
+import { getAgentPath } from "../../shared/config.ts";
 
 const LOG_FILE_PATH = getAgentPath("mcp", "mcp.log");
 const MAX_LOG_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB

@@ -1,5 +1,5 @@
-import type { McpLifecycleManager } from "./client/lifecycle.ts";
-import type { McpServerManager } from "./client/manager.ts";
+import type { McpLifecycleManager } from "../client/lifecycle.ts";
+import type { McpServerManager } from "../client/manager.ts";
 import type { ToolMetadata, McpConfig } from "./types.ts";
 
 export interface McpExtensionState {

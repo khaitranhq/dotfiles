@@ -11,17 +11,17 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getAgentPath } from "../agent-dir.ts";
+import { getAgentPath } from "../../shared/config.ts";
 
-/** OAuth token storage format */
+// ── Types ────────────────────────────────────────────────────────────
+
 export interface StoredTokens {
   accessToken: string;
   refreshToken?: string;
-  expiresAt?: number; // Unix timestamp in seconds
+  expiresAt?: number;
   scope?: string;
 }
 
-/** OAuth client information from dynamic or static registration */
 export interface StoredClientInfo {
   clientId: string;
   clientSecret?: string;
@@ -30,273 +30,158 @@ export interface StoredClientInfo {
   redirectUris?: string[];
 }
 
-/** Complete auth entry for a server */
 export interface AuthEntry {
   tokens?: StoredTokens;
   clientInfo?: StoredClientInfo;
   codeVerifier?: string;
   oauthState?: string;
-  serverUrl?: string; // Track the URL these credentials are for
+  serverUrl?: string;
 }
 
-// Base directory for auth storage - can be overridden via env var for testing
-function getAuthBaseDir(): string {
-  const override = process.env.MCP_OAUTH_DIR?.trim();
-  return override ? override : getAgentPath("mcp");
-}
+// ── AuthStorage class ────────────────────────────────────────────────
 
-/**
- * Get the server-specific directory path.
- */
-function getServerDir(serverName: string): string {
-  if (typeof serverName !== "string") {
-    throw new Error(`Invalid MCP server name: ${JSON.stringify(serverName)}`);
+export class AuthStorage {
+  private readonly dir: string;
+  private readonly tokensPath: string;
+
+  constructor(serverName: string) {
+    this.dir = this.computeDir(serverName);
+    this.tokensPath = join(this.dir, "tokens.json");
   }
-  const storageKey = createHash("sha256").update(serverName, "utf8").digest("hex");
-  return join(getAuthBaseDir(), `sha256-${storageKey}`);
-}
 
-/**
- * Get the tokens file path for a server.
- */
-export function getAuthEntryFilePath(serverName: string): string {
-  return join(getServerDir(serverName), "tokens.json");
-}
+  // ── Read/write ──────────────────────────────────────────────────
 
-/**
- * Ensure the server directory exists with secure permissions.
- */
-function ensureServerDir(serverName: string): void {
-  const dir = getServerDir(serverName);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
-  }
-}
-
-/**
- * Read the auth entry for a server from disk.
- * Returns undefined if file doesn't exist.
- */
-function readAuthEntry(serverName: string): AuthEntry | undefined {
-  const filePath = getAuthEntryFilePath(serverName);
-  try {
-    if (!existsSync(filePath)) {
+  getEntry(): AuthEntry | undefined {
+    try {
+      if (!existsSync(this.tokensPath)) return undefined;
+      return JSON.parse(readFileSync(this.tokensPath, "utf-8")) as AuthEntry;
+    } catch {
       return undefined;
     }
-    const data = readFileSync(filePath, "utf-8");
-    return JSON.parse(data) as AuthEntry;
-  } catch (error) {
-    console.error(`Failed to read auth entry for ${serverName}:`, error);
-    return undefined;
   }
-}
 
-/**
- * Write the auth entry for a server to disk with secure permissions.
- */
-function writeAuthEntry(serverName: string, entry: AuthEntry): void {
-  ensureServerDir(serverName);
-  const filePath = getAuthEntryFilePath(serverName);
-  writeFileSync(filePath, JSON.stringify(entry, null, 2), { mode: 0o600 });
-}
-
-/**
- * Get auth entry for a server.
- */
-export function getAuthEntry(serverName: string): AuthEntry | undefined {
-  return readAuthEntry(serverName);
-}
-
-/**
- * Get auth entry and validate it's for the correct URL.
- * Returns undefined if URL has changed (credentials are invalid).
- */
-export function getAuthForUrl(serverName: string, serverUrl: string): AuthEntry | undefined {
-  const entry = getAuthEntry(serverName);
-  if (!entry) return undefined;
-
-  // If no serverUrl is stored, this is from an old version - consider it invalid
-  if (!entry.serverUrl) return undefined;
-
-  // If URL has changed, credentials are invalid
-  if (entry.serverUrl !== serverUrl) return undefined;
-
-  return entry;
-}
-
-/**
- * Save auth entry for a server.
- */
-export function saveAuthEntry(serverName: string, entry: AuthEntry, serverUrl?: string): void {
-  // Always update serverUrl if provided
-  if (serverUrl) {
-    entry.serverUrl = serverUrl;
+  getForUrl(serverUrl: string): AuthEntry | undefined {
+    const entry = this.getEntry();
+    if (!entry?.serverUrl) return undefined;
+    if (entry.serverUrl !== serverUrl) return undefined;
+    return entry;
   }
-  writeAuthEntry(serverName, entry);
-}
 
-/**
- * Remove auth entry for a server.
- * Also removes the server directory if empty.
- */
-export function removeAuthEntry(serverName: string): void {
-  try {
-    const filePath = getAuthEntryFilePath(serverName);
-    if (existsSync(filePath)) {
-      writeFileSync(filePath, "{}", { mode: 0o600 });
-    }
-    // Try to remove the directory
-    const dir = getServerDir(serverName);
-    if (existsSync(dir)) {
-      try {
-        rmSync(dir, { recursive: true });
-      } catch {
-        // Directory may not be empty, ignore
+  saveEntry(entry: AuthEntry, serverUrl?: string): void {
+    if (serverUrl) entry.serverUrl = serverUrl;
+    this.ensureDir();
+    writeFileSync(this.tokensPath, JSON.stringify(entry, null, 2), { mode: 0o600 });
+  }
+
+  remove(): void {
+    try {
+      if (existsSync(this.tokensPath)) writeFileSync(this.tokensPath, "{}", { mode: 0o600 });
+      if (existsSync(this.dir)) {
+        try {
+          rmSync(this.dir, { recursive: true });
+        } catch {
+          /* ignore */
+        }
       }
+    } catch {
+      /* ignore */
     }
-  } catch (error) {
-    console.error(`Failed to remove auth entry for ${serverName}:`, error);
   }
-}
 
-/**
- * Update tokens for a server.
- */
-export function updateTokens(serverName: string, tokens: StoredTokens, serverUrl?: string): void {
-  const entry = getAuthEntry(serverName) ?? {};
-  if (serverUrl && entry.serverUrl !== serverUrl) {
-    delete entry.clientInfo;
-    delete entry.codeVerifier;
-    delete entry.oauthState;
+  // ── Token helpers ────────────────────────────────────────────────
+
+  get tokens(): StoredTokens | undefined {
+    return this.getEntry()?.tokens;
   }
-  entry.tokens = tokens;
-  saveAuthEntry(serverName, entry, serverUrl);
-}
 
-/**
- * Update client info for a server.
- */
-export function updateClientInfo(
-  serverName: string,
-  clientInfo: StoredClientInfo,
-  serverUrl?: string,
-): void {
-  const entry = getAuthEntry(serverName) ?? {};
-  if (serverUrl && entry.serverUrl !== serverUrl) {
-    delete entry.tokens;
-    delete entry.codeVerifier;
-    delete entry.oauthState;
+  set tokens(t: StoredTokens) {
+    this.update("tokens", t);
   }
-  entry.clientInfo = clientInfo;
-  saveAuthEntry(serverName, entry, serverUrl);
-}
 
-/**
- * Update code verifier for a server.
- */
-export function updateCodeVerifier(
-  serverName: string,
-  codeVerifier: string,
-  serverUrl?: string,
-): void {
-  const entry = getAuthEntry(serverName) ?? {};
-  if (serverUrl && entry.serverUrl !== serverUrl) {
-    delete entry.tokens;
-    delete entry.clientInfo;
-    delete entry.oauthState;
+  get isExpired(): boolean | null {
+    const entry = this.getEntry();
+    if (!entry?.tokens) return null;
+    if (!entry.tokens.expiresAt) return false;
+    return entry.tokens.expiresAt < Date.now() / 1000;
   }
-  entry.codeVerifier = codeVerifier;
-  saveAuthEntry(serverName, entry, serverUrl);
-}
 
-/**
- * Clear code verifier for a server.
- */
-export function clearCodeVerifier(serverName: string): void {
-  const entry = getAuthEntry(serverName);
-  if (entry) {
-    delete entry.codeVerifier;
-    saveAuthEntry(serverName, entry);
+  get hasTokens(): boolean {
+    return !!this.getEntry()?.tokens;
   }
-}
 
-/**
- * Update OAuth state for a server.
- */
-export function updateOAuthState(serverName: string, state: string, serverUrl?: string): void {
-  const entry = getAuthEntry(serverName) ?? {};
-  if (serverUrl && entry.serverUrl !== serverUrl) {
-    delete entry.tokens;
-    delete entry.clientInfo;
-    delete entry.codeVerifier;
+  // ── Client info ──────────────────────────────────────────────────
+
+  get clientInfo(): StoredClientInfo | undefined {
+    return this.getEntry()?.clientInfo;
   }
-  entry.oauthState = state;
-  saveAuthEntry(serverName, entry, serverUrl);
-}
 
-/**
- * Get OAuth state for a server.
- */
-export function getOAuthState(serverName: string): string | undefined {
-  const entry = getAuthEntry(serverName);
-  return entry?.oauthState;
-}
-
-/**
- * Clear OAuth state for a server.
- */
-export function clearOAuthState(serverName: string): void {
-  const entry = getAuthEntry(serverName);
-  if (entry) {
-    delete entry.oauthState;
-    saveAuthEntry(serverName, entry);
+  set clientInfo(info: StoredClientInfo) {
+    this.update("clientInfo", info);
   }
-}
 
-/**
- * Check if stored tokens are expired.
- * Returns null if no tokens exist, false if no expiry or not expired, true if expired.
- */
-export function isTokenExpired(serverName: string): boolean | null {
-  const entry = getAuthEntry(serverName);
-  if (!entry?.tokens) return null;
-  if (!entry.tokens.expiresAt) return false;
-  return entry.tokens.expiresAt < Date.now() / 1000;
-}
+  // ── PKCE / OAuth state ───────────────────────────────────────────
 
-/**
- * Check if a server has stored tokens.
- */
-export function hasStoredTokens(serverName: string): boolean {
-  const entry = getAuthEntry(serverName);
-  return !!entry?.tokens;
-}
-
-/**
- * Clear all credentials for a server.
- */
-export function clearAllCredentials(serverName: string): void {
-  removeAuthEntry(serverName);
-}
-
-/**
- * Clear only client info for a server.
- */
-export function clearClientInfo(serverName: string): void {
-  const entry = getAuthEntry(serverName);
-  if (entry) {
-    delete entry.clientInfo;
-    saveAuthEntry(serverName, entry);
+  get codeVerifier(): string | undefined {
+    return this.getEntry()?.codeVerifier;
   }
-}
 
-/**
- * Clear only tokens for a server.
- */
-export function clearTokens(serverName: string): void {
-  const entry = getAuthEntry(serverName);
-  if (entry) {
-    delete entry.tokens;
-    saveAuthEntry(serverName, entry);
+  set codeVerifier(v: string) {
+    this.update("codeVerifier", v);
+  }
+
+  clearCodeVerifier(): void {
+    this.clearField("codeVerifier");
+  }
+
+  get oauthState(): string | undefined {
+    return this.getEntry()?.oauthState;
+  }
+
+  set oauthState(s: string) {
+    this.update("oauthState", s);
+  }
+
+  clearOAuthState(): void {
+    this.clearField("oauthState");
+  }
+
+  // ── Bulk operations ──────────────────────────────────────────────
+
+  clearAll(): void {
+    this.remove();
+  }
+
+  clearClientInfo(): void {
+    this.clearField("clientInfo");
+  }
+
+  clearTokens(): void {
+    this.clearField("tokens");
+  }
+
+  // ── Private ──────────────────────────────────────────────────────
+
+  private computeDir(name: string): string {
+    const storageKey = createHash("sha256").update(name, "utf8").digest("hex");
+    const base = process.env.MCP_OAUTH_DIR?.trim() || getAgentPath("mcp");
+    return join(base, `sha256-${storageKey}`);
+  }
+
+  private ensureDir(): void {
+    if (!existsSync(this.dir)) mkdirSync(this.dir, { recursive: true, mode: 0o700 });
+  }
+
+  private update<K extends keyof AuthEntry>(key: K, value: AuthEntry[K]): void {
+    const entry = this.getEntry() ?? {};
+    entry[key] = value;
+    this.saveEntry(entry);
+  }
+
+  private clearField(key: keyof AuthEntry): void {
+    const entry = this.getEntry();
+    if (entry) {
+      delete entry[key];
+      this.saveEntry(entry);
+    }
   }
 }

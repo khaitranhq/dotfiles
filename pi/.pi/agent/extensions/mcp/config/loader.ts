@@ -2,10 +2,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { getAgentPath } from "../agent-dir.ts";
+import { getAgentPath } from "../../shared/config.ts";
 import { loadCustomSettings } from "../../shared/config.ts";
 import type { McpYamlServer } from "../../shared/config.ts";
-import type { McpConfig, ServerEntry, McpSettings } from "../types.ts";
+import type { McpConfig, ServerEntry, McpSettings } from "../core/types.ts";
 
 const GENERIC_GLOBAL_CONFIG_PATH = join(homedir(), ".config", "mcp", "mcp.json");
 const PROJECT_CONFIG_NAME = ".mcp.json";

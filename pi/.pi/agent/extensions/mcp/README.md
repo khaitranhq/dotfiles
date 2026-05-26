@@ -1,6 +1,6 @@
 # MCP
 
-MCP (Model Context Protocol) gateway — connect to MCP servers and call their tools from Pi.
+MCP (Model Context Protocol) gateway — connect to MCP servers and register their tools in Pi.
 
 Supports `stdio` and HTTP (StreamableHTTP + SSE) transports.
 
@@ -14,6 +14,8 @@ MCP servers are loaded from (in order, later overrides earlier):
 4. `.pi/mcp.json` — project Pi override
 5. `~/.pi/agent/custom-settings.yaml` `mcp.servers[]` — YAML server list (overrides all above)
 
+Config is always loaded from these default locations; no CLI flag is needed.
+
 ## Commands
 
 | Command                | Description                             |
@@ -21,6 +23,8 @@ MCP servers are loaded from (in order, later overrides earlier):
 | `mcp`                  | Show MCP server status                  |
 | `mcp reconnect [name]` | Reconnect all servers or a specific one |
 | `mcp tools`            | List tools from all connected servers   |
+| `mcp auth <name>`      | Authenticate an OAuth server            |
+| `mcp logout <name>`    | Remove stored OAuth credentials         |
 
 ## Settings (`mcp` in `custom-settings.yaml`)
 
@@ -55,10 +59,10 @@ mcp:
 | `lifecycle`       | `"keep-alive"` \| `"lazy"` \| `"eager"` | Connection lifecycle                                    |
 | `idleTimeout`     | number                                  | Idle timeout in minutes                                 |
 | `exposeResources` | boolean                                 | Expose MCP resources as tools                           |
-| `directTools`     | boolean \| string[]                     | Register tools directly (not via proxy)                 |
+| `directTools`     | boolean \| string[]                     | Register tools as Pi tools                              |
 | `excludeTools`    | string[]                                | Tools to exclude                                        |
 | `debug`           | boolean                                 | Show server stderr                                      |
 
-### Proxy Tool
+### Tool Registration
 
-The `mcp` proxy tool is registered by default to provide a unified gateway for all MCP servers. Set `disableProxyTool: true` in `mcp.json` settings to disable it when using only direct tool registration.
+MCP tools are registered as native Pi tools using the `directTools` setting. Set it to `true` to register all tools from a server, or provide a list of specific tool names. Tools are available directly by name (prefixed with the server name).

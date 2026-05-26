@@ -3,8 +3,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import type { McpTool, McpResource, ServerDefinition, Transport } from "../types.ts";
-import { interpolateEnvRecord, resolveBearerToken, resolveConfigPath } from "../utils.ts";
+import type { McpTool, McpResource, ServerDefinition, Transport } from "../core/types.ts";
+import { interpolateEnvRecord, resolveBearerToken, resolveConfigPath } from "../core/utils.ts";
 import { supportsOAuth, extractOAuthConfig } from "./oauth-flow.ts";
 import { McpOAuthProvider } from "./oauth-provider.ts";
 

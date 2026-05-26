@@ -1,5 +1,7 @@
 # AGENTS.md — Pi Extensions
 
+> **Note:** Files under `/home/khaitran/dotfiles/pi/.pi/agent/**` are symlinked to `~/.pi/agent/`. The dotfiles repo is the canonical source. Changes made here are reflected immediately in pi's runtime.
+
 ## Mandatory: Lint and Format After Code Changes
 
 After any code change (edit, write, or file creation), you **MUST** run lint and format:

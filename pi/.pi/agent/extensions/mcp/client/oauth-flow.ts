@@ -8,127 +8,19 @@ import { spawn } from "node:child_process";
 import { auth as runSdkAuth, UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { McpOAuthProvider, type McpOAuthConfig } from "./oauth-provider.ts";
-import {
-  ensureCallbackServer,
-  waitForCallback,
-  cancelPendingCallback,
-  stopCallbackServer,
-  releaseCallbackServer,
-} from "./oauth-callback.ts";
-import {
-  getAuthForUrl,
-  isTokenExpired,
-  hasStoredTokens,
-  clearAllCredentials,
-  clearClientInfo,
-  clearTokens,
-  clearCodeVerifier,
-  updateOAuthState,
-  getOAuthState,
-  clearOAuthState,
-  type StoredTokens,
-} from "./oauth-auth.ts";
-import type { ServerEntry } from "../types.ts";
+import { callbackServer } from "./oauth-callback.ts";
+import { AuthStorage, type StoredTokens } from "./oauth-auth.ts";
+import type { ServerEntry } from "../core/types.ts";
 
-/** Auth status for a server */
 export type AuthStatus = "authenticated" | "expired" | "not_authenticated";
 
-// Track pending transports for auth completion
 const pendingTransports = new Map<string, StreamableHTTPClientTransport>();
-
-// Deduplicate concurrent authenticate() calls per server.
 const pendingAuthentications = new Map<string, Promise<AuthStatus>>();
 
-/**
- * Open a URL in the default browser.
- * Uses platform-specific commands (no npm dependency on `open`).
- */
-async function openBrowser(url: string): Promise<void> {
-  const platform = process.platform;
-  const command = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
-  const args = platform === "win32" ? ["", url] : [url];
-  const shell = platform === "win32" ? true : false;
-
-  return new Promise<void>((resolve, reject) => {
-    const proc = spawn(command, args, {
-      shell,
-      stdio: "ignore",
-      detached: true,
-    });
-
-    proc.on("error", (err) => {
-      reject(new Error(`Failed to open browser: ${err.message}`, { cause: err }));
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0 || code === null) {
-        resolve();
-      } else {
-        reject(new Error(`Browser command exited with code ${code}`));
-      }
-    });
-
-    // Don't wait for the process — detach
-    proc.unref();
-    // Resolve early — the browser process is detachable and may outlive us
-    setTimeout(() => resolve(), 500);
-  });
-}
-
-/**
- * Generate a cryptographically secure random state parameter.
- */
 function generateState(): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-}
-
-/**
- * Extract OAuth configuration from a ServerEntry.
- */
-export function extractOAuthConfig(definition: ServerEntry): McpOAuthConfig {
-  if (definition.oauth === false) {
-    return {};
-  }
-
-  const config: McpOAuthConfig = {};
-  if (definition.oauth?.grantType !== undefined) config.grantType = definition.oauth.grantType;
-  if (definition.oauth?.clientId !== undefined) config.clientId = definition.oauth.clientId;
-  if (definition.oauth?.clientSecret !== undefined)
-    config.clientSecret = definition.oauth.clientSecret;
-  if (definition.oauth?.scope !== undefined) config.scope = definition.oauth.scope;
-  if (definition.oauth?.redirectUri !== undefined) {
-    if (typeof definition.oauth.redirectUri !== "string") {
-      throw new Error("OAuth redirectUri must be a string");
-    }
-    const redirectUri = definition.oauth.redirectUri.trim();
-    if (!redirectUri) {
-      throw new Error("OAuth redirectUri must not be empty");
-    }
-    config.redirectUri = redirectUri;
-  }
-  if (definition.oauth?.clientName !== undefined) {
-    if (typeof definition.oauth.clientName !== "string") {
-      throw new Error("OAuth clientName must be a string");
-    }
-    const clientName = definition.oauth.clientName.trim();
-    if (!clientName) {
-      throw new Error("OAuth clientName must not be empty");
-    }
-    config.clientName = clientName;
-  }
-  if (definition.oauth?.clientUri !== undefined) {
-    if (typeof definition.oauth.clientUri !== "string") {
-      throw new Error("OAuth clientUri must be a string");
-    }
-    const clientUri = definition.oauth.clientUri.trim();
-    if (!clientUri) {
-      throw new Error("OAuth clientUri must not be empty");
-    }
-    config.clientUri = clientUri;
-  }
-  return config;
 }
 
 function parseOAuthRedirectUri(redirectUri: string): {
@@ -139,392 +31,315 @@ function parseOAuthRedirectUri(redirectUri: string): {
   let url: URL;
   try {
     url = new URL(redirectUri);
-  } catch (error) {
-    throw new Error(`Invalid OAuth redirectUri: ${redirectUri}`, { cause: error });
+  } catch (err) {
+    throw new Error(`Invalid OAuth redirectUri: ${redirectUri}. Error: ${(err as Error).message}`);
   }
 
   const hostname = url.hostname.toLowerCase();
-  const isLocalhost =
+  const isLocal =
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname === "[::1]" ||
     hostname === "::1";
-  if (url.protocol !== "http:" || !isLocalhost) {
+  if (url.protocol !== "http:" || !isLocal)
     throw new Error("OAuth redirectUri must be an http:// localhost or loopback URI");
-  }
-
-  if (url.username || url.password) {
+  if (url.username || url.password)
     throw new Error("OAuth redirectUri must not include username or password");
-  }
-
-  if (url.hash) {
-    throw new Error("OAuth redirectUri must not include a fragment");
-  }
-
-  if (!url.port) {
-    throw new Error("OAuth redirectUri must include an explicit numeric port");
-  }
+  if (url.hash) throw new Error("OAuth redirectUri must not include a fragment");
+  if (!url.port) throw new Error("OAuth redirectUri must include an explicit numeric port");
 
   const port = Number.parseInt(url.port, 10);
-  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+  if (!Number.isInteger(port) || port <= 0 || port > 65535)
     throw new Error("OAuth redirectUri must include an explicit numeric port");
-  }
 
-  const callbackHost = hostname === "[::1]" ? "::1" : hostname;
-  return { port, callbackHost, callbackPath: url.pathname };
+  return {
+    port,
+    callbackHost: hostname === "[::1]" ? "::1" : hostname,
+    callbackPath: url.pathname,
+  };
 }
 
-/**
- * Start OAuth authentication flow for a server.
- * Returns the authorization URL when browser authorization is required.
- */
-export async function startAuth(
-  serverName: string,
-  serverUrl: string,
-  definition?: ServerEntry,
-): Promise<{ authorizationUrl: string }> {
-  const config = definition ? extractOAuthConfig(definition) : {};
+// ── Standalone helpers ────────────────────────────────────────────────
 
-  if (config.grantType === "client_credentials") {
-    const storedAuth = await getAuthForUrl(serverName, serverUrl);
-    if (storedAuth?.clientInfo && !storedAuth.tokens && !config.clientId) {
-      clearClientInfo(serverName);
-      clearCodeVerifier(serverName);
-      await clearOAuthState(serverName);
-    }
-
-    const authProvider = new McpOAuthProvider(serverName, serverUrl, config, {
-      onRedirect: async () => {
-        throw new Error("Browser redirect is not used for client_credentials flow");
-      },
-    });
-    const result = await runSdkAuth(authProvider, { serverUrl });
-    if (result !== "AUTHORIZED") {
-      throw new UnauthorizedError("Failed to authorize");
-    }
-    return { authorizationUrl: "" };
+export function extractOAuthConfig(definition: ServerEntry): McpOAuthConfig {
+  if (definition.oauth === false) return {};
+  const config: McpOAuthConfig = {};
+  const o = definition.oauth;
+  if (o?.grantType) config.grantType = o.grantType;
+  if (o?.clientId) config.clientId = o.clientId;
+  if (o?.clientSecret) config.clientSecret = o.clientSecret;
+  if (o?.scope) config.scope = o.scope;
+  if (o?.redirectUri !== undefined) {
+    if (typeof o.redirectUri !== "string") throw new Error("OAuth redirectUri must be a string");
+    const uri = o.redirectUri.trim();
+    if (!uri) throw new Error("OAuth redirectUri must not be empty");
+    config.redirectUri = uri;
   }
-
-  const redirectCallback =
-    config.redirectUri !== undefined ? parseOAuthRedirectUri(config.redirectUri) : undefined;
-  const oauthState = generateState();
-
-  try {
-    await ensureCallbackServer({
-      strictPort: Boolean(config.clientId) || config.redirectUri !== undefined,
-      oauthState,
-      reserveState: true,
-      ...(redirectCallback
-        ? {
-            port: redirectCallback.port,
-            callbackHost: redirectCallback.callbackHost,
-            callbackPath: redirectCallback.callbackPath,
-          }
-        : {}),
-    });
-  } catch (error) {
-    await clearOAuthState(serverName);
-    throw error;
+  if (o?.clientName !== undefined) {
+    if (typeof o.clientName !== "string") throw new Error("OAuth clientName must be a string");
+    const name = o.clientName.trim();
+    if (!name) throw new Error("OAuth clientName must not be empty");
+    config.clientName = name;
   }
+  if (o?.clientUri !== undefined) {
+    if (typeof o.clientUri !== "string") throw new Error("OAuth clientUri must be a string");
+    const uri = o.clientUri.trim();
+    if (!uri) throw new Error("OAuth clientUri must not be empty");
+    config.clientUri = uri;
+  }
+  return config;
+}
 
-  let capturedUrl: URL | undefined;
-  const authProvider = new McpOAuthProvider(serverName, serverUrl, config, {
-    onRedirect: async (url) => {
-      capturedUrl = url;
-    },
-  });
-
-  try {
-    const storedAuth = await getAuthForUrl(serverName, serverUrl);
-    if (storedAuth?.clientInfo && !config.clientId) {
-      if (!storedAuth.tokens) {
-        clearClientInfo(serverName);
-        clearCodeVerifier(serverName);
-        await clearOAuthState(serverName);
-      } else {
-        const redirectUris = storedAuth.clientInfo.redirectUris;
-        if (
-          !Array.isArray(redirectUris) ||
-          !redirectUris.includes(authProvider.redirectUrl ?? "")
-        ) {
-          clearClientInfo(serverName);
-          clearTokens(serverName);
-          clearCodeVerifier(serverName);
-          await clearOAuthState(serverName);
-        }
-      }
-    }
-
-    await updateOAuthState(serverName, oauthState, serverUrl);
-
-    const result = await runSdkAuth(authProvider, { serverUrl });
-    if (result === "AUTHORIZED") {
-      releaseCallbackServer(oauthState);
-      await clearOAuthState(serverName);
-      return { authorizationUrl: "" };
-    }
-    if (!capturedUrl) {
-      throw new UnauthorizedError("OAuth authorization URL was not provided");
-    }
-    pendingTransports.set(
-      serverName,
-      new StreamableHTTPClientTransport(new URL(serverUrl), { authProvider }),
+export function supportsOAuth(definition: ServerEntry): boolean {
+  if (!definition.url) return false;
+  if (definition.auth === false) return false;
+  if (definition.oauth === false) return false;
+  if (definition.auth === "oauth") return true;
+  if (definition.headers) {
+    const hasAuth = Object.keys(definition.headers).some(
+      (k) => k.toLowerCase() === "authorization",
     );
-    return { authorizationUrl: capturedUrl.toString() };
-  } catch (error) {
-    releaseCallbackServer(oauthState);
-    await clearOAuthState(serverName);
-    throw error;
+    if (hasAuth) return false;
   }
+  return definition.auth === undefined;
 }
 
-/**
- * Complete OAuth authentication with the authorization code.
- */
-export async function completeAuth(
-  serverName: string,
-  authorizationCode: string,
-): Promise<AuthStatus> {
-  const transport = pendingTransports.get(serverName);
-  if (!transport) {
-    throw new Error(`No pending OAuth flow for server: ${serverName}`);
+// ── OAuthFlow class ───────────────────────────────────────────────────
+
+export class OAuthFlow {
+  readonly storage: AuthStorage;
+
+  constructor(private readonly serverName: string) {
+    this.storage = new AuthStorage(serverName);
   }
 
-  const oauthState = await getOAuthState(serverName);
+  // ── Status ───────────────────────────────────────────────────────
 
-  try {
-    // Complete the auth using the transport's finishAuth method
-    await transport.finishAuth(authorizationCode);
-    return "authenticated";
-  } finally {
-    if (oauthState) {
-      releaseCallbackServer(oauthState);
-    }
-    await clearOAuthState(serverName);
-    pendingTransports.delete(serverName);
-    await transport.close().catch(() => {});
-  }
-}
-
-/**
- * Perform the complete OAuth authentication flow for a server.
- *
- * @param serverName - The name of the MCP server
- * @param serverUrl - The URL of the MCP server
- * @param definition - The server definition (optional)
- * @returns The final auth status
- */
-export async function authenticate(
-  serverName: string,
-  serverUrl: string,
-  definition?: ServerEntry,
-): Promise<AuthStatus> {
-  const inFlight = pendingAuthentications.get(serverName);
-  if (inFlight) {
-    return inFlight;
+  get authStatus(): AuthStatus {
+    if (!this.storage.hasTokens) return "not_authenticated";
+    return this.storage.isExpired ? "expired" : "authenticated";
   }
 
-  const operation = (async (): Promise<AuthStatus> => {
-    // Start auth flow
-    const { authorizationUrl } = await startAuth(serverName, serverUrl, definition);
+  async validToken(): Promise<StoredTokens | null> {
+    const entry = this.storage.getForUrl(""); // url check done at call site
+    if (!entry?.tokens) return null;
+    if (this.storage.isExpired !== true) return entry.tokens;
+    // Expired — try refresh
+    if (!entry.tokens.refreshToken) return null;
+    return this.doRefresh();
+  }
 
-    // If no auth URL needed, already authenticated
-    if (!authorizationUrl) {
-      return "authenticated";
-    }
+  // ── Full authentication flow ─────────────────────────────────────
 
-    // Get the state that was already generated and stored in startAuth()
-    const oauthState = await getOAuthState(serverName);
-    if (!oauthState) {
-      throw new Error("OAuth state not found - this should not happen");
-    }
+  async authenticate(serverUrl: string, definition?: ServerEntry): Promise<AuthStatus> {
+    const inFlight = pendingAuthentications.get(this.serverName);
+    if (inFlight) return inFlight;
 
-    // Register the callback BEFORE opening the browser
-    const callbackPromise = waitForCallback(oauthState);
-
+    const op = this.doAuthenticate(serverUrl, definition);
+    pendingAuthentications.set(this.serverName, op);
     try {
-      // Open browser
-      console.log(`MCP Auth: Opening browser for ${serverName}`);
-      try {
-        await openBrowser(authorizationUrl);
-      } catch (error) {
-        console.warn(`MCP Auth: Failed to open browser for ${serverName}`, { error });
-        throw new Error(
-          `Could not open browser. Please open this URL manually: ${authorizationUrl}`,
-          { cause: error },
-        );
-      }
+      return await op;
+    } finally {
+      if (pendingAuthentications.get(this.serverName) === op)
+        pendingAuthentications.delete(this.serverName);
+    }
+  }
 
-      // Wait for callback
+  private async doAuthenticate(serverUrl: string, definition?: ServerEntry): Promise<AuthStatus> {
+    const { authorizationUrl } = await this.startAuth(serverUrl, definition);
+    if (!authorizationUrl) return "authenticated";
+
+    const oauthState = this.storage.oauthState;
+    if (!oauthState) throw new Error("OAuth state not found");
+
+    const callbackPromise = callbackServer.wait(oauthState);
+    try {
+      console.log(`MCP Auth: Opening browser for ${this.serverName}`);
+      await openBrowser(authorizationUrl);
       const code = await callbackPromise;
 
-      // Validate state
-      const storedState = await getOAuthState(serverName);
-      if (storedState !== oauthState) {
-        await clearOAuthState(serverName);
+      if (this.storage.oauthState !== oauthState) {
+        this.storage.clearOAuthState();
         throw new Error("OAuth state mismatch - potential CSRF attack");
       }
-      await clearOAuthState(serverName);
-
-      // Complete the auth
-      return await completeAuth(serverName, code);
+      this.storage.clearOAuthState();
+      return await this.completeAuth(code);
     } catch (error) {
-      cancelPendingCallback(oauthState);
-      await clearOAuthState(serverName);
-      const pendingTransport = pendingTransports.get(serverName);
-      if (pendingTransport) {
-        pendingTransports.delete(serverName);
-        await pendingTransport.close().catch(() => {});
+      callbackServer.cancel(oauthState);
+      this.storage.clearOAuthState();
+      const pt = pendingTransports.get(this.serverName);
+      if (pt) {
+        pendingTransports.delete(this.serverName);
+        await pt.close().catch(() => {});
       }
       throw error;
     }
-  })();
+  }
 
-  pendingAuthentications.set(serverName, operation);
+  // ── Start/completion ─────────────────────────────────────────────
 
-  try {
-    return await operation;
-  } finally {
-    if (pendingAuthentications.get(serverName) === operation) {
-      pendingAuthentications.delete(serverName);
+  private async startAuth(
+    serverUrl: string,
+    definition?: ServerEntry,
+  ): Promise<{ authorizationUrl: string }> {
+    const config = definition ? extractOAuthConfig(definition) : {};
+
+    if (config.grantType === "client_credentials") {
+      const storedAuth = this.storage.getForUrl(serverUrl);
+      if (storedAuth?.clientInfo && !storedAuth.tokens && !config.clientId) {
+        this.storage.clearClientInfo();
+        this.storage.clearCodeVerifier();
+        this.storage.clearOAuthState();
+      }
+      const provider = new McpOAuthProvider(this.serverName, serverUrl, config, {
+        onRedirect: async () => {
+          throw new Error("Browser redirect is not used for client_credentials flow");
+        },
+      });
+      const result = await runSdkAuth(provider, { serverUrl });
+      if (result !== "AUTHORIZED") throw new UnauthorizedError("Failed to authorize");
+      return { authorizationUrl: "" };
     }
-  }
-}
 
-/**
- * Get a valid access token for a server, refreshing if necessary.
- *
- * @param serverName - The name of the MCP server
- * @param serverUrl - The URL of the MCP server
- * @returns The valid tokens or null if not authenticated
- */
-export async function getValidToken(
-  serverName: string,
-  serverUrl: string,
-): Promise<StoredTokens | null> {
-  // Check if we have valid tokens
-  const entry = await getAuthForUrl(serverName, serverUrl);
-  if (!entry?.tokens) {
-    return null;
-  }
-
-  // Check expiration
-  const expired = await isTokenExpired(serverName);
-  if (expired === false) {
-    return entry.tokens;
-  }
-
-  if (expired === true && entry.tokens.refreshToken) {
-    // Token is expired, try to refresh
-    console.log(`MCP Auth: Token expired for ${serverName}, attempting refresh`);
+    const redirectCallback = config.redirectUri
+      ? parseOAuthRedirectUri(config.redirectUri)
+      : undefined;
+    const oauthState = generateState();
 
     try {
-      // Create auth provider for token refresh
-      const authProvider = new McpOAuthProvider(
-        serverName,
-        serverUrl,
-        {},
-        {
-          onRedirect: async () => {},
-        },
-      );
-
-      const clientInfo = await authProvider.clientInformation();
-      if (!clientInfo) {
-        console.log(`MCP Auth: No client info for refresh for ${serverName}`);
-        return null;
-      }
-
-      const result = await runSdkAuth(authProvider, { serverUrl });
-      if (result !== "AUTHORIZED") {
-        return null;
-      }
-      const refreshed = await getAuthForUrl(serverName, serverUrl);
-      return refreshed?.tokens ?? null;
+      await callbackServer.ensure({
+        strictPort: Boolean(config.clientId) || config.redirectUri !== undefined,
+        oauthState,
+        reserveState: true,
+        ...(redirectCallback
+          ? {
+              port: redirectCallback.port,
+              callbackHost: redirectCallback.callbackHost,
+              callbackPath: redirectCallback.callbackPath,
+            }
+          : {}),
+      });
     } catch (error) {
-      console.error(`MCP Auth: Token refresh failed for ${serverName}`, { error });
+      this.storage.clearOAuthState();
+      throw error;
+    }
+
+    let capturedUrl: URL | undefined;
+    const provider = new McpOAuthProvider(this.serverName, serverUrl, config, {
+      onRedirect: async (url) => {
+        capturedUrl = url;
+      },
+    });
+
+    try {
+      const storedAuth = this.storage.getForUrl(serverUrl);
+      if (storedAuth?.clientInfo && !config.clientId) {
+        if (!storedAuth.tokens) {
+          this.storage.clearClientInfo();
+          this.storage.clearCodeVerifier();
+          this.storage.clearOAuthState();
+        } else {
+          const uris = storedAuth.clientInfo.redirectUris;
+          if (!Array.isArray(uris) || !uris.includes(provider.redirectUrl ?? "")) {
+            this.storage.clearClientInfo();
+            this.storage.clearTokens();
+            this.storage.clearCodeVerifier();
+            this.storage.clearOAuthState();
+          }
+        }
+      }
+
+      this.storage.oauthState = oauthState;
+      const result = await runSdkAuth(provider, { serverUrl });
+      if (result === "AUTHORIZED") {
+        callbackServer.release(oauthState);
+        this.storage.clearOAuthState();
+        return { authorizationUrl: "" };
+      }
+      if (!capturedUrl) throw new UnauthorizedError("OAuth authorization URL was not provided");
+      pendingTransports.set(
+        this.serverName,
+        new StreamableHTTPClientTransport(new URL(serverUrl), { authProvider: provider }),
+      );
+      return { authorizationUrl: capturedUrl.toString() };
+    } catch (error) {
+      callbackServer.release(oauthState);
+      this.storage.clearOAuthState();
+      throw error;
+    }
+  }
+
+  private async completeAuth(authorizationCode: string): Promise<AuthStatus> {
+    const transport = pendingTransports.get(this.serverName);
+    if (!transport) throw new Error(`No pending OAuth flow for server: ${this.serverName}`);
+
+    const oauthState = this.storage.oauthState;
+    try {
+      await transport.finishAuth(authorizationCode);
+      return "authenticated";
+    } finally {
+      if (oauthState) callbackServer.release(oauthState);
+      this.storage.clearOAuthState();
+      pendingTransports.delete(this.serverName);
+      await transport.close().catch(() => {});
+    }
+  }
+
+  // ── Token refresh ────────────────────────────────────────────────
+
+  private async doRefresh(): Promise<StoredTokens | null> {
+    console.log(`MCP Auth: Token expired for ${this.serverName}, attempting refresh`);
+    try {
+      const provider = new McpOAuthProvider(
+        this.serverName,
+        "",
+        {},
+        { onRedirect: async () => {} },
+      );
+      const ci = await provider.clientInformation();
+      if (!ci) return null;
+
+      const result = await runSdkAuth(provider, { serverUrl: "" });
+      if (result !== "AUTHORIZED") return null;
+      return this.storage.getForUrl("")?.tokens ?? null;
+    } catch (error) {
+      console.error(`MCP Auth: Token refresh failed for ${this.serverName}`, { error });
       return null;
     }
   }
 
-  // No expiration info or no refresh token, assume valid
-  return entry.tokens;
-}
+  // ── Cleanup ──────────────────────────────────────────────────────
 
-/**
- * Check the authentication status for a server.
- *
- * @param serverName - The name of the MCP server
- * @returns The current auth status
- */
-export async function getAuthStatus(serverName: string): Promise<AuthStatus> {
-  const hasTokens = await hasStoredTokens(serverName);
-  if (!hasTokens) return "not_authenticated";
-
-  const expired = await isTokenExpired(serverName);
-  return expired ? "expired" : "authenticated";
-}
-
-/**
- * Remove all OAuth credentials for a server.
- *
- * @param serverName - The name of the MCP server
- */
-export async function removeAuth(serverName: string): Promise<void> {
-  const oauthState = await getOAuthState(serverName);
-  if (oauthState) {
-    cancelPendingCallback(oauthState);
+  async removeAuth(): Promise<void> {
+    const oauthState = this.storage.oauthState;
+    if (oauthState) callbackServer.cancel(oauthState);
+    const pt = pendingTransports.get(this.serverName);
+    if (pt) {
+      pendingTransports.delete(this.serverName);
+      await pt.close().catch(() => {});
+    }
+    this.storage.clearAll();
+    this.storage.clearOAuthState();
+    console.log(`MCP Auth: Removed credentials for ${this.serverName}`);
   }
-  const pendingTransport = pendingTransports.get(serverName);
-  if (pendingTransport) {
-    pendingTransports.delete(serverName);
-    await pendingTransport.close().catch(() => {});
-  }
-  clearAllCredentials(serverName);
-  await clearOAuthState(serverName);
-  console.log(`MCP Auth: Removed credentials for ${serverName}`);
 }
 
-/**
- * Check if OAuth is supported for a server configuration.
- * OAuth is supported for HTTP servers unless explicitly disabled.
- *
- * @param definition - The server definition
- * @returns True if OAuth is supported
- */
-export function supportsOAuth(definition: ServerEntry): boolean {
-  // OAuth requires a URL
-  if (!definition.url) return false;
+// ── Browser helper ────────────────────────────────────────────────────
 
-  // Explicitly disabled via auth: false or oauth: false
-  if (definition.auth === false) return false;
-  if (definition.oauth === false) return false;
+async function openBrowser(url: string): Promise<void> {
+  const platform = process.platform;
+  const cmd = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
+  const args = platform === "win32" ? ["", url] : [url];
+  const shell = platform === "win32";
 
-  // Explicitly set to oauth — always use OAuth
-  if (definition.auth === "oauth") return true;
-
-  // Headers already provide Authorization — skip OAuth (auto-detect only)
-  if (definition.headers) {
-    const hasAuthHeader = Object.keys(definition.headers).some(
-      (k) => k.toLowerCase() === "authorization",
-    );
-    if (hasAuthHeader) return false;
-  }
-
-  // Auto-detect: OAuth supported if auth is not specified
-  return definition.auth === undefined;
-}
-
-/**
- * Initialize the OAuth system on startup.
- * OAuth callback binding is lazy and starts from startAuth() only.
- */
-export async function initializeOAuth(): Promise<void> {}
-
-/**
- * Shutdown the OAuth system.
- * Stops the callback server and cancels pending auths.
- */
-export async function shutdownOAuth(): Promise<void> {
-  await stopCallbackServer();
+  return new Promise<void>((resolve, reject) => {
+    const proc = spawn(cmd, args, { shell, stdio: "ignore", detached: true });
+    proc.on("error", (err) => reject(new Error(`Failed to open browser: ${err.message}`)));
+    proc.on("close", (code) => {
+      if (code === 0 || code === null) resolve();
+      else reject(new Error(`Browser command exited with code ${code}`));
+    });
+    proc.unref();
+    setTimeout(() => resolve(), 500);
+  });
 }

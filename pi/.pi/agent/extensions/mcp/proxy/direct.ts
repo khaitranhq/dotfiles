@@ -1,28 +1,29 @@
-// proxy/direct.ts - Direct tool registration and execution
+// proxy/direct.ts - Tool registration and execution
 import type {
   AgentToolResult,
   AgentToolUpdateCallback,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../state.ts";
-import type { DirectToolSpec, McpConfig, McpContent } from "../types.ts";
+import type { McpExtensionState } from "../core/state.ts";
+import type { RegisteredTool, McpConfig, McpContent } from "../core/types.ts";
 import type { MetadataCache } from "../config/cache.ts";
 import { lazyConnect, getFailureAgeSeconds } from "../init/bootstrap.ts";
 import { isServerCacheValid } from "../config/cache.ts";
 import { formatSchema } from "../tools/metadata.ts";
 import { transformMcpContent } from "../tools/registrar.ts";
 import { resourceNameToToolName } from "../tools/resources.ts";
-import { formatToolName, isToolExcluded } from "../types.ts";
+import { formatToolName, isToolExcluded } from "../core/types.ts";
+import { getOrInitMcpState } from "../core/utils.ts";
 
 const BUILTIN_NAMES = new Set(["read", "bash", "edit", "write", "grep", "find", "ls", "mcp"]);
 
-export function resolveDirectTools(
+export function resolveTools(
   config: McpConfig,
   cache: MetadataCache | null,
   prefix: "server" | "none" | "short",
   envOverride?: string[],
-): DirectToolSpec[] {
-  const specs: DirectToolSpec[] = [];
+): RegisteredTool[] {
+  const specs: RegisteredTool[] = [];
   if (!cache) return specs;
 
   const seenNames = new Set<string>();
@@ -46,7 +47,7 @@ export function resolveDirectTools(
     }
   }
 
-  const globalDirect = config.settings?.directTools;
+  const globalFilter = config.settings?.directTools;
 
   for (const [serverName, definition] of Object.entries(config.mcpServers)) {
     const serverCache = cache.servers[serverName];
@@ -63,8 +64,8 @@ export function resolveDirectTools(
     } else {
       if (definition.directTools !== undefined) {
         toolFilter = definition.directTools;
-      } else if (globalDirect) {
-        toolFilter = globalDirect;
+      } else if (globalFilter) {
+        toolFilter = globalFilter;
       }
     }
 
@@ -75,11 +76,11 @@ export function resolveDirectTools(
       if (isToolExcluded(tool.name, serverName, prefix, definition.excludeTools)) continue;
       const prefixedName = formatToolName(tool.name, serverName, prefix);
       if (BUILTIN_NAMES.has(prefixedName)) {
-        console.warn(`MCP: skipping direct tool "${prefixedName}" (collides with builtin)`);
+        console.warn(`MCP: skipping tool "${prefixedName}" (collides with builtin)`);
         continue;
       }
       if (seenNames.has(prefixedName)) {
-        console.warn(`MCP: skipping duplicate direct tool "${prefixedName}" from "${serverName}"`);
+        console.warn(`MCP: skipping duplicate tool "${prefixedName}" from "${serverName}"`);
         continue;
       }
       seenNames.add(prefixedName);
@@ -99,14 +100,12 @@ export function resolveDirectTools(
         if (isToolExcluded(baseName, serverName, prefix, definition.excludeTools)) continue;
         const prefixedName = formatToolName(baseName, serverName, prefix);
         if (BUILTIN_NAMES.has(prefixedName)) {
-          console.warn(
-            `MCP: skipping direct resource tool "${prefixedName}" (collides with builtin)`,
-          );
+          console.warn(`MCP: skipping resource tool "${prefixedName}" (collides with builtin)`);
           continue;
         }
         if (seenNames.has(prefixedName)) {
           console.warn(
-            `MCP: skipping duplicate direct resource tool "${prefixedName}" from "${serverName}"`,
+            `MCP: skipping duplicate resource tool "${prefixedName}" from "${serverName}"`,
           );
           continue;
         }
@@ -125,18 +124,18 @@ export function resolveDirectTools(
   return specs;
 }
 
-export function getMissingConfiguredDirectToolServers(
+export function getMissingConfiguredToolServers(
   config: McpConfig,
   cache: MetadataCache | null,
 ): string[] {
   const missing: string[] = [];
-  const globalDirect = config.settings?.directTools;
+  const globalFilter = config.settings?.directTools;
 
   for (const [serverName, definition] of Object.entries(config.mcpServers)) {
-    const hasDirectTools =
-      definition.directTools !== undefined ? !!definition.directTools : !!globalDirect;
+    const hasConfiguredTools =
+      definition.directTools !== undefined ? !!definition.directTools : !!globalFilter;
 
-    if (!hasDirectTools) continue;
+    if (!hasConfiguredTools) continue;
 
     const serverCache = cache?.servers?.[serverName];
     if (!serverCache || !isServerCacheValid(serverCache, definition)) {
@@ -147,63 +146,7 @@ export function getMissingConfiguredDirectToolServers(
   return missing;
 }
 
-export function buildProxyDescription(
-  config: McpConfig,
-  cache: MetadataCache | null,
-  directSpecs: DirectToolSpec[],
-): string {
-  const prefix = config.settings?.toolPrefix ?? "server";
-  let desc = `MCP gateway - connect to MCP servers and call their tools. Non-MCP Pi tools should be called directly, not through mcp.\n`;
-
-  const directByServer = new Map<string, number>();
-  for (const spec of directSpecs) {
-    directByServer.set(spec.serverName, (directByServer.get(spec.serverName) ?? 0) + 1);
-  }
-  if (directByServer.size > 0) {
-    const parts = [...directByServer.entries()].map(([server, count]) => `${server} (${count})`);
-    desc += `\nDirect tools available (call as normal tools): ${parts.join(", ")}\n`;
-  }
-
-  const serverSummaries: string[] = [];
-  for (const serverName of Object.keys(config.mcpServers)) {
-    const entry = cache?.servers?.[serverName];
-    const definition = config.mcpServers[serverName];
-    const toolCount = (entry?.tools ?? []).filter(
-      (tool) => !isToolExcluded(tool.name, serverName, prefix, definition.excludeTools),
-    ).length;
-    const resourceCount =
-      definition?.exposeResources !== false
-        ? (entry?.resources ?? []).filter((resource) => {
-            const baseName = `get_${resourceNameToToolName(resource.name)}`;
-            return !isToolExcluded(baseName, serverName, prefix, definition.excludeTools);
-          }).length
-        : 0;
-    const totalItems = toolCount + resourceCount;
-    if (totalItems === 0) continue;
-    const directCount = directByServer.get(serverName) ?? 0;
-    const proxyCount = totalItems - directCount;
-    if (proxyCount > 0) {
-      serverSummaries.push(`${serverName} (${proxyCount} tools)`);
-    }
-  }
-
-  if (serverSummaries.length > 0) {
-    desc += `\nServers: ${serverSummaries.join(", ")}\n`;
-  }
-
-  desc += `\nUsage:\n`;
-  desc += `  mcp({ })                              → Show server status\n`;
-  desc += `  mcp({ server: "name" })               → List tools from server\n`;
-  desc += `  mcp({ search: "query" })              → Search MCP tools by name/description\n`;
-  desc += `  mcp({ describe: "tool_name" })        → Show tool details and parameters\n`;
-  desc += `  mcp({ connect: "server-name" })       → Connect to a server and refresh metadata\n`;
-  desc += `  mcp({ tool: "name", args: '{"key": "value"}' })    → Call a tool (args is JSON string)\n`;
-  desc += `\nMode: tool (call) > connect > describe > search > server (list) > nothing (status)`;
-
-  return desc;
-}
-
-type DirectToolExecute = (
+type ToolExecutor = (
   toolCallId: string,
   params: Record<string, unknown>,
   signal: AbortSignal | undefined,
@@ -211,30 +154,17 @@ type DirectToolExecute = (
   ctx: ExtensionContext,
 ) => Promise<AgentToolResult<Record<string, unknown>>>;
 
-export function createDirectToolExecutor(
+export function createToolExecutor(
   getState: () => McpExtensionState | null,
   getInitPromise: () => Promise<McpExtensionState> | null,
-  spec: DirectToolSpec,
-): DirectToolExecute {
+  spec: RegisteredTool,
+): ToolExecutor {
   return async function execute(_toolCallId, params) {
-    let state = getState();
-    const initPromise = getInitPromise();
-
-    if (!state && initPromise) {
-      try {
-        state = await initPromise;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [{ type: "text" as const, text: `MCP initialization failed: ${message}` }],
-          details: { error: "init_failed", message },
-        };
-      }
-    }
-    if (!state) {
+    const { state, error } = await getOrInitMcpState(getState, getInitPromise);
+    if (error || !state) {
       return {
-        content: [{ type: "text" as const, text: "MCP not initialized" }],
-        details: { error: "not_initialized" },
+        content: [{ type: "text" as const, text: error ?? "MCP not initialized" }],
+        details: { error: "init_failed" },
       };
     }
 

@@ -1,9 +1,11 @@
 // init/commands.ts - MCP slash commands (simplified, no UI panels)
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../state.ts";
-import type { ServerEntry } from "../types.ts";
+import type { McpExtensionState } from "../core/state.ts";
+import type { ServerEntry } from "../core/types.ts";
 import { updateMetadataCache, updateStatusBar, getFailureAgeSeconds } from "./bootstrap.ts";
 import { buildToolMetadata } from "../tools/metadata.ts";
+import { OAuthFlow } from "../client/oauth-flow.ts";
+import { getOrInitMcpState } from "../core/utils.ts";
 
 export async function showStatus(state: McpExtensionState, _ctx: ExtensionContext): Promise<void> {
   const lines: string[] = ["MCP Server Status:", ""];
@@ -97,4 +99,68 @@ export async function reconnectServers(
   }
 
   updateStatusBar(state);
+}
+
+export function createMcpCommand(
+  getState: () => McpExtensionState | null,
+  getInitPromise: () => Promise<McpExtensionState> | null,
+) {
+  return async (args?: string) => {
+    const { state, error } = await getOrInitMcpState(getState, getInitPromise);
+    if (error || !state) {
+      console.error(error ?? "MCP not initialized");
+      return;
+    }
+
+    const parts = args?.trim()?.split(/\s+/) ?? [];
+    const subcommand = parts[0] ?? "";
+    const targetServer = parts[1];
+
+    switch (subcommand) {
+      case "reconnect":
+        await reconnectServers(state, targetServer);
+        break;
+      case "tools":
+        await showTools(state, { hasUI: false } as never);
+        break;
+      case "auth": {
+        if (!targetServer) {
+          console.error("Usage: mcp auth <server-name>");
+          return;
+        }
+        const defn = state.config.mcpServers[targetServer];
+        if (!defn?.url) {
+          console.error(`Server "${targetServer}" not found or not an HTTP server`);
+          return;
+        }
+        try {
+          const status = await new OAuthFlow(targetServer).authenticate(defn.url, defn);
+          console.log(`MCP Auth: ${targetServer} → ${status}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`MCP Auth failed for ${targetServer}: ${message}`);
+        }
+        break;
+      }
+      case "logout": {
+        if (!targetServer) {
+          console.error("Usage: mcp logout <server-name>");
+          return;
+        }
+        try {
+          await new OAuthFlow(targetServer).removeAuth();
+          console.log(`MCP Auth: Removed credentials for ${targetServer}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`MCP logout failed for ${targetServer}: ${message}`);
+        }
+        break;
+      }
+      case "status":
+      case "":
+      default:
+        await showStatus(state, { hasUI: false } as never);
+        break;
+    }
+  };
 }

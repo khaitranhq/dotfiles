@@ -1,5 +1,5 @@
 // tools/registrar.ts - MCP content transformation
-import type { McpContent, ContentBlock } from "../types.ts";
+import type { McpContent, ContentBlock } from "../core/types.ts";
 
 export function transformMcpContent(content: McpContent[]): ContentBlock[] {
   return content.map((c) => {

@@ -159,12 +159,16 @@ export interface CustomSettings {
 
 // ── Path resolution ───────────────────────────────────────────────────
 
-function getAgentDir(): string {
+export function getAgentDir(): string {
   return process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
 }
 
+export function getAgentPath(...segments: string[]): string {
+  return path.join(getAgentDir(), ...segments);
+}
+
 export function configPath(): string {
-  return path.join(getAgentDir(), "custom-settings.yaml");
+  return getAgentPath("custom-settings.yaml");
 }
 
 /** Legacy JSON config path (migrated to YAML on first load). */

@@ -66,7 +66,6 @@ export interface McpSettings {
   toolPrefix?: "server" | "none" | "short";
   idleTimeout?: number; // minutes, default 10, 0 to disable
   directTools?: boolean;
-  disableProxyTool?: boolean;
   sampling?: boolean;
   samplingAutoApprove?: boolean;
 }
@@ -88,7 +87,7 @@ export interface ToolMetadata {
   inputSchema?: unknown; // JSON Schema for parameters
 }
 
-export interface DirectToolSpec {
+export interface RegisteredTool {
   serverName: string;
   originalName: string;
   prefixedName: string;

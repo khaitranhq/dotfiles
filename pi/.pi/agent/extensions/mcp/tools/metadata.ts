@@ -1,7 +1,7 @@
 // tools/metadata.ts - Tool metadata construction
-import type { McpExtensionState } from "../state.ts";
-import type { ToolMetadata, McpTool, McpResource, ServerEntry } from "../types.ts";
-import { formatToolName, isToolExcluded } from "../types.ts";
+import type { McpExtensionState } from "../core/state.ts";
+import type { ToolMetadata, McpTool, McpResource, ServerEntry } from "../core/types.ts";
+import { formatToolName, isToolExcluded } from "../core/types.ts";
 import { resourceNameToToolName } from "./resources.ts";
 
 export function buildToolMetadata(

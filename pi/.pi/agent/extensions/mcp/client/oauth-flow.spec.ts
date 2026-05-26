@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { supportsOAuth } from "./oauth-flow.ts";
-import type { ServerEntry } from "../types.ts";
+import type { ServerEntry } from "../core/types.ts";
 
 describe("supportsOAuth", () => {
   // ── URL required ──────────────────────────────────────────────────
