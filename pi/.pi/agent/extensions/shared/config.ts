@@ -79,9 +79,60 @@ export type BashPermissions = Record<string, ToolPermission>;
  */
 export type ToolPermissions = Record<string, ToolPermission | BashPermissions>;
 
+// ── MCP server config from custom-settings.yaml ──────────────────────
+
+/**
+ * Single MCP server entry as defined in custom-settings.yaml `mcp.servers[]`.
+ * Uses an array format with `name` and `transport` fields, unlike the
+ * keyed-object format used in `mcp.json`.
+ */
+export interface McpYamlServer {
+  name: string;
+  transport?: "http" | "stdio";
+  url?: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+  headers?: Record<string, string>;
+  /** Authentication type: 'oauth', 'bearer', or false to disable */
+  auth?: "oauth" | "bearer" | false;
+  bearerToken?: string;
+  bearerTokenEnv?: string;
+  /** OAuth configuration (optional). Set to false to disable OAuth. */
+  oauth?:
+    | {
+        grantType?: "authorization_code" | "client_credentials";
+        clientId?: string;
+        clientSecret?: string;
+        scope?: string;
+        redirectUri?: string;
+        clientName?: string;
+        clientUri?: string;
+      }
+    | false;
+  lifecycle?: "keep-alive" | "lazy" | "eager";
+  idleTimeout?: number;
+  exposeResources?: boolean;
+  directTools?: boolean | string[];
+  excludeTools?: string[];
+  debug?: boolean;
+  timeout?: number;
+  reconnection?: {
+    maxRetries?: number;
+    maxReconnectionDelay?: number;
+  };
+}
+
+/** MCP section under custom-settings.yaml root `mcp` key. */
+export interface McpYamlConfig {
+  servers?: McpYamlServer[];
+}
+
 export interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
+  mcp?: McpYamlConfig;
   /**
    * Tool permissions map (new format) or legacy ToolsConfig (old format).
    *

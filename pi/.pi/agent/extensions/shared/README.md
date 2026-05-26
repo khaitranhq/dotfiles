@@ -14,7 +14,28 @@ Utility module — not a real extension. Provides shared config, path guard, and
 interface CustomSettings {
   always_approve?: AlwaysApproveConfig;
   subagent?: SubagentConfig;
-  tools?: ToolsConfig;
+  mcp?: McpYamlConfig;
+  tools?: ToolsConfig | ToolPermissions;
   [key: string]: unknown; // extensible
+}
+```
+
+### MCP Types
+
+```typescript
+interface McpYamlConfig {
+  servers?: McpYamlServer[];
+}
+
+interface McpYamlServer {
+  name: string;
+  transport?: "http" | "stdio";
+  url?: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+  lifecycle?: "keep-alive" | "lazy" | "eager";
+  // ...
 }
 ```

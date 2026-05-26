@@ -6,19 +6,13 @@ mcp:
     - name: obsidian
       transport: http
       url: http://127.0.0.1:27123/mcp/
+      timeout: 30000
+      reconnection:
+        maxRetries: 10
+        maxReconnectionDelay: 60000
       headers:
         Authorization: Bearer ${OBSIDIAN_MCP_TOKEN}
 tools:
-  read: allow
-  write: allow
-  edit: allow
-  subagent: allow
-  question: allow
-  web_search: allow
-  web_fetch: allow
-  todowrite: allow
-  mcp_atlassian_*: deny
-  mcp_obsidian_*: allow
   bash:
     find: allow
     ls: allow
@@ -82,3 +76,15 @@ tools:
     printf: allow
     awk: allow
     oxlint: allow
+    uniq: allow
+  read: allow
+  write: allow
+  edit: allow
+  subagent: allow
+  question: allow
+  web_search: allow
+  web_fetch: allow
+  todowrite: allow
+  mcp_atlassian_*: deny
+  mcp_obsidian_*: allow
+  mcp: allow

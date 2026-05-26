@@ -18,6 +18,8 @@ export type {
   ToolPermission,
   BashPermissions,
   ToolPermissions,
+  McpYamlServer,
+  McpYamlConfig,
 } from "./config";
 
 export {

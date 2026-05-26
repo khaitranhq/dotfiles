@@ -1,93 +1,351 @@
-/**
- * MCP Extension — Model Context Protocol integration for pi.
- *
- * Connects to MCP servers (stdio & SSE transports) and registers their
- * tools as pi tools that the LLM can call.
- *
- * **Token efficiency strategies:**
- *   - `promptSnippet`: concise one-line per tool in tool list
- *   - Truncated results: max 10 KB / 500 lines per tool response
- *   - Lazy schema conversion: unknown schemas → Type.Any() (minimal tokens)
- *   - Connection reuse: clients persist across turns
- *   - No full server metadata in LLM context — only tool name + snippet
- *
- * **Configuration:** ~/.pi/agent/custom-settings.yaml → "mcp" section
- */
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { McpClient } from "./client";
-import { mcpLogInfo } from "./logger";
-import { loadMcpConfig, DEFAULTS } from "./config";
-import { connectAllServers, type ConnectionState } from "./connection";
+// index.ts - MCP extension entry point
+import type { ExtensionAPI, ToolInfo } from "@earendil-works/pi-coding-agent";
+import type { McpExtensionState } from "./state.ts";
+import { Type } from "typebox";
+import { showStatus, showTools, reconnectServers } from "./init/commands.ts";
+import { loadMcpConfig } from "./config/loader.ts";
 import {
-  registerMcpStatusCommand,
-  registerMcpReloadCommand,
-  registerMcpAuthCommand,
-} from "./commands";
-import { registerInputHandler } from "./input-handler";
+  buildProxyDescription,
+  createDirectToolExecutor,
+  getMissingConfiguredDirectToolServers,
+  resolveDirectTools,
+} from "./proxy/direct.ts";
+import { flushMetadataCache, initializeMcp } from "./init/bootstrap.ts";
+import { loadMetadataCache } from "./config/cache.ts";
+import {
+  executeCall,
+  executeConnect,
+  executeDescribe,
+  executeList,
+  executeSearch,
+  executeStatus,
+} from "./proxy/modes.ts";
+import { getConfigPathFromArgv, truncateAtWord } from "./utils.ts";
+import {
+  createMcpDirectToolCallRenderer,
+  renderMcpProxyToolCall,
+  renderMcpToolResult,
+} from "./tools/renderer.ts";
+import { shutdownOAuth, authenticate, removeAuth } from "./client/oauth-flow.ts";
 
-export default function (pi: ExtensionAPI) {
-  // ── Shared mutable state ──────────────────────────────────────────
+export default function mcpAdapter(pi: ExtensionAPI) {
+  let state: McpExtensionState | null = null;
+  let initPromise: Promise<McpExtensionState> | null = null;
+  let lifecycleGeneration = 0;
 
-  const state: ConnectionState = {
-    clients: new Map<string, McpClient>(),
-    toolMap: new Map<string, { client: McpClient; originalName: string }>(),
-    config: { ...DEFAULTS },
-  };
+  async function shutdownState(currentState: McpExtensionState | null): Promise<void> {
+    if (!currentState) return;
 
-  const loadingRef = { current: false };
+    try {
+      flushMetadataCache(currentState);
+    } catch (error) {
+      console.error("MCP: metadata flush failed during shutdown", error);
+    }
 
-  // ── Commands ───────────────────────────────────────────────────────
+    try {
+      await currentState.lifecycle.gracefulShutdown();
+    } catch (error) {
+      console.error("MCP: graceful shutdown failed", error);
+    }
 
-  registerMcpStatusCommand(pi, state);
-  registerMcpReloadCommand(pi, state, loadingRef);
-  registerMcpAuthCommand(pi, state);
+    try {
+      await shutdownOAuth();
+    } catch (error) {
+      console.error("MCP: OAuth shutdown failed", error);
+    }
+  }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────
+  const earlyConfigPath = getConfigPathFromArgv();
+  const earlyConfig = loadMcpConfig(earlyConfigPath);
+  const earlyCache = loadMetadataCache();
+  const prefix = earlyConfig.settings?.toolPrefix ?? "server";
+
+  const envRaw = process.env.MCP_DIRECT_TOOLS;
+  const directSpecs =
+    envRaw === "__none__"
+      ? []
+      : resolveDirectTools(
+          earlyConfig,
+          earlyCache,
+          prefix,
+          envRaw
+            ?.split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        );
+  const missingConfiguredDirectToolServers = getMissingConfiguredDirectToolServers(
+    earlyConfig,
+    earlyCache,
+  );
+  const shouldRegisterProxyTool =
+    earlyConfig.settings?.disableProxyTool !== true ||
+    directSpecs.length === 0 ||
+    missingConfiguredDirectToolServers.length > 0;
+
+  for (const spec of directSpecs) {
+    (pi.registerTool as (tool: unknown) => unknown)({
+      name: spec.prefixedName,
+      label: `MCP: ${spec.originalName}`,
+      description: spec.description || "(no description)",
+      promptSnippet: truncateAtWord(spec.description, 100) || `MCP tool from ${spec.serverName}`,
+      parameters: Type.Unsafe((spec.inputSchema || { type: "object", properties: {} }) as never),
+      execute: createDirectToolExecutor(
+        () => state,
+        () => initPromise,
+        spec,
+      ),
+      renderCall: createMcpDirectToolCallRenderer(spec.prefixedName),
+      renderResult: renderMcpToolResult,
+    });
+  }
+
+  const getPiTools = (): ToolInfo[] => pi.getAllTools();
+
+  pi.registerFlag("mcp-config", {
+    description: "Path to MCP config file",
+    type: "string",
+  });
 
   pi.on("session_start", async (_event, ctx) => {
-    state.config = loadMcpConfig();
+    const generation = ++lifecycleGeneration;
+    const previousState = state;
+    state = null;
+    initPromise = null;
 
-    mcpLogInfo("mcp", "Session started");
+    try {
+      await shutdownState(previousState);
+    } catch (error) {
+      console.error("MCP: failed to shut down previous session state", error);
+    }
 
-    const serverCount = (state.config.servers ?? []).length;
-
-    if (serverCount === 0) {
-      mcpLogInfo("mcp", "No servers configured");
-      if (ctx.hasUI) {
-        ctx.ui.setStatus("mcp", "MCP: no servers configured");
-      }
+    if (generation !== lifecycleGeneration) {
       return;
     }
 
-    mcpLogInfo("mcp", `Connecting to ${serverCount} server(s)...`);
-    if (ctx.hasUI) {
-      ctx.ui.setStatus("mcp", `MCP: connecting to ${serverCount} server(s)...`);
-    }
+    const promise = initializeMcp(pi, ctx);
+    initPromise = promise;
 
-    await connectAllServers(pi, state, loadingRef, ctx);
+    promise
+      .then(async (nextState) => {
+        if (generation !== lifecycleGeneration || initPromise !== promise) {
+          try {
+            await shutdownState(nextState);
+          } catch (error) {
+            console.error("MCP: failed to clean stale session state", error);
+          }
+          return;
+        }
 
-    const connectedCount = state.clients.size;
-    const toolCount = state.toolMap.size;
-    mcpLogInfo("mcp", `${connectedCount}/${serverCount} server(s) connected, ${toolCount} tool(s)`);
-    if (ctx.hasUI) {
-      ctx.ui.setStatus(
-        "mcp",
-        `MCP: ${connectedCount}/${serverCount} server(s), ${toolCount} tool(s)`,
-      );
-    }
+        state = nextState;
+        initPromise = null;
+      })
+      .catch((err) => {
+        if (generation !== lifecycleGeneration) {
+          return;
+        }
+        if (initPromise !== promise && initPromise !== null) {
+          return;
+        }
+        console.error("MCP initialization failed:", err);
+        initPromise = null;
+      });
   });
 
   pi.on("session_shutdown", async () => {
-    mcpLogInfo("mcp", "Session shutdown — disconnecting all clients");
-    for (const [, client] of state.clients) {
-      client.disconnect();
+    ++lifecycleGeneration;
+    const currentState = state;
+    state = null;
+    initPromise = null;
+
+    try {
+      await shutdownState(currentState);
+    } catch (error) {
+      console.error("MCP: session shutdown cleanup failed", error);
     }
-    state.clients.clear();
-    state.toolMap.clear();
-    state.config = { ...DEFAULTS };
   });
 
-  // ── Input handler ──────────────────────────────────────────────────
+  pi.registerCommand("mcp", {
+    description: "Show MCP server status",
+    handler: async (args) => {
+      if (!state && initPromise) {
+        try {
+          state = await initPromise;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`MCP initialization failed: ${message}`);
+          return;
+        }
+      }
+      if (!state) {
+        console.error("MCP not initialized");
+        return;
+      }
 
-  registerInputHandler(pi);
+      const parts = args?.trim()?.split(/\s+/) ?? [];
+      const subcommand = parts[0] ?? "";
+      const targetServer = parts[1];
+
+      switch (subcommand) {
+        case "reconnect":
+          await reconnectServers(state, targetServer);
+          break;
+        case "tools":
+          await showTools(state, { hasUI: false } as never);
+          break;
+        case "auth": {
+          if (!targetServer) {
+            console.error("Usage: mcp auth <server-name>");
+            return;
+          }
+          const defn = state.config.mcpServers[targetServer];
+          if (!defn?.url) {
+            console.error(`Server "${targetServer}" not found or not an HTTP server`);
+            return;
+          }
+          try {
+            const status = await authenticate(targetServer, defn.url, defn);
+            console.log(`MCP Auth: ${targetServer} → ${status}`);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`MCP Auth failed for ${targetServer}: ${message}`);
+          }
+          break;
+        }
+        case "logout": {
+          if (!targetServer) {
+            console.error("Usage: mcp logout <server-name>");
+            return;
+          }
+          try {
+            await removeAuth(targetServer);
+            console.log(`MCP Auth: Removed credentials for ${targetServer}`);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`MCP logout failed for ${targetServer}: ${message}`);
+          }
+          break;
+        }
+        case "status":
+        case "":
+        default:
+          await showStatus(state, { hasUI: false } as never);
+          break;
+      }
+    },
+  });
+
+  if (shouldRegisterProxyTool) {
+    (pi.registerTool as (tool: unknown) => unknown)({
+      name: "mcp",
+      label: "MCP",
+      description: buildProxyDescription(earlyConfig, earlyCache, directSpecs),
+      promptSnippet: "MCP gateway - connect to MCP servers and call their tools",
+      renderCall: renderMcpProxyToolCall,
+      parameters: Type.Object({
+        tool: Type.Optional(
+          Type.String({ description: "Tool name to call (e.g., 'xcodebuild_list_sims')" }),
+        ),
+        args: Type.Optional(
+          Type.String({ description: 'Arguments as JSON string (e.g., \'{"key": "value"}\')' }),
+        ),
+        connect: Type.Optional(
+          Type.String({ description: "Server name to connect (lazy connect + metadata refresh)" }),
+        ),
+        describe: Type.Optional(
+          Type.String({ description: "Tool name to describe (shows parameters)" }),
+        ),
+        search: Type.Optional(Type.String({ description: "Search tools by name/description" })),
+        regex: Type.Optional(
+          Type.Boolean({ description: "Treat search as regex (default: substring match)" }),
+        ),
+        includeSchemas: Type.Optional(
+          Type.Boolean({
+            description: "Include parameter schemas in search results (default: true)",
+          }),
+        ),
+        server: Type.Optional(
+          Type.String({ description: "Filter to specific server (also disambiguates tool calls)" }),
+        ),
+      }),
+      renderResult: renderMcpToolResult,
+      async execute(
+        _toolCallId: string,
+        params: {
+          tool?: string;
+          args?: string;
+          connect?: string;
+          describe?: string;
+          search?: string;
+          regex?: boolean;
+          includeSchemas?: boolean;
+          server?: string;
+        },
+      ) {
+        let parsedArgs: Record<string, unknown> | undefined;
+        if (params.args) {
+          try {
+            parsedArgs = JSON.parse(params.args);
+            if (
+              typeof parsedArgs !== "object" ||
+              parsedArgs === null ||
+              Array.isArray(parsedArgs)
+            ) {
+              const gotType = Array.isArray(parsedArgs)
+                ? "array"
+                : parsedArgs === null
+                  ? "null"
+                  : typeof parsedArgs;
+              throw new Error(`Invalid args: expected a JSON object, got ${gotType}`);
+            }
+          } catch (error) {
+            if (error instanceof SyntaxError) {
+              throw new Error(`Invalid args JSON: ${error.message}`, { cause: error });
+            }
+            throw error;
+          }
+        }
+
+        if (!state && initPromise) {
+          try {
+            state = await initPromise;
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            return {
+              content: [{ type: "text" as const, text: `MCP initialization failed: ${message}` }],
+              details: { error: "init_failed", message },
+            };
+          }
+        }
+        if (!state) {
+          return {
+            content: [{ type: "text" as const, text: "MCP not initialized" }],
+            details: { error: "not_initialized" },
+          };
+        }
+
+        if (params.tool) {
+          return executeCall(state, params.tool, parsedArgs, params.server, getPiTools);
+        }
+        if (params.connect) {
+          return executeConnect(state, params.connect);
+        }
+        if (params.describe) {
+          return executeDescribe(state, params.describe);
+        }
+        if (params.search) {
+          return executeSearch(
+            state,
+            params.search,
+            params.regex,
+            params.server,
+            params.includeSchemas,
+          );
+        }
+        if (params.server) {
+          return executeList(state, params.server);
+        }
+        return executeStatus(state);
+      },
+    });
+  }
 }
