@@ -1,6 +1,6 @@
-import type { ServerEntry } from "./types.ts";
-import type { McpExtensionState } from "./state.ts";
-import { interpolateEnvVars } from "../../shared/env-utils.ts";
+import type { ServerEntry } from "./types";
+import type { McpExtensionState } from "./state";
+import { interpolateEnvVars } from "../../shared/env-utils";
 
 // Re-export shared utilities for convenience within the MCP extension
 // (new code should import directly from shared/)
@@ -8,9 +8,8 @@ export {
   interpolateEnvVars,
   interpolateEnvRecord,
   resolveConfigPath,
-} from "../../shared/env-utils.ts";
-export { parallelLimit } from "../../shared/async-utils.ts";
-export { truncateAtWord } from "../../shared/text-utils.ts";
+} from "../../shared/env-utils";
+export { parallelLimit } from "../../shared/async-utils";
 
 export async function getOrInitMcpState(
   getState: () => McpExtensionState | null,

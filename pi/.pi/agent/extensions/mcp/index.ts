@@ -1,10 +1,10 @@
 // index.ts - MCP extension entry point
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "./core/state.ts";
-import { loadMcpConfig } from "./config/loader.ts";
-import { McpToolRegistry } from "./tools/register.ts";
-import { registerMcpSessionHandlers, type McpSessionContext } from "./init/session.ts";
-import { createMcpCommand } from "./init/commands.ts";
+import type { McpExtensionState } from "./core/state";
+import { loadMcpConfig } from "./config/loader";
+import { McpToolRegistry } from "./tools/register";
+import { registerMcpSessionHandlers, type McpSessionContext } from "./init/session";
+import { createMcpCommand } from "./init/commands";
 
 export default function (pi: ExtensionAPI) {
   const sessionCtx: McpSessionContext = {

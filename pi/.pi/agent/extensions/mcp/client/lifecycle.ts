@@ -1,9 +1,9 @@
 // client/lifecycle.ts - Server lifecycle management
-import type { ServerDefinition } from "../core/types.ts";
-import type { McpServerManager } from "./manager.ts";
-import { logger } from "../core/logger.ts";
+import type { ServerDefinition } from "../core/types";
+import type { McpServerManager } from "./manager";
+import { logger } from "../core/logger";
 
-export type ReconnectCallback = (serverName: string) => void;
+type ReconnectCallback = (serverName: string) => void;
 
 export class McpLifecycleManager {
   private manager: McpServerManager;
@@ -19,8 +19,11 @@ export class McpLifecycleManager {
     this.manager = manager;
   }
 
-  setReconnectCallback(callback: ReconnectCallback): void {
-    this.onReconnect = callback;
+  async gracefulShutdown(): Promise<void> {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+    }
+    await this.manager.closeAll();
   }
 
   markKeepAlive(name: string, definition: ServerDefinition): void {
@@ -44,6 +47,10 @@ export class McpLifecycleManager {
 
   setIdleShutdownCallback(callback: (serverName: string) => void): void {
     this.onIdleShutdown = callback;
+  }
+
+  setReconnectCallback(callback: ReconnectCallback): void {
+    this.onReconnect = callback;
   }
 
   startHealthChecks(intervalMs = 30000): void {
@@ -84,12 +91,5 @@ export class McpLifecycleManager {
     const perServer = this.serverSettings.get(name)?.idleTimeout;
     if (perServer !== undefined) return perServer * 60 * 1000;
     return this.globalIdleTimeout;
-  }
-
-  async gracefulShutdown(): Promise<void> {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
-    }
-    await this.manager.closeAll();
   }
 }

@@ -1,12 +1,11 @@
 // tools/register.ts - Register MCP tools as Pi tools
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state.ts";
-import type { McpConfig } from "../core/types.ts";
+import type { McpExtensionState } from "../core/state";
+import type { McpConfig } from "../core/types";
 import { Type } from "typebox";
-import { MetadataCacheManager } from "../config/cache.ts";
-import { resolveTools, createToolExecutor } from "../proxy/direct.ts";
-import { truncateAtWord } from "../../shared/text-utils.ts";
-import { createMcpToolCallRenderer, renderMcpToolResult } from "./renderer.ts";
+import { MetadataCacheManager } from "../config/cache";
+import { resolveTools, createToolExecutor } from "../proxy/direct";
+import { truncateAtWord } from "../../shared/text-utils";
 
 export class McpToolRegistry {
   private cache = new MetadataCacheManager();
@@ -45,8 +44,6 @@ export class McpToolRegistry {
         promptSnippet: truncateAtWord(spec.description, 100) || `MCP tool from ${spec.serverName}`,
         parameters: Type.Unsafe((spec.inputSchema || { type: "object", properties: {} }) as never),
         execute: createToolExecutor(this.getState, this.getInitPromise, spec),
-        renderCall: createMcpToolCallRenderer(spec.prefixedName),
-        renderResult: renderMcpToolResult,
       });
     }
   }

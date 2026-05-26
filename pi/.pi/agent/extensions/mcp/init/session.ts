@@ -1,8 +1,8 @@
 // init/session.ts - MCP session lifecycle event handlers
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state.ts";
-import { initializeMcp } from "./bootstrap.ts";
-import { shutdownMcpState } from "./shutdown.ts";
+import type { McpExtensionState } from "../core/state";
+import { initializeMcp } from "./bootstrap";
+import { shutdownMcpState } from "./shutdown";
 
 export interface McpSessionContext {
   state: McpExtensionState | null;

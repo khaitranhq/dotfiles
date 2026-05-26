@@ -4,18 +4,151 @@ import type {
   AgentToolUpdateCallback,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state.ts";
-import type { RegisteredTool, McpConfig, McpContent } from "../core/types.ts";
-import type { MetadataCache } from "../config/cache.ts";
-import { lazyConnect, getFailureAgeSeconds } from "../init/bootstrap.ts";
-import { isServerCacheValid } from "../config/cache.ts";
-import { formatSchema } from "../tools/metadata.ts";
-import { transformMcpContent } from "../tools/registrar.ts";
-import { resourceNameToToolName } from "../tools/resources.ts";
-import { formatToolName, isToolExcluded } from "../core/types.ts";
-import { getOrInitMcpState } from "../core/utils.ts";
+import type { McpExtensionState } from "../core/state";
+import type { RegisteredTool, McpConfig, McpContent, ContentBlock } from "../core/types";
+import type { MetadataCache } from "../config/cache";
+import { lazyConnect, getFailureAgeSeconds } from "../init/bootstrap";
+import { isServerCacheValid } from "../config/cache";
+import { resourceNameToToolName } from "../tools/resources";
+import { formatToolName, isToolExcluded } from "../core/types";
+import { getOrInitMcpState } from "../core/utils";
 
 const BUILTIN_NAMES = new Set(["read", "bash", "edit", "write", "grep", "find", "ls", "mcp"]);
+
+type _ToolExecutor = (
+  toolCallId: string,
+  params: Record<string, unknown>,
+  signal: AbortSignal | undefined,
+  onUpdate: AgentToolUpdateCallback<Record<string, unknown>> | undefined,
+  ctx: ExtensionContext,
+) => Promise<AgentToolResult<Record<string, unknown>>>;
+
+// ── Exported ──────────────────────────────────────────────────────────
+
+export function createToolExecutor(
+  getState: () => McpExtensionState | null,
+  getInitPromise: () => Promise<McpExtensionState> | null,
+  spec: RegisteredTool,
+): _ToolExecutor {
+  return async function execute(_toolCallId, params) {
+    const { state, error } = await getOrInitMcpState(getState, getInitPromise);
+    if (error || !state) {
+      return {
+        content: [{ type: "text" as const, text: error ?? "MCP not initialized" }],
+        details: { error: "init_failed" },
+      };
+    }
+
+    const connected = await lazyConnect(state, spec.serverName);
+
+    if (!connected) {
+      const failedAgo = getFailureAgeSeconds(state, spec.serverName);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `MCP server "${spec.serverName}" not available${failedAgo !== null ? ` (failed ${failedAgo}s ago)` : ""}`,
+          },
+        ],
+        details: { error: "server_unavailable", server: spec.serverName },
+      };
+    }
+
+    const connection = state.manager.getConnection(spec.serverName);
+    if (!connection || connection.status !== "connected") {
+      return {
+        content: [{ type: "text" as const, text: `MCP server "${spec.serverName}" not connected` }],
+        details: { error: "not_connected", server: spec.serverName },
+      };
+    }
+
+    try {
+      state.manager.touch(spec.serverName);
+      state.manager.incrementInFlight(spec.serverName);
+
+      if (spec.resourceUri) {
+        const result = await connection.client.readResource({ uri: spec.resourceUri });
+        const content = (result.contents ?? []).map((c) => ({
+          type: "text" as const,
+          text:
+            "text" in c
+              ? c.text
+              : "blob" in c
+                ? `[Binary data: ${(c as { mimeType?: string }).mimeType ?? "unknown"}]`
+                : JSON.stringify(c),
+        }));
+        return {
+          content:
+            content.length > 0 ? content : [{ type: "text" as const, text: "(empty resource)" }],
+          details: { server: spec.serverName, resourceUri: spec.resourceUri },
+        };
+      }
+
+      const result = await connection.client.callTool({
+        name: spec.originalName,
+        arguments: params ?? {},
+      });
+
+      const mcpContent = (result.content ?? []) as McpContent[];
+      const content = transformMcpContent(mcpContent);
+
+      if (result.isError) {
+        let errorText =
+          content
+            .filter((c: { type: string; text?: string }) => c.type === "text")
+            .map((c: { type: string; text?: string }) => (c as { text: string }).text)
+            .join("\n") || "Tool execution failed";
+        if (spec.inputSchema) {
+          errorText += `\n\nExpected parameters:\n${formatSchema(spec.inputSchema)}`;
+        }
+        return {
+          content: [{ type: "text" as const, text: `Error: ${errorText}` }],
+          details: { error: "tool_error", server: spec.serverName },
+        };
+      }
+
+      return {
+        content: content.length > 0 ? content : [{ type: "text" as const, text: "(empty result)" }],
+        details: { server: spec.serverName, tool: spec.originalName },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      let errorText = `Failed to call tool: ${message}`;
+      if (spec.inputSchema) {
+        errorText += `\n\nExpected parameters:\n${formatSchema(spec.inputSchema)}`;
+      }
+      return {
+        content: [{ type: "text" as const, text: errorText }],
+        details: { error: "call_failed", server: spec.serverName },
+      };
+    } finally {
+      state.manager.decrementInFlight(spec.serverName);
+      state.manager.touch(spec.serverName);
+    }
+  };
+}
+
+export function getMissingConfiguredToolServers(
+  config: McpConfig,
+  cache: MetadataCache | null,
+): string[] {
+  const missing: string[] = [];
+  const globalFilter = config.settings?.directTools;
+
+  for (const [serverName, definition] of Object.entries(config.mcpServers)) {
+    const hasConfiguredTools =
+      definition.directTools !== undefined ? !!definition.directTools : !!globalFilter;
+
+    if (!hasConfiguredTools) continue;
+
+    const serverCache = cache?.servers?.[serverName];
+    if (!serverCache || !isServerCacheValid(serverCache, definition)) {
+      missing.push(serverName);
+    }
+  }
+
+  return missing;
+}
 
 export function resolveTools(
   config: McpConfig,
@@ -124,135 +257,117 @@ export function resolveTools(
   return specs;
 }
 
-export function getMissingConfiguredToolServers(
-  config: McpConfig,
-  cache: MetadataCache | null,
-): string[] {
-  const missing: string[] = [];
-  const globalFilter = config.settings?.directTools;
+// ── Schema formatting ────────────────────────────────────────────────
 
-  for (const [serverName, definition] of Object.entries(config.mcpServers)) {
-    const hasConfiguredTools =
-      definition.directTools !== undefined ? !!definition.directTools : !!globalFilter;
-
-    if (!hasConfiguredTools) continue;
-
-    const serverCache = cache?.servers?.[serverName];
-    if (!serverCache || !isServerCacheValid(serverCache, definition)) {
-      missing.push(serverName);
-    }
+function formatProperty(name: string, schema: unknown, required: boolean, indent: string): string {
+  if (!schema || typeof schema !== "object") {
+    return `${indent}${name}${required ? " *required*" : ""}`;
   }
 
-  return missing;
+  const s = schema as Record<string, unknown>;
+  const parts: string[] = [];
+
+  let typeStr = "";
+  if (s.type) {
+    if (Array.isArray(s.type)) {
+      typeStr = s.type.join(" | ");
+    } else {
+      typeStr = String(s.type);
+    }
+  } else if (s.enum) {
+    typeStr = "enum";
+  } else if (s.anyOf || s.oneOf) {
+    typeStr = "union";
+  }
+
+  if (Array.isArray(s.enum)) {
+    const enumVals = s.enum.map((v) => JSON.stringify(v)).join(", ");
+    typeStr = `enum: ${enumVals}`;
+  }
+
+  parts.push(`${indent}${name}`);
+  if (typeStr) parts.push(`(${typeStr})`);
+  if (required) parts.push("*required*");
+
+  if (s.description && typeof s.description === "string") {
+    parts.push(`- ${s.description}`);
+  }
+
+  if (s.default !== undefined) {
+    parts.push(`[default: ${JSON.stringify(s.default)}]`);
+  }
+
+  return parts.join(" ");
 }
 
-type ToolExecutor = (
-  toolCallId: string,
-  params: Record<string, unknown>,
-  signal: AbortSignal | undefined,
-  onUpdate: AgentToolUpdateCallback<Record<string, unknown>> | undefined,
-  ctx: ExtensionContext,
-) => Promise<AgentToolResult<Record<string, unknown>>>;
+function formatSchema(schema: unknown, indent = "  "): string {
+  if (!schema || typeof schema !== "object") {
+    return `${indent}(no schema)`;
+  }
 
-export function createToolExecutor(
-  getState: () => McpExtensionState | null,
-  getInitPromise: () => Promise<McpExtensionState> | null,
-  spec: RegisteredTool,
-): ToolExecutor {
-  return async function execute(_toolCallId, params) {
-    const { state, error } = await getOrInitMcpState(getState, getInitPromise);
-    if (error || !state) {
-      return {
-        content: [{ type: "text" as const, text: error ?? "MCP not initialized" }],
-        details: { error: "init_failed" },
-      };
+  const s = schema as Record<string, unknown>;
+
+  if (s.type === "object" && s.properties && typeof s.properties === "object") {
+    const props = s.properties as Record<string, unknown>;
+    const required = Array.isArray(s.required) ? (s.required as string[]) : [];
+
+    if (Object.keys(props).length === 0) {
+      return `${indent}(no parameters)`;
     }
 
-    const connected = await lazyConnect(state, spec.serverName);
+    const lines: string[] = [];
+    for (const [name, propSchema] of Object.entries(props)) {
+      const isRequired = required.includes(name);
+      const propLine = formatProperty(name, propSchema, isRequired, indent);
+      lines.push(propLine);
+    }
+    return lines.join("\n");
+  }
 
-    if (!connected) {
-      const failedAgo = getFailureAgeSeconds(state, spec.serverName);
+  if (s.type) {
+    return `${indent}(${s.type})`;
+  }
+
+  return `${indent}(complex schema)`;
+}
+
+// ── MCP content transformation ──────────────────────────────────────
+
+function transformMcpContent(content: McpContent[]): ContentBlock[] {
+  return content.map((c) => {
+    if (c.type === "text") {
+      return { type: "text" as const, text: c.text ?? "" };
+    }
+    if (c.type === "image") {
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: `MCP server "${spec.serverName}" not available${failedAgo !== null ? ` (failed ${failedAgo}s ago)` : ""}`,
-          },
-        ],
-        details: { error: "server_unavailable", server: spec.serverName },
+        type: "image" as const,
+        data: c.data ?? "",
+        mimeType: c.mimeType ?? "image/png",
       };
     }
-
-    const connection = state.manager.getConnection(spec.serverName);
-    if (!connection || connection.status !== "connected") {
+    if (c.type === "resource") {
+      const resourceUri = c.resource?.uri ?? "(no URI)";
+      const resourceContent =
+        c.resource?.text ?? (c.resource ? JSON.stringify(c.resource) : "(no content)");
       return {
-        content: [{ type: "text" as const, text: `MCP server "${spec.serverName}" not connected` }],
-        details: { error: "not_connected", server: spec.serverName },
+        type: "text" as const,
+        text: `[Resource: ${resourceUri}]\n${resourceContent}`,
       };
     }
-
-    try {
-      state.manager.touch(spec.serverName);
-      state.manager.incrementInFlight(spec.serverName);
-
-      if (spec.resourceUri) {
-        const result = await connection.client.readResource({ uri: spec.resourceUri });
-        const content = (result.contents ?? []).map((c) => ({
-          type: "text" as const,
-          text:
-            "text" in c
-              ? c.text
-              : "blob" in c
-                ? `[Binary data: ${(c as { mimeType?: string }).mimeType ?? "unknown"}]`
-                : JSON.stringify(c),
-        }));
-        return {
-          content:
-            content.length > 0 ? content : [{ type: "text" as const, text: "(empty resource)" }],
-          details: { server: spec.serverName, resourceUri: spec.resourceUri },
-        };
-      }
-
-      const result = await connection.client.callTool({
-        name: spec.originalName,
-        arguments: params ?? {},
-      });
-
-      const mcpContent = (result.content ?? []) as McpContent[];
-      const content = transformMcpContent(mcpContent);
-
-      if (result.isError) {
-        let errorText =
-          content
-            .filter((c: { type: string; text?: string }) => c.type === "text")
-            .map((c: { type: string; text?: string }) => (c as { text: string }).text)
-            .join("\n") || "Tool execution failed";
-        if (spec.inputSchema) {
-          errorText += `\n\nExpected parameters:\n${formatSchema(spec.inputSchema)}`;
-        }
-        return {
-          content: [{ type: "text" as const, text: `Error: ${errorText}` }],
-          details: { error: "tool_error", server: spec.serverName },
-        };
-      }
-
+    if (c.type === "resource_link") {
+      const linkName = c.name ?? c.uri ?? "unknown";
+      const linkUri = c.uri ?? "(no URI)";
       return {
-        content: content.length > 0 ? content : [{ type: "text" as const, text: "(empty result)" }],
-        details: { server: spec.serverName, tool: spec.originalName },
+        type: "text" as const,
+        text: `[Resource Link: ${linkName}]\nURI: ${linkUri}`,
       };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      let errorText = `Failed to call tool: ${message}`;
-      if (spec.inputSchema) {
-        errorText += `\n\nExpected parameters:\n${formatSchema(spec.inputSchema)}`;
-      }
-      return {
-        content: [{ type: "text" as const, text: errorText }],
-        details: { error: "call_failed", server: spec.serverName },
-      };
-    } finally {
-      state.manager.decrementInFlight(spec.serverName);
-      state.manager.touch(spec.serverName);
     }
-  };
+    if (c.type === "audio") {
+      return {
+        type: "text" as const,
+        text: `[Audio content: ${c.mimeType ?? "audio/*"}]`,
+      };
+    }
+    return { type: "text" as const, text: JSON.stringify(c) };
+  });
 }

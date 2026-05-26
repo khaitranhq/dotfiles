@@ -7,57 +7,15 @@
 import { spawn } from "node:child_process";
 import { auth as runSdkAuth, UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { McpOAuthProvider, type McpOAuthConfig } from "./oauth-provider.ts";
-import { callbackServer } from "./oauth-callback.ts";
-import { AuthStorage, type StoredTokens } from "./oauth-auth.ts";
-import type { ServerEntry } from "../core/types.ts";
+import { McpOAuthProvider, type McpOAuthConfig } from "./oauth-provider";
+import { callbackServer } from "./oauth-callback";
+import { AuthStorage, type StoredTokens } from "./oauth-auth";
+import type { ServerEntry } from "../core/types";
 
-export type AuthStatus = "authenticated" | "expired" | "not_authenticated";
+type AuthStatus = "authenticated" | "expired" | "not_authenticated";
 
 const pendingTransports = new Map<string, StreamableHTTPClientTransport>();
 const pendingAuthentications = new Map<string, Promise<AuthStatus>>();
-
-function generateState(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function parseOAuthRedirectUri(redirectUri: string): {
-  port: number;
-  callbackHost: string;
-  callbackPath: string;
-} {
-  let url: URL;
-  try {
-    url = new URL(redirectUri);
-  } catch (err) {
-    throw new Error(`Invalid OAuth redirectUri: ${redirectUri}. Error: ${(err as Error).message}`);
-  }
-
-  const hostname = url.hostname.toLowerCase();
-  const isLocal =
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "[::1]" ||
-    hostname === "::1";
-  if (url.protocol !== "http:" || !isLocal)
-    throw new Error("OAuth redirectUri must be an http:// localhost or loopback URI");
-  if (url.username || url.password)
-    throw new Error("OAuth redirectUri must not include username or password");
-  if (url.hash) throw new Error("OAuth redirectUri must not include a fragment");
-  if (!url.port) throw new Error("OAuth redirectUri must include an explicit numeric port");
-
-  const port = Number.parseInt(url.port, 10);
-  if (!Number.isInteger(port) || port <= 0 || port > 65535)
-    throw new Error("OAuth redirectUri must include an explicit numeric port");
-
-  return {
-    port,
-    callbackHost: hostname === "[::1]" ? "::1" : hostname,
-    callbackPath: url.pathname,
-  };
-}
 
 // ── Standalone helpers ────────────────────────────────────────────────
 
@@ -113,23 +71,14 @@ export class OAuthFlow {
     this.storage = new AuthStorage(serverName);
   }
 
-  // ── Status ───────────────────────────────────────────────────────
+  // ── Properties ───────────────────────────────────────────────────
 
   get authStatus(): AuthStatus {
     if (!this.storage.hasTokens) return "not_authenticated";
     return this.storage.isExpired ? "expired" : "authenticated";
   }
 
-  async validToken(): Promise<StoredTokens | null> {
-    const entry = this.storage.getForUrl(""); // url check done at call site
-    if (!entry?.tokens) return null;
-    if (this.storage.isExpired !== true) return entry.tokens;
-    // Expired — try refresh
-    if (!entry.tokens.refreshToken) return null;
-    return this.doRefresh();
-  }
-
-  // ── Full authentication flow ─────────────────────────────────────
+  // ── Public methods ───────────────────────────────────────────────
 
   async authenticate(serverUrl: string, definition?: ServerEntry): Promise<AuthStatus> {
     const inFlight = pendingAuthentications.get(this.serverName);
@@ -142,6 +91,46 @@ export class OAuthFlow {
     } finally {
       if (pendingAuthentications.get(this.serverName) === op)
         pendingAuthentications.delete(this.serverName);
+    }
+  }
+
+  async removeAuth(): Promise<void> {
+    const oauthState = this.storage.oauthState;
+    if (oauthState) callbackServer.cancel(oauthState);
+    const pt = pendingTransports.get(this.serverName);
+    if (pt) {
+      pendingTransports.delete(this.serverName);
+      await pt.close().catch(() => {});
+    }
+    this.storage.clearAll();
+    this.storage.clearOAuthState();
+    console.log(`MCP Auth: Removed credentials for ${this.serverName}`);
+  }
+
+  async validToken(): Promise<StoredTokens | null> {
+    const entry = this.storage.getForUrl(""); // url check done at call site
+    if (!entry?.tokens) return null;
+    if (this.storage.isExpired !== true) return entry.tokens;
+    // Expired — try refresh
+    if (!entry.tokens.refreshToken) return null;
+    return this.doRefresh();
+  }
+
+  // ── Private methods ──────────────────────────────────────────────
+
+  private async completeAuth(authorizationCode: string): Promise<AuthStatus> {
+    const transport = pendingTransports.get(this.serverName);
+    if (!transport) throw new Error(`No pending OAuth flow for server: ${this.serverName}`);
+
+    const oauthState = this.storage.oauthState;
+    try {
+      await transport.finishAuth(authorizationCode);
+      return "authenticated";
+    } finally {
+      if (oauthState) callbackServer.release(oauthState);
+      this.storage.clearOAuthState();
+      pendingTransports.delete(this.serverName);
+      await transport.close().catch(() => {});
     }
   }
 
@@ -176,7 +165,26 @@ export class OAuthFlow {
     }
   }
 
-  // ── Start/completion ─────────────────────────────────────────────
+  private async doRefresh(): Promise<StoredTokens | null> {
+    console.log(`MCP Auth: Token expired for ${this.serverName}, attempting refresh`);
+    try {
+      const provider = new McpOAuthProvider(
+        this.serverName,
+        "",
+        {},
+        { onRedirect: async () => {} },
+      );
+      const ci = await provider.clientInformation();
+      if (!ci) return null;
+
+      const result = await runSdkAuth(provider, { serverUrl: "" });
+      if (result !== "AUTHORIZED") return null;
+      return this.storage.getForUrl("")?.tokens ?? null;
+    } catch (error) {
+      console.error(`MCP Auth: Token refresh failed for ${this.serverName}`, { error });
+      return null;
+    }
+  }
 
   private async startAuth(
     serverUrl: string,
@@ -268,63 +276,15 @@ export class OAuthFlow {
       throw error;
     }
   }
-
-  private async completeAuth(authorizationCode: string): Promise<AuthStatus> {
-    const transport = pendingTransports.get(this.serverName);
-    if (!transport) throw new Error(`No pending OAuth flow for server: ${this.serverName}`);
-
-    const oauthState = this.storage.oauthState;
-    try {
-      await transport.finishAuth(authorizationCode);
-      return "authenticated";
-    } finally {
-      if (oauthState) callbackServer.release(oauthState);
-      this.storage.clearOAuthState();
-      pendingTransports.delete(this.serverName);
-      await transport.close().catch(() => {});
-    }
-  }
-
-  // ── Token refresh ────────────────────────────────────────────────
-
-  private async doRefresh(): Promise<StoredTokens | null> {
-    console.log(`MCP Auth: Token expired for ${this.serverName}, attempting refresh`);
-    try {
-      const provider = new McpOAuthProvider(
-        this.serverName,
-        "",
-        {},
-        { onRedirect: async () => {} },
-      );
-      const ci = await provider.clientInformation();
-      if (!ci) return null;
-
-      const result = await runSdkAuth(provider, { serverUrl: "" });
-      if (result !== "AUTHORIZED") return null;
-      return this.storage.getForUrl("")?.tokens ?? null;
-    } catch (error) {
-      console.error(`MCP Auth: Token refresh failed for ${this.serverName}`, { error });
-      return null;
-    }
-  }
-
-  // ── Cleanup ──────────────────────────────────────────────────────
-
-  async removeAuth(): Promise<void> {
-    const oauthState = this.storage.oauthState;
-    if (oauthState) callbackServer.cancel(oauthState);
-    const pt = pendingTransports.get(this.serverName);
-    if (pt) {
-      pendingTransports.delete(this.serverName);
-      await pt.close().catch(() => {});
-    }
-    this.storage.clearAll();
-    this.storage.clearOAuthState();
-    console.log(`MCP Auth: Removed credentials for ${this.serverName}`);
-  }
 }
 
-// ── Browser helper ────────────────────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────────
+
+function generateState(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 async function openBrowser(url: string): Promise<void> {
   const platform = process.platform;
@@ -342,4 +302,40 @@ async function openBrowser(url: string): Promise<void> {
     proc.unref();
     setTimeout(() => resolve(), 500);
   });
+}
+
+function parseOAuthRedirectUri(redirectUri: string): {
+  port: number;
+  callbackHost: string;
+  callbackPath: string;
+} {
+  let url: URL;
+  try {
+    url = new URL(redirectUri);
+  } catch (err) {
+    throw new Error(`Invalid OAuth redirectUri: ${redirectUri}. Error: ${(err as Error).message}`);
+  }
+
+  const hostname = url.hostname.toLowerCase();
+  const isLocal =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname === "::1";
+  if (url.protocol !== "http:" || !isLocal)
+    throw new Error("OAuth redirectUri must be an http:// localhost or loopback URI");
+  if (url.username || url.password)
+    throw new Error("OAuth redirectUri must not include username or password");
+  if (url.hash) throw new Error("OAuth redirectUri must not include a fragment");
+  if (!url.port) throw new Error("OAuth redirectUri must include an explicit numeric port");
+
+  const port = Number.parseInt(url.port, 10);
+  if (!Number.isInteger(port) || port <= 0 || port > 65535)
+    throw new Error("OAuth redirectUri must include an explicit numeric port");
+
+  return {
+    port,
+    callbackHost: hostname === "[::1]" ? "::1" : hostname,
+    callbackPath: url.pathname,
+  };
 }

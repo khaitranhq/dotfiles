@@ -133,7 +133,7 @@ export type ContentBlock = TextContent | ImageContent;
 
 // -- Tool name formatting --
 
-export function getServerPrefix(serverName: string, mode: "server" | "none" | "short"): string {
+function getServerPrefix(serverName: string, mode: "server" | "none" | "short"): string {
   if (mode === "none") return "";
   if (mode === "short") {
     let short = serverName.replace(/-?mcp$/i, "").replace(/-/g, "_");

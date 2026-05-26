@@ -13,7 +13,7 @@ import {
   getOAuthCallbackPort,
   setOAuthCallbackPath,
   setOAuthCallbackPort,
-} from "./oauth-provider.ts";
+} from "./oauth-provider";
 
 const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
 const HOST_DEFAULT = "localhost";
@@ -50,14 +50,12 @@ body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-
 <p>An error occurred during authorization.</p><div class="error">${escapeHtml(err)}</div></div></body></html>`;
 }
 
-export class OAuthCallbackServer {
+class OAuthCallbackServer {
   private server?: Server;
   private bindingPromise?: Promise<void>;
   private pending = new Map<string, PendingAuth>();
   private reserved = new Set<string>();
   private host = HOST_DEFAULT;
-
-  // ── State queries ─────────────────────────────────────────────────
 
   get isRunning(): boolean {
     return this.server !== undefined;
@@ -67,7 +65,17 @@ export class OAuthCallbackServer {
     return this.pending.size;
   }
 
-  // ── Server lifecycle ──────────────────────────────────────────────
+  // ── Public ────────────────────────────────────────────────────────
+
+  cancel(state: string): void {
+    this.reserved.delete(state);
+    const p = this.pending.get(state);
+    if (p) {
+      clearTimeout(p.timeout);
+      this.pending.delete(state);
+      p.reject(new Error("Authorization cancelled"));
+    }
+  }
 
   async ensure(
     options: {
@@ -88,6 +96,57 @@ export class OAuthCallbackServer {
     } finally {
       if (this.bindingPromise === op) this.bindingPromise = undefined;
     }
+  }
+
+  release(state: string): void {
+    this.reserved.delete(state);
+  }
+
+  reserve(state: string): void {
+    this.reserved.add(state);
+  }
+
+  async stop(): Promise<void> {
+    if (this.server) {
+      await new Promise<void>((resolve) => {
+        this.server!.close(() => resolve());
+      });
+      this.server = undefined;
+    }
+    setOAuthCallbackPort(getConfiguredOAuthCallbackPort());
+    this.host = HOST_DEFAULT;
+    setOAuthCallbackPath(DEFAULT_OAUTH_CALLBACK_PATH);
+
+    const list = Array.from(this.pending.entries());
+    this.pending.clear();
+    this.reserved.clear();
+    setTimeout(() => {
+      for (const [, p] of list) {
+        clearTimeout(p.timeout);
+        p.reject(new Error("OAuth callback server stopped"));
+      }
+    }, 0);
+  }
+
+  wait(state: string): Promise<string> {
+    this.reserved.delete(state);
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        if (this.pending.has(state)) {
+          this.pending.delete(state);
+          reject(new Error("OAuth callback timeout - authorization took too long"));
+        }
+      }, CALLBACK_TIMEOUT_MS);
+      this.pending.set(state, { resolve, reject, timeout });
+    });
+  }
+
+  // ── Private ───────────────────────────────────────────────────────
+
+  private closeQuiet(srv: Server): Promise<void> {
+    return new Promise((resolve) => {
+      srv.close(() => resolve());
+    });
   }
 
   private async ensureLocked(opts: {
@@ -160,63 +219,6 @@ export class OAuthCallbackServer {
     srv.unref();
   }
 
-  reserve(state: string): void {
-    this.reserved.add(state);
-  }
-
-  release(state: string): void {
-    this.reserved.delete(state);
-  }
-
-  // ── Callback waiting ──────────────────────────────────────────────
-
-  wait(state: string): Promise<string> {
-    this.reserved.delete(state);
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        if (this.pending.has(state)) {
-          this.pending.delete(state);
-          reject(new Error("OAuth callback timeout - authorization took too long"));
-        }
-      }, CALLBACK_TIMEOUT_MS);
-      this.pending.set(state, { resolve, reject, timeout });
-    });
-  }
-
-  cancel(state: string): void {
-    this.reserved.delete(state);
-    const p = this.pending.get(state);
-    if (p) {
-      clearTimeout(p.timeout);
-      this.pending.delete(state);
-      p.reject(new Error("Authorization cancelled"));
-    }
-  }
-
-  async stop(): Promise<void> {
-    if (this.server) {
-      await new Promise<void>((resolve) => {
-        this.server!.close(() => resolve());
-      });
-      this.server = undefined;
-    }
-    setOAuthCallbackPort(getConfiguredOAuthCallbackPort());
-    this.host = HOST_DEFAULT;
-    setOAuthCallbackPath(DEFAULT_OAUTH_CALLBACK_PATH);
-
-    const list = Array.from(this.pending.entries());
-    this.pending.clear();
-    this.reserved.clear();
-    setTimeout(() => {
-      for (const [, p] of list) {
-        clearTimeout(p.timeout);
-        p.reject(new Error("OAuth callback server stopped"));
-      }
-    }, 0);
-  }
-
-  // ── Private ───────────────────────────────────────────────────────
-
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
     const url = new URL(req.url || "/", `http://${req.headers.host}`);
     if (url.pathname !== getOAuthCallbackPath()) {
@@ -267,10 +269,6 @@ export class OAuthCallbackServer {
     res.writeHead(200, { "Content-Type": "text/html" }).end(HTML_SUCCESS);
   }
 
-  private reply(res: ServerResponse, status: number, body: string): void {
-    res.writeHead(status, { "Content-Type": "text/html" }).end(body);
-  }
-
   private hasPending(): boolean {
     return this.pending.size > 0 || this.reserved.size > 0;
   }
@@ -282,12 +280,13 @@ export class OAuthCallbackServer {
     });
   }
 
-  private closeQuiet(srv: Server): Promise<void> {
-    return new Promise((resolve) => {
-      srv.close(() => resolve());
-    });
+  private reply(res: ServerResponse, status: number, body: string): void {
+    res.writeHead(status, { "Content-Type": "text/html" }).end(body);
   }
 }
+
+/** Singleton instance */
+export const callbackServer = new OAuthCallbackServer();
 
 function throwBusy(host: string, port?: number): never {
   throw new Error(
@@ -295,6 +294,3 @@ function throwBusy(host: string, port?: number): never {
       `but a different endpoint is required and cannot be switched while authorizations are pending`,
   );
 }
-
-/** Singleton instance */
-export const callbackServer = new OAuthCallbackServer();

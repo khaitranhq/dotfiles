@@ -1,10 +1,16 @@
 // init/bootstrap.ts - MCP extension initialization
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state.ts";
-import type { ToolMetadata } from "../core/types.ts";
+import type { McpExtensionState } from "../core/state";
+import type { ToolMetadata } from "../core/types";
 import { existsSync } from "node:fs";
-import { loadMcpConfig } from "../config/loader.ts";
-import { McpLifecycleManager } from "../client/lifecycle.ts";
+import { loadMcpConfig } from "../config/loader";
+import { McpLifecycleManager } from "../client/lifecycle";
+import { McpServerManager } from "../client/manager";
+import { buildToolMetadata } from "../tools/metadata";
+import { parallelLimit } from "../core/utils";
+import { logger } from "../core/logger";
+import { getMissingConfiguredToolServers } from "../proxy/direct";
+import { OAuthFlow, supportsOAuth } from "../client/oauth-flow";
 import {
   computeServerHash,
   getMetadataCachePath,
@@ -15,16 +21,31 @@ import {
   serializeResources,
   serializeTools,
   type ServerCacheEntry,
-} from "../config/cache.ts";
-import { McpServerManager } from "../client/manager.ts";
-import { buildToolMetadata } from "../tools/metadata.ts";
-import { parallelLimit } from "../core/utils.ts";
-import { logger } from "../core/logger.ts";
-import { getMissingConfiguredToolServers } from "../proxy/direct.ts";
-import { OAuthFlow, supportsOAuth } from "../client/oauth-flow.ts";
+} from "../config/cache";
 
 const FAILURE_BACKOFF_MS = 60 * 1000;
 
+// ── Exported ──────────────────────────────────────────────────────────
+
+/** Flush tool/resource metadata for all connected servers to persistent cache. */
+export function flushMetadataCache(state: McpExtensionState): void {
+  for (const [name, connection] of state.manager.getAllConnections()) {
+    if (connection.status === "connected") {
+      updateMetadataCache(state, name);
+    }
+  }
+}
+
+/** Get seconds since a server's last connection failure (null if beyond backoff window). */
+export function getFailureAgeSeconds(state: McpExtensionState, serverName: string): number | null {
+  const failedAt = state.failureTracker.get(serverName);
+  if (!failedAt) return null;
+  const ageMs = Date.now() - failedAt;
+  if (ageMs > FAILURE_BACKOFF_MS) return null;
+  return Math.round(ageMs / 1000);
+}
+
+/** Bootstrap MCP: load config, connect servers, hydrate tool metadata. */
 export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtensionState> {
   const config = loadMcpConfig(undefined, ctx.cwd);
 
@@ -83,8 +104,6 @@ export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtension
   }
 
   // Check authentication for OAuth-capable HTTP servers on startup.
-  // Authenticate servers that need it before connecting, so connections
-  // carry valid tokens from the start.
   const oauthServerEntries = serverEntries.filter(([, def]) => def.url && supportsOAuth(def));
   for (const [name, definition] of oauthServerEntries) {
     const serverUrl = definition.url;
@@ -191,25 +210,35 @@ export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtension
   return state;
 }
 
-export function updateServerMetadata(state: McpExtensionState, serverName: string): void {
+/** Attempt a lazy connection to a server, hydrating metadata on success. */
+export async function lazyConnect(state: McpExtensionState, serverName: string): Promise<boolean> {
   const connection = state.manager.getConnection(serverName);
-  if (!connection || connection.status !== "connected") return;
+  if (connection?.status === "connected") {
+    updateServerMetadata(state, serverName);
+    return true;
+  }
+
+  const failedAgo = getFailureAgeSeconds(state, serverName);
+  if (failedAgo !== null) return false;
 
   const definition = state.config.mcpServers[serverName];
-  if (!definition) return;
+  if (!definition) return false;
 
-  const prefix = state.config.settings?.toolPrefix ?? "server";
-
-  const { metadata } = buildToolMetadata(
-    connection.tools,
-    connection.resources,
-    definition,
-    serverName,
-    prefix,
-  );
-  state.toolMetadata.set(serverName, metadata);
+  try {
+    await state.manager.connect(serverName, definition);
+    state.failureTracker.delete(serverName);
+    updateServerMetadata(state, serverName);
+    updateMetadataCache(state, serverName);
+    return true;
+  } catch (error) {
+    state.failureTracker.set(serverName, Date.now());
+    const message = error instanceof Error ? error.message : String(error);
+    logger.debug(`MCP: lazy connect failed for ${serverName}: ${message}`);
+    return false;
+  }
 }
 
+/** Persist tool/resource metadata for a single server to cache. */
 export function updateMetadataCache(state: McpExtensionState, serverName: string): void {
   const connection = state.manager.getConnection(serverName);
   if (!connection || connection.status !== "connected") return;
@@ -244,53 +273,7 @@ export function updateMetadataCache(state: McpExtensionState, serverName: string
   saveMetadataCache({ version: 1, servers: { [serverName]: entry } });
 }
 
-export function flushMetadataCache(state: McpExtensionState): void {
-  for (const [name, connection] of state.manager.getAllConnections()) {
-    if (connection.status === "connected") {
-      updateMetadataCache(state, name);
-    }
-  }
-}
-
-export function updateStatusBar(_state: McpExtensionState): void {
-  // Status bar updates are now no-op (no UI context available).
-  // Previously this used state.ui which was removed.
-}
-
-export function getFailureAgeSeconds(state: McpExtensionState, serverName: string): number | null {
-  const failedAt = state.failureTracker.get(serverName);
-  if (!failedAt) return null;
-  const ageMs = Date.now() - failedAt;
-  if (ageMs > FAILURE_BACKOFF_MS) return null;
-  return Math.round(ageMs / 1000);
-}
-
-export async function lazyConnect(state: McpExtensionState, serverName: string): Promise<boolean> {
-  const connection = state.manager.getConnection(serverName);
-  if (connection?.status === "connected") {
-    updateServerMetadata(state, serverName);
-    return true;
-  }
-
-  const failedAgo = getFailureAgeSeconds(state, serverName);
-  if (failedAgo !== null) return false;
-
-  const definition = state.config.mcpServers[serverName];
-  if (!definition) return false;
-
-  try {
-    await state.manager.connect(serverName, definition);
-    state.failureTracker.delete(serverName);
-    updateServerMetadata(state, serverName);
-    updateMetadataCache(state, serverName);
-    return true;
-  } catch (error) {
-    state.failureTracker.set(serverName, Date.now());
-    const message = error instanceof Error ? error.message : String(error);
-    logger.debug(`MCP: lazy connect failed for ${serverName}: ${message}`);
-    return false;
-  }
-}
+// ── Internal ──────────────────────────────────────────────────────────
 
 function getEffectiveIdleTimeoutMinutes(state: McpExtensionState, serverName: string): number {
   const definition = state.config.mcpServers[serverName];
@@ -305,4 +288,23 @@ function getEffectiveIdleTimeoutMinutes(state: McpExtensionState, serverName: st
   return typeof state.config.settings?.idleTimeout === "number"
     ? state.config.settings.idleTimeout
     : 10;
+}
+
+function updateServerMetadata(state: McpExtensionState, serverName: string): void {
+  const connection = state.manager.getConnection(serverName);
+  if (!connection || connection.status !== "connected") return;
+
+  const definition = state.config.mcpServers[serverName];
+  if (!definition) return;
+
+  const prefix = state.config.settings?.toolPrefix ?? "server";
+
+  const { metadata } = buildToolMetadata(
+    connection.tools,
+    connection.resources,
+    definition,
+    serverName,
+    prefix,
+  );
+  state.toolMetadata.set(serverName, metadata);
 }

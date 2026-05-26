@@ -6,14 +6,14 @@
 
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from "node:fs";
 import { dirname } from "node:path";
-import { getAgentPath } from "../../shared/config.ts";
+import { getAgentPath } from "../../shared/config";
 
 const LOG_FILE_PATH = getAgentPath("mcp", "mcp.log");
 const MAX_LOG_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
-export type LogLevel = "debug" | "info" | "warn" | "error";
+type LogLevel = "debug" | "info" | "warn" | "error";
 
-export interface LogContext {
+interface LogContext {
   server?: string;
   session?: string;
   tool?: string;
@@ -21,7 +21,7 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-export interface LogEntry {
+interface LogEntry {
   level: LogLevel;
   message: string;
   context?: LogContext;
@@ -45,30 +45,55 @@ const LEVEL_PREFIX: Record<LogLevel, string> = {
   error: "[MCP-UI:ERROR]",
 };
 
+// ── Logger class ──────────────────────────────────────────────────────
+
 class Logger {
   private minLevel: LogLevel = "info";
   private handlers: LogHandler[] = [];
   private defaultContext: LogContext = {};
 
-  setLevel(level: LogLevel): void {
-    this.minLevel = level;
-  }
-
-  setDefaultContext(context: LogContext): void {
-    this.defaultContext = context;
-  }
+  // ── Public methods ───────────────────────────────────────────────
 
   addHandler(handler: LogHandler): void {
     this.handlers.push(handler);
+  }
+
+  /**
+   * Create a child logger with additional default context.
+   */
+  child(context: LogContext): ChildLogger {
+    return new ChildLogger(this, context);
   }
 
   clearHandlers(): void {
     this.handlers = [];
   }
 
-  private shouldLog(level: LogLevel): boolean {
-    return LEVEL_PRIORITY[level] >= LEVEL_PRIORITY[this.minLevel];
+  debug(message: string, context?: LogContext): void {
+    this.emit("debug", message, context);
   }
+
+  error(message: string, error?: Error, context?: LogContext): void {
+    this.emit("error", message, context, error);
+  }
+
+  info(message: string, context?: LogContext): void {
+    this.emit("info", message, context);
+  }
+
+  setDefaultContext(context: LogContext): void {
+    this.defaultContext = context;
+  }
+
+  setLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  warn(message: string, context?: LogContext): void {
+    this.emit("warn", message, context);
+  }
+
+  // ── Private methods ──────────────────────────────────────────────
 
   private emit(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
     if (!this.shouldLog(level)) return;
@@ -107,6 +132,10 @@ class Logger {
         // Ignore handler errors
       }
     }
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return LEVEL_PRIORITY[level] >= LEVEL_PRIORITY[this.minLevel];
   }
 
   private writeToFile(entry: LogEntry): void {
@@ -151,30 +180,9 @@ class Logger {
       // Silently ignore file write errors — don't break app for logging
     }
   }
-
-  debug(message: string, context?: LogContext): void {
-    this.emit("debug", message, context);
-  }
-
-  info(message: string, context?: LogContext): void {
-    this.emit("info", message, context);
-  }
-
-  warn(message: string, context?: LogContext): void {
-    this.emit("warn", message, context);
-  }
-
-  error(message: string, error?: Error, context?: LogContext): void {
-    this.emit("error", message, context, error);
-  }
-
-  /**
-   * Create a child logger with additional default context.
-   */
-  child(context: LogContext): ChildLogger {
-    return new ChildLogger(this, context);
-  }
 }
+
+// ── ChildLogger class ─────────────────────────────────────────────────
 
 class ChildLogger {
   constructor(
@@ -182,8 +190,16 @@ class ChildLogger {
     private context: LogContext,
   ) {}
 
+  child(context: LogContext): ChildLogger {
+    return new ChildLogger(this.parent, { ...this.context, ...context });
+  }
+
   debug(message: string, context?: LogContext): void {
     this.parent.debug(message, { ...this.context, ...context });
+  }
+
+  error(message: string, error?: Error, context?: LogContext): void {
+    this.parent.error(message, error, { ...this.context, ...context });
   }
 
   info(message: string, context?: LogContext): void {
@@ -193,15 +209,9 @@ class ChildLogger {
   warn(message: string, context?: LogContext): void {
     this.parent.warn(message, { ...this.context, ...context });
   }
-
-  error(message: string, error?: Error, context?: LogContext): void {
-    this.parent.error(message, error, { ...this.context, ...context });
-  }
-
-  child(context: LogContext): ChildLogger {
-    return new ChildLogger(this.parent, { ...this.context, ...context });
-  }
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────
 
 function formatContext(context?: LogContext): string {
   if (!context || Object.keys(context).length === 0) return "";
@@ -214,7 +224,8 @@ function formatContext(context?: LogContext): string {
   return parts.length > 0 ? `(${parts.join(", ")})` : "";
 }
 
-// Singleton instance
+// ── Singleton ─────────────────────────────────────────────────────────
+
 export const logger = new Logger();
 
 // Enable debug mode via environment variable

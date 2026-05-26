@@ -11,7 +11,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getAgentPath } from "../../shared/config.ts";
+import { getAgentPath } from "../../shared/config";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ export interface StoredClientInfo {
   redirectUris?: string[];
 }
 
-export interface AuthEntry {
+interface AuthEntry {
   tokens?: StoredTokens;
   clientInfo?: StoredClientInfo;
   codeVerifier?: string;
@@ -49,7 +49,43 @@ export class AuthStorage {
     this.tokensPath = join(this.dir, "tokens.json");
   }
 
-  // ── Read/write ──────────────────────────────────────────────────
+  // ── Public ───────────────────────────────────────────────────────
+
+  clearAll(): void {
+    this.remove();
+  }
+
+  clearClientInfo(): void {
+    this.clearField("clientInfo");
+  }
+
+  clearCodeVerifier(): void {
+    this.clearField("codeVerifier");
+  }
+
+  clearOAuthState(): void {
+    this.clearField("oauthState");
+  }
+
+  clearTokens(): void {
+    this.clearField("tokens");
+  }
+
+  get clientInfo(): StoredClientInfo | undefined {
+    return this.getEntry()?.clientInfo;
+  }
+
+  set clientInfo(info: StoredClientInfo) {
+    this.update("clientInfo", info);
+  }
+
+  get codeVerifier(): string | undefined {
+    return this.getEntry()?.codeVerifier;
+  }
+
+  set codeVerifier(v: string) {
+    this.update("codeVerifier", v);
+  }
 
   getEntry(): AuthEntry | undefined {
     try {
@@ -67,10 +103,23 @@ export class AuthStorage {
     return entry;
   }
 
-  saveEntry(entry: AuthEntry, serverUrl?: string): void {
-    if (serverUrl) entry.serverUrl = serverUrl;
-    this.ensureDir();
-    writeFileSync(this.tokensPath, JSON.stringify(entry, null, 2), { mode: 0o600 });
+  get hasTokens(): boolean {
+    return !!this.getEntry()?.tokens;
+  }
+
+  get isExpired(): boolean | null {
+    const entry = this.getEntry();
+    if (!entry?.tokens) return null;
+    if (!entry.tokens.expiresAt) return false;
+    return entry.tokens.expiresAt < Date.now() / 1000;
+  }
+
+  get oauthState(): string | undefined {
+    return this.getEntry()?.oauthState;
+  }
+
+  set oauthState(s: string) {
+    this.update("oauthState", s);
   }
 
   remove(): void {
@@ -88,7 +137,11 @@ export class AuthStorage {
     }
   }
 
-  // ── Token helpers ────────────────────────────────────────────────
+  saveEntry(entry: AuthEntry, serverUrl?: string): void {
+    if (serverUrl) entry.serverUrl = serverUrl;
+    this.ensureDir();
+    writeFileSync(this.tokensPath, JSON.stringify(entry, null, 2), { mode: 0o600 });
+  }
 
   get tokens(): StoredTokens | undefined {
     return this.getEntry()?.tokens;
@@ -98,68 +151,15 @@ export class AuthStorage {
     this.update("tokens", t);
   }
 
-  get isExpired(): boolean | null {
-    const entry = this.getEntry();
-    if (!entry?.tokens) return null;
-    if (!entry.tokens.expiresAt) return false;
-    return entry.tokens.expiresAt < Date.now() / 1000;
-  }
-
-  get hasTokens(): boolean {
-    return !!this.getEntry()?.tokens;
-  }
-
-  // ── Client info ──────────────────────────────────────────────────
-
-  get clientInfo(): StoredClientInfo | undefined {
-    return this.getEntry()?.clientInfo;
-  }
-
-  set clientInfo(info: StoredClientInfo) {
-    this.update("clientInfo", info);
-  }
-
-  // ── PKCE / OAuth state ───────────────────────────────────────────
-
-  get codeVerifier(): string | undefined {
-    return this.getEntry()?.codeVerifier;
-  }
-
-  set codeVerifier(v: string) {
-    this.update("codeVerifier", v);
-  }
-
-  clearCodeVerifier(): void {
-    this.clearField("codeVerifier");
-  }
-
-  get oauthState(): string | undefined {
-    return this.getEntry()?.oauthState;
-  }
-
-  set oauthState(s: string) {
-    this.update("oauthState", s);
-  }
-
-  clearOAuthState(): void {
-    this.clearField("oauthState");
-  }
-
-  // ── Bulk operations ──────────────────────────────────────────────
-
-  clearAll(): void {
-    this.remove();
-  }
-
-  clearClientInfo(): void {
-    this.clearField("clientInfo");
-  }
-
-  clearTokens(): void {
-    this.clearField("tokens");
-  }
-
   // ── Private ──────────────────────────────────────────────────────
+
+  private clearField(key: keyof AuthEntry): void {
+    const entry = this.getEntry();
+    if (entry) {
+      delete entry[key];
+      this.saveEntry(entry);
+    }
+  }
 
   private computeDir(name: string): string {
     const storageKey = createHash("sha256").update(name, "utf8").digest("hex");
@@ -175,13 +175,5 @@ export class AuthStorage {
     const entry = this.getEntry() ?? {};
     entry[key] = value;
     this.saveEntry(entry);
-  }
-
-  private clearField(key: keyof AuthEntry): void {
-    const entry = this.getEntry();
-    if (entry) {
-      delete entry[key];
-      this.saveEntry(entry);
-    }
   }
 }

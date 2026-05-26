@@ -2,32 +2,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { getAgentPath } from "../../shared/config.ts";
-import { loadCustomSettings } from "../../shared/config.ts";
-import type { McpYamlServer } from "../../shared/config.ts";
-import type { McpConfig, ServerEntry, McpSettings } from "../core/types.ts";
+import { getAgentPath } from "../../shared/config";
+import { loadCustomSettings } from "../../shared/config";
+import type { McpYamlServer } from "../../shared/config";
+import type { McpConfig, ServerEntry, McpSettings } from "../core/types";
 
 const GENERIC_GLOBAL_CONFIG_PATH = join(homedir(), ".config", "mcp", "mcp.json");
 const PROJECT_CONFIG_NAME = ".mcp.json";
 const PROJECT_PI_CONFIG_NAME = ".pi/mcp.json";
-
-// -- Path helpers --
-
-export function getPiGlobalConfigPath(overridePath?: string): string {
-  return overridePath ? resolve(overridePath) : getAgentPath("mcp.json");
-}
-
-export function getGenericGlobalConfigPath(): string {
-  return GENERIC_GLOBAL_CONFIG_PATH;
-}
-
-export function getProjectConfigPath(cwd = process.cwd()): string {
-  return resolve(cwd, PROJECT_CONFIG_NAME);
-}
-
-export function getProjectPiConfigPath(cwd = process.cwd()): string {
-  return resolve(cwd, PROJECT_PI_CONFIG_NAME);
-}
 
 // -- Config sources (layered: standard → Pi overrides) --
 
@@ -37,6 +19,52 @@ interface ConfigSourceSpec {
   readPath: string;
   shared: boolean;
 }
+
+// -- Exported functions --
+
+/**
+ * Converts MCP servers from the custom-settings.yaml array format
+ * to the {@link McpConfig} keyed-object format.
+ *
+ * Strips `name` (becomes the key) and `transport` (inferred from
+ * presence of `url` vs `command`).
+ */
+export function convertYamlMcpToConfig(servers: McpYamlServer[] | undefined): McpConfig {
+  if (!servers || servers.length === 0) {
+    return { mcpServers: {} };
+  }
+
+  const mcpServers: Record<string, ServerEntry> = {};
+
+  for (const server of servers) {
+    if (!server.name) continue;
+
+    const { name, transport: _transport, ...entry } = server;
+    mcpServers[name] = entry as ServerEntry;
+  }
+
+  return { mcpServers };
+}
+
+export function loadMcpConfig(overridePath?: string, cwd = process.cwd()): McpConfig {
+  let config: McpConfig = { mcpServers: {} };
+
+  for (const source of getConfigSources(overridePath, cwd)) {
+    const loaded = readValidatedConfig(source.readPath);
+    if (!loaded) continue;
+    config = mergeConfigs(config, loaded);
+  }
+
+  // Merge MCP servers from custom-settings.yaml (overrides JSON configs)
+  const customSettings = loadCustomSettings();
+  if (customSettings.mcp?.servers) {
+    config = mergeConfigs(config, convertYamlMcpToConfig(customSettings.mcp.servers));
+  }
+
+  return config;
+}
+
+// -- Internal helpers --
 
 function getConfigSources(overridePath?: string, cwd = process.cwd()): ConfigSourceSpec[] {
   const userPath = getPiGlobalConfigPath(overridePath);
@@ -81,53 +109,17 @@ function getConfigSources(overridePath?: string, cwd = process.cwd()): ConfigSou
   return sources;
 }
 
-// -- Config loading --
-
-export function loadMcpConfig(overridePath?: string, cwd = process.cwd()): McpConfig {
-  let config: McpConfig = { mcpServers: {} };
-
-  for (const source of getConfigSources(overridePath, cwd)) {
-    const loaded = readValidatedConfig(source.readPath);
-    if (!loaded) continue;
-    config = mergeConfigs(config, loaded);
-  }
-
-  // Merge MCP servers from custom-settings.yaml (overrides JSON configs)
-  const customSettings = loadCustomSettings();
-  if (customSettings.mcp?.servers) {
-    config = mergeConfigs(config, convertYamlMcpToConfig(customSettings.mcp.servers));
-  }
-
-  return config;
+function getPiGlobalConfigPath(overridePath?: string): string {
+  return overridePath ? resolve(overridePath) : getAgentPath("mcp.json");
 }
 
-// -- YAML-to-McpConfig conversion --
-
-/**
- * Converts MCP servers from the custom-settings.yaml array format
- * to the {@link McpConfig} keyed-object format.
- *
- * Strips `name` (becomes the key) and `transport` (inferred from
- * presence of `url` vs `command`).
- */
-export function convertYamlMcpToConfig(servers: McpYamlServer[] | undefined): McpConfig {
-  if (!servers || servers.length === 0) {
-    return { mcpServers: {} };
-  }
-
-  const mcpServers: Record<string, ServerEntry> = {};
-
-  for (const server of servers) {
-    if (!server.name) continue;
-
-    const { name, transport: _transport, ...entry } = server;
-    mcpServers[name] = entry as ServerEntry;
-  }
-
-  return { mcpServers };
+function getProjectConfigPath(cwd = process.cwd()): string {
+  return resolve(cwd, PROJECT_CONFIG_NAME);
 }
 
-// -- Internal helpers --
+function getProjectPiConfigPath(cwd = process.cwd()): string {
+  return resolve(cwd, PROJECT_PI_CONFIG_NAME);
+}
 
 function mergeConfigs(base: McpConfig, next: McpConfig): McpConfig {
   return {

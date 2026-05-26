@@ -3,10 +3,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import type { McpTool, McpResource, ServerDefinition, Transport } from "../core/types.ts";
-import { interpolateEnvRecord, resolveBearerToken, resolveConfigPath } from "../core/utils.ts";
-import { supportsOAuth, extractOAuthConfig } from "./oauth-flow.ts";
-import { McpOAuthProvider } from "./oauth-provider.ts";
+import type { McpTool, McpResource, ServerDefinition, Transport } from "../core/types";
+import { interpolateEnvRecord, resolveBearerToken, resolveConfigPath } from "../core/utils";
+import { supportsOAuth, extractOAuthConfig } from "./oauth-flow";
+import { McpOAuthProvider } from "./oauth-provider";
 
 interface ServerConnection {
   client: Client;
@@ -22,6 +22,23 @@ interface ServerConnection {
 export class McpServerManager {
   private connections = new Map<string, ServerConnection>();
   private connectPromises = new Map<string, Promise<ServerConnection>>();
+
+  // --- Public methods ---
+
+  async close(name: string): Promise<void> {
+    const connection = this.connections.get(name);
+    if (!connection) return;
+
+    connection.status = "closed";
+    this.connections.delete(name);
+    await connection.client.close().catch(() => {});
+    await connection.transport.close().catch(() => {});
+  }
+
+  async closeAll(): Promise<void> {
+    const names = [...this.connections.keys()];
+    await Promise.all(names.map((name) => this.close(name)));
+  }
 
   async connect(name: string, definition: ServerDefinition): Promise<ServerConnection> {
     if (this.connectPromises.has(name)) {
@@ -45,6 +62,44 @@ export class McpServerManager {
       this.connectPromises.delete(name);
     }
   }
+
+  decrementInFlight(name: string): void {
+    const connection = this.connections.get(name);
+    if (connection && connection.inFlight) {
+      connection.inFlight--;
+    }
+  }
+
+  getAllConnections(): Map<string, ServerConnection> {
+    return new Map(this.connections);
+  }
+
+  getConnection(name: string): ServerConnection | undefined {
+    return this.connections.get(name);
+  }
+
+  incrementInFlight(name: string): void {
+    const connection = this.connections.get(name);
+    if (connection) {
+      connection.inFlight = (connection.inFlight ?? 0) + 1;
+    }
+  }
+
+  isIdle(name: string, timeoutMs: number): boolean {
+    const connection = this.connections.get(name);
+    if (!connection || connection.status !== "connected") return false;
+    if (connection.inFlight > 0) return false;
+    return Date.now() - connection.lastUsedAt > timeoutMs;
+  }
+
+  touch(name: string): void {
+    const connection = this.connections.get(name);
+    if (connection) {
+      connection.lastUsedAt = Date.now();
+    }
+  }
+
+  // --- Private methods ---
 
   private async createConnection(
     name: string,
@@ -147,19 +202,6 @@ export class McpServerManager {
     }
   }
 
-  private async fetchAllTools(client: Client): Promise<McpTool[]> {
-    const allTools: McpTool[] = [];
-    let cursor: string | undefined;
-
-    do {
-      const result = await client.listTools(cursor ? { cursor } : undefined);
-      allTools.push(...(result.tools ?? []));
-      cursor = result.nextCursor;
-    } while (cursor);
-
-    return allTools;
-  }
-
   private async fetchAllResources(client: Client): Promise<McpResource[]> {
     try {
       const allResources: McpResource[] = [];
@@ -177,55 +219,17 @@ export class McpServerManager {
     }
   }
 
-  async close(name: string): Promise<void> {
-    const connection = this.connections.get(name);
-    if (!connection) return;
+  private async fetchAllTools(client: Client): Promise<McpTool[]> {
+    const allTools: McpTool[] = [];
+    let cursor: string | undefined;
 
-    connection.status = "closed";
-    this.connections.delete(name);
-    await connection.client.close().catch(() => {});
-    await connection.transport.close().catch(() => {});
-  }
+    do {
+      const result = await client.listTools(cursor ? { cursor } : undefined);
+      allTools.push(...(result.tools ?? []));
+      cursor = result.nextCursor;
+    } while (cursor);
 
-  async closeAll(): Promise<void> {
-    const names = [...this.connections.keys()];
-    await Promise.all(names.map((name) => this.close(name)));
-  }
-
-  getConnection(name: string): ServerConnection | undefined {
-    return this.connections.get(name);
-  }
-
-  getAllConnections(): Map<string, ServerConnection> {
-    return new Map(this.connections);
-  }
-
-  touch(name: string): void {
-    const connection = this.connections.get(name);
-    if (connection) {
-      connection.lastUsedAt = Date.now();
-    }
-  }
-
-  incrementInFlight(name: string): void {
-    const connection = this.connections.get(name);
-    if (connection) {
-      connection.inFlight = (connection.inFlight ?? 0) + 1;
-    }
-  }
-
-  decrementInFlight(name: string): void {
-    const connection = this.connections.get(name);
-    if (connection && connection.inFlight) {
-      connection.inFlight--;
-    }
-  }
-
-  isIdle(name: string, timeoutMs: number): boolean {
-    const connection = this.connections.get(name);
-    if (!connection || connection.status !== "connected") return false;
-    if (connection.inFlight > 0) return false;
-    return Date.now() - connection.lastUsedAt > timeoutMs;
+    return allTools;
   }
 }
 

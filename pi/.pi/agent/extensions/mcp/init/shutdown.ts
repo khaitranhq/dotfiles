@@ -1,7 +1,7 @@
 // init/shutdown.ts - MCP state shutdown
-import type { McpExtensionState } from "../core/state.ts";
-import { flushMetadataCache } from "./bootstrap.ts";
-import { callbackServer } from "../client/oauth-callback.ts";
+import type { McpExtensionState } from "../core/state";
+import { flushMetadataCache } from "./bootstrap";
+import { callbackServer } from "../client/oauth-callback";
 
 export async function shutdownMcpState(currentState: McpExtensionState | null): Promise<void> {
   if (!currentState) return;
