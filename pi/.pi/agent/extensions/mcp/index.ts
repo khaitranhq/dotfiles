@@ -4,7 +4,7 @@ import type { McpExtensionState } from "./core/state";
 import { loadMcpConfig } from "./config/loader";
 import { McpToolRegistry } from "./tools/register";
 import { registerMcpSessionHandlers, type McpSessionContext } from "./init/session";
-import { createMcpCommand } from "./init/commands";
+import { mcpAuthCommand } from "./commands/auth";
 
 export default function (pi: ExtensionAPI) {
   const sessionCtx: McpSessionContext = {
@@ -22,8 +22,8 @@ export default function (pi: ExtensionAPI) {
 
   registerMcpSessionHandlers(pi, sessionCtx);
 
-  pi.registerCommand("mcp", {
-    description: "Show MCP server status",
-    handler: createMcpCommand(getState, getInitPromise),
+  pi.registerCommand("mcp-auth", {
+    description: "Authenticate an MCP OAuth server",
+    handler: mcpAuthCommand,
   });
 }

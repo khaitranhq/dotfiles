@@ -160,9 +160,7 @@ class OAuthCallbackServer {
     const requiredPort = opts.port ?? getConfiguredOAuthCallbackPort();
     const strictPort = opts.strictPort === true;
     const host = opts.callbackHost ?? HOST_DEFAULT;
-    const path = (opts.callbackPath ?? DEFAULT_OAUTH_CALLBACK_PATH).startsWith("/")
-      ? opts.callbackPath!
-      : `/${opts.callbackPath ?? DEFAULT_OAUTH_CALLBACK_PATH}`;
+    const path = opts.callbackPath ?? DEFAULT_OAUTH_CALLBACK_PATH;
 
     if (opts.reserveState && !opts.oauthState)
       throw new Error("OAuth callback reservation requires an oauthState");
