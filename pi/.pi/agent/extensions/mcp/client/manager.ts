@@ -5,8 +5,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import type { McpTool, McpResource, ServerDefinition, Transport } from "../core/types";
 import { interpolateEnvRecord, resolveBearerToken, resolveConfigPath } from "../core/utils";
-import { supportsOAuth, extractOAuthConfig } from "./oauth-flow";
-import { McpOAuthProvider } from "./oauth-provider";
+import { supportsOAuth, extractOAuthConfig } from "./oauth";
+import { McpOAuthProvider } from "./oauth";
 
 interface ServerConnection {
   client: Client;

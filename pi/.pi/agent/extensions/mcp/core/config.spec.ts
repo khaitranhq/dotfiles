@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertYamlMcpToConfig } from "./loader";
+import { convertYamlMcpToConfig } from "./config";
 
 describe("convertYamlMcpToConfig", () => {
   it("converts array of HTTP servers to mcpServers object", () => {

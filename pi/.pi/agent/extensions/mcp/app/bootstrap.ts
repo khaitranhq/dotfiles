@@ -1,16 +1,16 @@
 // init/bootstrap.ts - MCP extension initialization
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state";
+import type { McpExtensionState } from "../core/types";
 import type { ToolMetadata } from "../core/types";
 import { existsSync } from "node:fs";
-import { loadMcpConfig } from "../config/loader";
+import { loadMcpConfig } from "../core/config";
 import { McpLifecycleManager } from "../client/lifecycle";
 import { McpServerManager } from "../client/manager";
-import { buildToolMetadata } from "../tools/metadata";
+import { buildToolMetadata } from "./tools";
 import { parallelLimit } from "../core/utils";
 import { logger } from "../core/logger";
-import { getMissingConfiguredToolServers } from "../proxy/direct";
-import { OAuthFlow, supportsOAuth } from "../client/oauth-flow";
+import { getMissingConfiguredToolServers } from "./tools";
+import { OAuthFlow, supportsOAuth } from "../client/oauth";
 import {
   computeServerHash,
   getMetadataCachePath,
@@ -21,7 +21,7 @@ import {
   serializeResources,
   serializeTools,
   type ServerCacheEntry,
-} from "../config/cache";
+} from "../core/cache";
 
 const FAILURE_BACKOFF_MS = 60 * 1000;
 

@@ -3,11 +3,11 @@ import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from "
 import { dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { getAgentPath } from "../../shared/config";
-import type { McpTool, McpResource, ServerEntry, ToolMetadata } from "../core/types";
-import { formatToolName, isToolExcluded } from "../core/types";
-import { resourceNameToToolName } from "../tools/resources";
+import type { McpTool, McpResource, ServerEntry, ToolMetadata } from "./types";
+import { formatToolName, isToolExcluded } from "./types";
+import { resourceNameToToolName } from "../app/tools";
 import { interpolateEnvRecord, resolveConfigPath } from "../../shared/env-utils";
-import { resolveBearerToken } from "../core/utils";
+import { resolveBearerToken } from "./utils";
 
 const CACHE_VERSION = 1;
 const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;

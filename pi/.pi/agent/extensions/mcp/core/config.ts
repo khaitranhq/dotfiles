@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { getAgentPath } from "../../shared/config";
 import { loadCustomSettings } from "../../shared/config";
 import type { McpYamlServer } from "../../shared/config";
-import type { McpConfig, ServerEntry, McpSettings } from "../core/types";
+import type { McpConfig, ServerEntry, McpSettings } from "./types";
 
 const GENERIC_GLOBAL_CONFIG_PATH = join(homedir(), ".config", "mcp", "mcp.json");
 const PROJECT_CONFIG_NAME = ".mcp.json";

@@ -59,10 +59,10 @@ mcp:
 | `lifecycle`       | `"keep-alive"` \| `"lazy"` \| `"eager"` | Connection lifecycle                                    |
 | `idleTimeout`     | number                                  | Idle timeout in minutes                                 |
 | `exposeResources` | boolean                                 | Expose MCP resources as tools                           |
-| `directTools`     | boolean \| string[]                     | Register tools as Pi tools                              |
+| `directTools`     | boolean \| string[]                     | Register tools as Pi tools (default: `true`)              |
 | `excludeTools`    | string[]                                | Tools to exclude                                        |
 | `debug`           | boolean                                 | Show server stderr                                      |
 
 ### Tool Registration
 
-MCP tools are registered as native Pi tools using the `directTools` setting. Set it to `true` to register all tools from a server, or provide a list of specific tool names. Tools are available directly by name (prefixed with the server name).
+MCP tools are registered as native Pi tools by default. Set `directTools: false` to disable tool registration for a server, or provide a list of specific tool names to register only those tools. Tools are available directly by name (prefixed with the server name).

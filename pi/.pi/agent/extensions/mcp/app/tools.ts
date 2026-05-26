@@ -1,17 +1,107 @@
-// proxy/direct.ts - Tool registration and execution
+/**
+ * app/tools.ts — MCP tool registration, execution, and metadata.
+ *
+ * Merges: proxy/direct.ts + tools/register.ts + tools/metadata.ts + tools/resources.ts
+ */
+
 import type {
   AgentToolResult,
   AgentToolUpdateCallback,
+  ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import type { McpExtensionState } from "../core/state";
-import type { RegisteredTool, McpConfig, McpContent, ContentBlock } from "../core/types";
-import type { MetadataCache } from "../config/cache";
-import { lazyConnect, getFailureAgeSeconds } from "../init/bootstrap";
-import { isServerCacheValid } from "../config/cache";
-import { resourceNameToToolName } from "../tools/resources";
+import { Type } from "typebox";
+import type { McpExtensionState } from "../core/types";
+import type {
+  RegisteredTool,
+  McpConfig,
+  McpTool,
+  McpResource,
+  McpContent,
+  ContentBlock,
+  ServerEntry,
+  ToolMetadata,
+} from "../core/types";
 import { formatToolName, isToolExcluded } from "../core/types";
+import type { MetadataCache } from "../core/cache";
+import { MetadataCacheManager } from "../core/cache";
+import { isServerCacheValid } from "../core/cache";
+import { lazyConnect, getFailureAgeSeconds } from "./bootstrap";
 import { getOrInitMcpState } from "../core/utils";
+import { truncateAtWord } from "../../shared/text-utils";
+
+// ═══════════════════════════════════════════════════════════════════════
+// Resource name utilities (was tools/resources.ts)
+// ═══════════════════════════════════════════════════════════════════════
+
+export function resourceNameToToolName(name: string): string {
+  let result = name
+    .replace(/[^a-zA-Z0-9]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+/, "")
+    .replace(/_+$/, "")
+    .toLowerCase();
+
+  if (!result || /^\d/.test(result)) {
+    result = "resource" + (result ? "_" + result : "");
+  }
+
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Tool metadata builder (was tools/metadata.ts)
+// ═══════════════════════════════════════════════════════════════════════
+
+export function buildToolMetadata(
+  tools: McpTool[],
+  resources: McpResource[],
+  definition: ServerEntry,
+  serverName: string,
+  prefix: "server" | "none" | "short",
+): { metadata: ToolMetadata[]; failedTools: string[] } {
+  const metadata: ToolMetadata[] = [];
+  const failedTools: string[] = [];
+
+  for (const tool of tools) {
+    if (!tool?.name) {
+      failedTools.push("(unnamed)");
+      continue;
+    }
+    if (isToolExcluded(tool.name, serverName, prefix, definition.excludeTools)) {
+      continue;
+    }
+
+    metadata.push({
+      name: formatToolName(tool.name, serverName, prefix),
+      originalName: tool.name,
+      description: tool.description ?? "",
+      inputSchema: tool.inputSchema,
+    });
+  }
+
+  if (definition.exposeResources !== false) {
+    for (const resource of resources) {
+      const baseName = `get_${resourceNameToToolName(resource.name)}`;
+      if (isToolExcluded(baseName, serverName, prefix, definition.excludeTools)) {
+        continue;
+      }
+
+      metadata.push({
+        name: formatToolName(baseName, serverName, prefix),
+        originalName: baseName,
+        description: resource.description ?? `Read resource: ${resource.uri}`,
+        resourceUri: resource.uri,
+      });
+    }
+  }
+
+  return { metadata, failedTools };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Tool resolution (was proxy/direct.ts — resolveTools)
+// ═══════════════════════════════════════════════════════════════════════
 
 const BUILTIN_NAMES = new Set(["read", "bash", "edit", "write", "grep", "find", "ls", "mcp"]);
 
@@ -22,8 +112,6 @@ type _ToolExecutor = (
   onUpdate: AgentToolUpdateCallback<Record<string, unknown>> | undefined,
   ctx: ExtensionContext,
 ) => Promise<AgentToolResult<Record<string, unknown>>>;
-
-// ── Exported ──────────────────────────────────────────────────────────
 
 export function createToolExecutor(
   getState: () => McpExtensionState | null,
@@ -197,8 +285,10 @@ export function resolveTools(
     } else {
       if (definition.directTools !== undefined) {
         toolFilter = definition.directTools;
-      } else if (globalFilter) {
+      } else if (globalFilter !== undefined) {
         toolFilter = globalFilter;
+      } else {
+        toolFilter = true;
       }
     }
 
@@ -370,4 +460,50 @@ function transformMcpContent(content: McpContent[]): ContentBlock[] {
     }
     return { type: "text" as const, text: JSON.stringify(c) };
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Tool registry (was tools/register.ts)
+// ═══════════════════════════════════════════════════════════════════════
+
+export class McpToolRegistry {
+  private cache = new MetadataCacheManager();
+  private prefix: "server" | "none" | "short";
+
+  constructor(
+    private pi: ExtensionAPI,
+    private config: McpConfig,
+    private getState: () => McpExtensionState | null,
+    private getInitPromise: () => Promise<McpExtensionState> | null,
+  ) {
+    this.prefix = config.settings?.toolPrefix ?? "server";
+  }
+
+  register(): void {
+    const cache = this.cache.load();
+    const envRaw = process.env.MCP_DIRECT_TOOLS;
+    const specs =
+      envRaw === "__none__"
+        ? []
+        : resolveTools(
+            this.config,
+            cache,
+            this.prefix,
+            envRaw
+              ?.split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          );
+
+    for (const spec of specs) {
+      this.pi.registerTool({
+        name: spec.prefixedName,
+        label: `MCP: ${spec.originalName}`,
+        description: spec.description || "(no description)",
+        promptSnippet: truncateAtWord(spec.description, 100) || `MCP tool from ${spec.serverName}`,
+        parameters: Type.Unsafe((spec.inputSchema || { type: "object", properties: {} }) as never),
+        execute: createToolExecutor(this.getState, this.getInitPromise, spec),
+      });
+    }
+  }
 }

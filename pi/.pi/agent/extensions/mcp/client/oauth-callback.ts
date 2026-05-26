@@ -13,7 +13,7 @@ import {
   getOAuthCallbackPort,
   setOAuthCallbackPath,
   setOAuthCallbackPort,
-} from "./oauth-provider";
+} from "./oauth";
 
 const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
 const HOST_DEFAULT = "localhost";

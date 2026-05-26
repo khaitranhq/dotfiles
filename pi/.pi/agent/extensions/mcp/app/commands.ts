@@ -1,7 +1,7 @@
-// commands/auth.ts - /mcp-auth command implementation
+// app/commands.ts - /mcp-auth command implementation
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { loadMcpConfig } from "../config/loader";
-import { OAuthFlow, supportsOAuth } from "../client/oauth-flow";
+import { loadMcpConfig } from "../core/config";
+import { OAuthFlow, supportsOAuth } from "../client/oauth";
 
 export async function mcpAuthCommand(args: string, ctx: ExtensionCommandContext): Promise<void> {
   const serverName = args?.trim();

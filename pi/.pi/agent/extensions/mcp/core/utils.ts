@@ -1,5 +1,5 @@
 import type { ServerEntry } from "./types";
-import type { McpExtensionState } from "./state";
+import type { McpExtensionState } from "./types";
 import { interpolateEnvVars } from "../../shared/env-utils";
 
 // Re-export shared utilities for convenience within the MCP extension

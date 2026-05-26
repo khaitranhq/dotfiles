@@ -131,6 +131,19 @@ export interface McpContent {
 
 export type ContentBlock = TextContent | ImageContent;
 
+// -- Extension state --
+
+import type { McpLifecycleManager } from "../client/lifecycle";
+import type { McpServerManager } from "../client/manager";
+
+export interface McpExtensionState {
+  manager: McpServerManager;
+  lifecycle: McpLifecycleManager;
+  toolMetadata: Map<string, ToolMetadata[]>;
+  config: McpConfig;
+  failureTracker: Map<string, number>;
+}
+
 // -- Tool name formatting --
 
 function getServerPrefix(serverName: string, mode: "server" | "none" | "short"): string {
