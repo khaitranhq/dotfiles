@@ -33,7 +33,7 @@ function M.copy_buffer_path()
 	end)
 end
 
---- Ensure markdown tasks have sequential IDs in the form: `- [ ] [ID: XX] ...`.
+--- Ensure markdown tasks have sequential IDs in the form: `- [ ] \`XX\` ...`.
 --- Scans the current buffer for markdown task lines (lines that start with `- [<char>]`) and
 --- assigns or corrects a two-digit increasing ID for each task in order of appearance.
 --- Preserves cursor position and saves the buffer when changes are made.
@@ -56,26 +56,26 @@ function M.fix_markdown_task_ids()
 			local rest = line:sub(#prefix + 1)
 
 			-- Check for existing ID and capture its number and the remainder after it
-			local existing_num, after = rest:match("^%[ID:%s*(%d+)%]%s*(.*)$")
+			local existing_num, after = rest:match("^`(%d+)`%s*(.*)$")
 			if existing_num then
 				-- If the numeric value differs, replace with the new zero-padded id
 				if tonumber(existing_num) ~= tonumber(new_id) then
 					-- rebuild the line with the corrected id; preserve spacing between id and remainder
 					if after == "" then
-						lines[i] = prefix .. "[ID: " .. new_id .. "]"
+						lines[i] = prefix .. "`" .. new_id .. "`"
 					else
-						lines[i] = prefix .. "[ID: " .. new_id .. "] " .. after
+						lines[i] = prefix .. "`" .. new_id .. "` " .. after
 					end
 					changed = changed + 1
 				end
 			else
 				-- No existing ID: insert one. If rest is empty or starts with space, don't add extra space.
 				if rest == "" then
-					lines[i] = prefix .. "[ID: " .. new_id .. "]"
+					lines[i] = prefix .. "`" .. new_id .. "`"
 				elseif rest:match("^%s") then
-					lines[i] = prefix .. "[ID: " .. new_id .. "]" .. rest
+					lines[i] = prefix .. "`" .. new_id .. "`" .. rest
 				else
-					lines[i] = prefix .. "[ID: " .. new_id .. "] " .. rest
+					lines[i] = prefix .. "`" .. new_id .. "` " .. rest
 				end
 				changed = changed + 1
 			end
