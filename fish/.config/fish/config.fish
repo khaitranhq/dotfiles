@@ -26,6 +26,24 @@ set -x DOTNET_ROOT "$HOME/.dotnet"
 set -x GOMAXPROCS 8
 set -x GOMEMLIMIT 20GiB
 
+if test -d $HOME/.linuxbrew
+    # Homebrew is installed on Linux
+    set -gx HOMEBREW_PREFIX "$HOME/.linuxbrew"
+    set -gx HOMEBREW_CELLAR "$HOME/.linuxbrew/Cellar"
+    set -gx HOMEBREW_REPOSITORY "$HOME/.linuxbrew/Homebrew"
+    set -gx PATH "$HOME/.linuxbrew/bin" "$HOME/.linuxbrew/sbin" $PATH
+    set -q MANPATH; or set MANPATH ''
+    set -gx MANPATH "$HOME/.linuxbrew/share/man" $MANPATH
+    set -q INFOPATH; or set INFOPATH ''
+    set -gx INFOPATH "$HOME/.linuxbrew/share/info" $INFOPATH
+
+    # Homebrew asked for this in order to `brew upgrade`
+    set -gx HOMEBREW_GITHUB_API_TOKEN {api token goes here, don't remember where that's created}
+else if test -d /opt/homebrew
+    # Homebrew is installed on MacOS
+    $HOME/.linuxbrew/Homebrew/bin/brew shellenv | source
+end
+
 #=========================Path=========================
 fish_add_path $HOME/.local/bin
 fish_add_path $HOME/.local/share/nvm/v22.16.0/bin
