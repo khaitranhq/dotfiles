@@ -52,6 +52,14 @@ export { parallelLimit } from "./async-utils";
 
 export { truncateAtWord } from "./text-utils";
 
+export {
+  isToolPermissions,
+  lookupPermission,
+  resolveBashPermission,
+  addToolPermission,
+  addBashPermission,
+} from "./tool-permissions";
+
 export default function () {
   /* intentionally empty — shared module, not an extension */
 }

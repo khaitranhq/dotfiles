@@ -35,20 +35,14 @@
  */
 
 import type { ExtensionAPI, ToolCallEvent } from "@earendil-works/pi-coding-agent";
+import { loadToolPermissions, updateCustomSettings, type ToolPermissions } from "../shared/config";
 import {
-  loadToolPermissions,
-  updateCustomSettings,
-  type BashPermissions,
-  type CustomSettings,
-  type ToolPermission,
-  type ToolPermissions,
-} from "../shared/config";
-import {
-  extractAllCommandSegments,
-  extractCommandBasis,
-  isCommandApproved,
-  matchesToolPattern,
-} from "../shared/command-utils";
+  lookupPermission,
+  resolveBashPermission,
+  addToolPermission,
+  addBashPermission,
+} from "../shared/tool-permissions";
+import { extractAllCommandSegments, extractCommandBasis } from "../shared/command-utils";
 import { notifyPermissionRequired } from "../notification/index";
 
 // ── Agent tool permissions (from env var) ──────────────────────────────
@@ -61,109 +55,6 @@ function loadAgentToolPermissions(): ToolPermissions | null {
   } catch {
     return null;
   }
-}
-
-// ── Permission resolution ─────────────────────────────────────────────
-
-/**
- * Look up a tool name in a permission map.
- * Returns the permission value or null if not found.
- * Supports wildcards (e.g. `mcp_atlassian_*`).
- */
-function lookupPermission(toolName: string, perms: ToolPermissions | null): ToolPermission | null {
-  if (!perms) return null;
-
-  // Collect all tool-level keys (exclude bash special key)
-  for (const [key, value] of Object.entries(perms)) {
-    if (key === "bash") continue;
-    if (matchesToolPattern(toolName, new Set([key]))) {
-      if (typeof value === "string") return value as ToolPermission;
-    }
-  }
-  return null;
-}
-
-/**
- * Resolve bash command permission from a permission map.
- * Checks the `bash` sub-map for command prefix matches.
- * Returns the permission value or null if not found.
- */
-function resolveBashPermission(
-  command: string,
-  perms: ToolPermissions | null,
-): ToolPermission | null {
-  if (!perms) return null;
-
-  const bashPerms = perms["bash"];
-  if (!bashPerms || typeof bashPerms === "string") return null;
-
-  const bashMap = bashPerms as BashPermissions;
-
-  // Check allow entries
-  const allowEntries = new Set(
-    Object.entries(bashMap)
-      .filter(([, v]) => v === "allow")
-      .map(([k]) => k),
-  );
-  if (allowEntries.size > 0 && isCommandApproved(command, allowEntries)) return "allow";
-
-  // Check deny entries
-  const denyEntries = new Set(
-    Object.entries(bashMap)
-      .filter(([, v]) => v === "deny")
-      .map(([k]) => k),
-  );
-  if (denyEntries.size > 0 && isCommandApproved(command, denyEntries)) return "deny";
-
-  // Check ask entries
-  const askEntries = new Set(
-    Object.entries(bashMap)
-      .filter(([, v]) => v === "ask")
-      .map(([k]) => k),
-  );
-  if (askEntries.size > 0 && isCommandApproved(command, askEntries)) return "ask";
-
-  return null;
-}
-
-// ── Persistence helpers ────────────────────────────────────────────────
-
-/** Check whether a tools config is the new ToolPermissions map format. */
-function isToolPermissions(obj: unknown): obj is ToolPermissions {
-  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
-  const keys = Object.keys(obj);
-  if (keys.length === 0) return false;
-  if (keys.includes("global") || keys.includes("agents")) return false;
-  return true;
-}
-
-function addToolPermission(
-  settings: CustomSettings,
-  toolName: string,
-  permission: ToolPermission,
-): CustomSettings {
-  const perms: ToolPermissions = isToolPermissions(settings.tools)
-    ? { ...(settings.tools as ToolPermissions) }
-    : {};
-  perms[toolName] = permission;
-  return { ...settings, tools: perms };
-}
-
-function addBashPermission(
-  settings: CustomSettings,
-  command: string,
-  permission: ToolPermission,
-): CustomSettings {
-  const perms: ToolPermissions = isToolPermissions(settings.tools)
-    ? { ...(settings.tools as ToolPermissions) }
-    : {};
-  const bashPerms: BashPermissions =
-    typeof perms["bash"] === "object" && perms["bash"] !== null
-      ? { ...(perms["bash"] as BashPermissions) }
-      : {};
-  bashPerms[command] = permission;
-  perms["bash"] = bashPerms;
-  return { ...settings, tools: perms };
 }
 
 // ── Extension ─────────────────────────────────────────────────────────
