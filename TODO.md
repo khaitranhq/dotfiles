@@ -12,16 +12,18 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `03` Secret masking capability for the read tool
-- [ ] `04` change layout to OpenCode style
-- [ ] `05` Auto-refresh access token for MCP Atlassian
+- [=] `03` simplify input-ux
+- [=] `04` correct shared documentation
+- [ ] `05` Secret masking capability for the read tool
+- [ ] `06` change layout to OpenCode style
+- [=] `07` Auto-refresh access token for MCP Atlassian
 - [ ] `08` refactor comments
-- [ ] `10` Enable/disable tools for specific subagents and global (needs testing)
+- [ ] `09` Enable/disable tools for specific subagents and global (needs testing)
   - Dependencies: #06
 
 ### Measure AI System Efficiency
 
-- [ ] `11` Implement metrics tool:
+- [ ] `10` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
@@ -30,5 +32,5 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ### General
 
-- [ ] `12` Refactor tools
-- [ ] `13` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills
+- [ ] `11` Refactor tools
+- [ ] `12` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills

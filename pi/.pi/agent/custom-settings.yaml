@@ -73,6 +73,7 @@ tools:
     uniq: allow
     cp: allow
     pnpm lint: allow
+    pnpm test: allow
   read: allow
   write: allow
   edit: allow
