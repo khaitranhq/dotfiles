@@ -38,8 +38,7 @@ import {
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents";
-import { loadSubagentConfig, loadToolsConfig } from "../shared/config";
-import type { AgentToolOverride, ToolsConfig } from "../shared/config";
+import { loadSubagentConfig } from "../shared/config";
 import { matchesToolPattern } from "../shared/command-utils";
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -60,8 +59,6 @@ interface ToolOverride {
 
 /** Global tool restrictions applied to primary agent and all subagents. */
 let globalToolOverride: ToolOverride | null = null;
-/** Saved active tools before first global override, for reset. */
-let savedActiveTools: string[] | null = null;
 /** Per-agent tool overrides (overrides agent's default tools from .md frontmatter). */
 const agentToolOverrides = new Map<string, ToolOverride>();
 
@@ -1275,7 +1272,7 @@ export default function (pi: ExtensionAPI) {
         // List available primary agents
         if (primaryAgents.length === 0) {
           ctx.ui.notify(
-            "No primary agents found. Add .md files to ~/.pi/agent/agents/ or .pi/agents/ with mode: primary.",
+            "No primary agents found. Define agents in custom-settings.yaml under the `agents` key.",
             "warning",
           );
           return;
@@ -1283,7 +1280,11 @@ export default function (pi: ExtensionAPI) {
 
         const items = primaryAgents.map(
           (a) =>
-            `${a.name}${activePrimaryAgent === a.name ? " [active]" : ""} (${a.source}): ${a.description}`,
+            `${a.name}${
+              activePrimaryAgent === a.name || (!activePrimaryAgent && a.name === "pi")
+                ? " [active]"
+                : ""
+            } (${a.source}): ${a.description}`,
         );
         ctx.ui.notify(`Primary agents:\n${items.join("\n")}`, "info");
         return;
@@ -1291,6 +1292,20 @@ export default function (pi: ExtensionAPI) {
 
       // Switch to a primary agent
       const targetName = args.trim();
+
+      // Switching to "pi" resets to the default primary agent
+      if (targetName === "pi") {
+        if (activePrimaryAgent) {
+          activePrimaryAgent = null;
+          pi.events.emit("agent:changed", { name: "pi" });
+          ctx.ui.notify("Switched to default agent: pi", "info");
+          ctx.ui.setStatus("agent", undefined);
+        } else {
+          ctx.ui.notify("Already using default agent: pi", "info");
+        }
+        return;
+      }
+
       const agent = primaryAgents.find((a) => a.name === targetName);
 
       if (!agent) {
@@ -1360,6 +1375,9 @@ export default function (pi: ExtensionAPI) {
       return;
     }
 
+    // Skip if agent has no system prompt (e.g. built-in "pi")
+    if (!agent.systemPrompt.trim()) return;
+
     return {
       systemPrompt: event.systemPrompt + "\n\n" + agent.systemPrompt,
     };
@@ -1370,50 +1388,6 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     if (activePrimaryAgent) {
       ctx.ui.setStatus("agent", `agent: ${activePrimaryAgent}`);
-    }
-
-    // Load tool toggles from custom-settings.yaml
-    const toolsCfg: ToolsConfig = loadToolsConfig();
-
-    function toToolOverride(cfg: AgentToolOverride | undefined): ToolOverride | null {
-      if (!cfg) return null;
-      if (cfg.allow && cfg.allow.length > 0) {
-        return { type: "allow", tools: cfg.allow };
-      }
-      if (cfg.deny && cfg.deny.length > 0) {
-        return { type: "deny", tools: cfg.deny };
-      }
-      return null;
-    }
-
-    // Global tools
-    const globalOverride = toToolOverride(toolsCfg.global);
-    if (globalOverride) {
-      if (!globalToolOverride) {
-        savedActiveTools = [...pi.getActiveTools()];
-      }
-      globalToolOverride = globalOverride;
-      if (globalOverride.type === "allow") {
-        pi.setActiveTools(globalOverride.tools);
-      }
-      // for deny, we can't easily setActiveTools with an inverse list,
-      // but computeEffectiveTools handles deny at subagent spawn time
-    } else if (globalToolOverride && savedActiveTools) {
-      // Config removed global override; restore
-      pi.setActiveTools(savedActiveTools);
-      savedActiveTools = null;
-      globalToolOverride = null;
-    }
-
-    // Per-agent tools
-    agentToolOverrides.clear();
-    if (toolsCfg.agents) {
-      for (const [name, cfg] of Object.entries(toolsCfg.agents)) {
-        const override = toToolOverride(cfg);
-        if (override) {
-          agentToolOverrides.set(name, override);
-        }
-      }
     }
   });
 }

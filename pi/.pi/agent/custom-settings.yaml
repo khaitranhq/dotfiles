@@ -65,6 +65,7 @@ tools:
     npx tsc: allow
     npx vitest: allow
     npx oxlint: allow
+    npx oxfmt: allow
     npm search: allow
     actionlint: allow
     zizmor: allow
@@ -85,3 +86,87 @@ tools:
   mcp_atlassian_*: deny
   mcp_obsidian_*: allow
   mcp: allow
+
+# ── Agent definitions ────────────────────────────────────────────────
+# Replaces individual agent markdown files in ~/.pi/agent/agents/.
+# Prompts support ${file:/path/to/prompt.md} references.
+
+agents:
+  architect-orchestrator:
+    mode: primary
+    description: Orchestrates complex multi-agent workflows for architecture and design
+    model: claude-sonnet-4-5
+    prompt: "${file:agents/architect-orchestrator.md}"
+
+  development-coordinator:
+    mode: primary
+    description: Coordinates development workflows across subagents for implementation tasks
+    model: claude-sonnet-4-5
+    prompt: "${file:agents/development-coordinator.md}"
+
+  atlassian:
+    mode: subagent
+    description: Atlassian specialist for Jira issue and Confluence page operations via MCP
+    model: claude-sonnet-4-5
+    tools:
+      read: allow
+      bash: allow
+      write: allow
+      edit: allow
+      web_search: allow
+      web_fetch: allow
+      question: allow
+      todowrite: allow
+      mcp: allow
+      mcp_atlassian_*: allow
+    prompt: "${file:agents/atlassian.md}"
+
+  code-reviewer:
+    mode: subagent
+    description: Senior code reviewer for quality, security, and maintainability
+    model: claude-sonnet-4-5
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+      - bash
+    prompt: "${file:agents/code-reviewer.md}"
+
+  coder:
+    mode: subagent
+    description: General-purpose coding subagent with full tool capabilities
+    model: claude-sonnet-4-5
+    tools:
+      - read
+      - bash
+      - write
+      - edit
+      - grep
+      - find
+      - ls
+    prompt: "${file:agents/coder.md}"
+
+  planner:
+    mode: subagent
+    description: Creates implementation plans from context and requirements
+    model: claude-sonnet-4-5
+    tools:
+      - read
+      - grep
+      - find
+      - ls
+    prompt: "${file:agents/planner.md}"
+
+  scout:
+    mode: subagent
+    description: Fast codebase recon returning structured context for other agents
+    model: claude-haiku-4-5
+    tools:
+      - read
+      - rg
+      - grep
+      - find
+      - ls
+      - bash
+    prompt: "${file:agents/scout.md}"

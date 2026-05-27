@@ -7,15 +7,10 @@ import createPermissionRequestExtension from "./index";
 let mockSettings: Record<string, unknown> = {};
 
 vi.mock("../shared/config", () => ({
-  loadAlwaysApprove: vi.fn(() => mockSettings.always_approve ?? {}),
   loadToolPermissions: vi.fn(() => {
     const tools = mockSettings.tools;
-    // Simulate the real loadToolPermissions: if tools is in new format, return it
     if (tools && typeof tools === "object" && !Array.isArray(tools)) {
-      const keys = Object.keys(tools);
-      if (keys.length > 0 && !keys.includes("global") && !keys.includes("agents")) {
-        return tools as Record<string, unknown>;
-      }
+      return tools as Record<string, unknown>;
     }
     return {};
   }),
@@ -459,33 +454,6 @@ describe("permission-request extension (new tools format)", () => {
       // Agent has no entry for "edit", settings has "edit: allow"
       const result = await toolCallHandler(toolEvent("edit", { path: "/f" }), mockCtx());
       expect(result).toBeUndefined(); // Settings allow wins
-    });
-  });
-
-  // ── Migration from always_approve ────────────────────────────────
-
-  describe("migration from always_approve", () => {
-    beforeEach(() => {
-      mockSettings = {
-        always_approve: {
-          tools: ["read", "write"],
-          bashCommands: ["ls", "cat", "git diff"],
-        },
-        // No `permissions` key → should migrate
-      };
-    });
-
-    it("migrates always_approve.tools to permissions map", () => {
-      // loadToolPermissions in the mock calls the real loadToolPermissions
-      // which returns the always_approve migration
-      // We'll verify via the mock's return
-      const perms = loadToolPermissions() as Record<string, unknown>;
-      // Note: the mocked loadToolPermissions returns mockSettings.permissions,
-      // which is undefined here.  The real migration logic lives in
-      // loadToolPermissions in config.ts; since we mock it, this test
-      // just verifies the mock config pattern works for the extension.
-      // The actual migration is tested in config integration.
-      expect(perms).toEqual({});
     });
   });
 

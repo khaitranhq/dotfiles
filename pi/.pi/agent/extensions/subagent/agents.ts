@@ -1,8 +1,8 @@
 /**
  * Agent discovery and configuration
  *
- * Agents are defined as markdown files with YAML frontmatter using an
- * opencode-compatible schema:
+ * Agents are defined in custom-settings.yaml under the `agents` key
+ * using an opencode-compatible schema:
  *
  *   mode:   "primary" | "subagent"
  *           Primary agents can be switched to as the main agent.
@@ -10,19 +10,29 @@
  *
  *   model:  Optional model override (e.g. "claude-sonnet-4-5").
  *
- *   tools:  Optional comma-separated list of tools the agent can use.
+ *   tools:  Optional tool list (array) or permission map (object).
  *           For subagents, these are passed as --tools to pi subprocess.
  *           For primary agents, pi.setActiveTools() is used.
  *
- * Discovery locations:
- *   User-level:  ~/.pi/agent/agents/*.md  (always loaded)
- *   Project-level: .pi/agents/*.md         (travelled up from cwd)
+ *   prompt: System prompt text. Supports ${file:/path/to/prompt.md}.
+ *
+ * Agent config locations:
+ *   User-level:    ~/.pi/agent/custom-settings.yaml `agents` key  (always loaded)
+ *   Project-level: .pi/agents.yaml                                 (travelled up from cwd)
+ *
+ * The built-in "pi" primary agent is always available and is the default.
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
-import type { ToolPermissions } from "../shared/config";
+import { parse as parseYaml } from "yaml";
+import {
+  loadAgentsConfig,
+  resolveFileRefs,
+  type AgentYamlDefinition,
+  type AgentsConfig,
+  type ToolPermissions,
+} from "../shared/config";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -34,15 +44,16 @@ export interface AgentConfig {
   description: string;
   mode: AgentMode;
   model?: string;
-  /** Tool availability list (comma-separated in old format, derived from map keys in new format). */
+  /** Tool availability list (derived from tools array or permission map keys). */
   tools?: string[];
   /**
-   * Tool permission map (new `tools` map format in frontmatter).
+   * Tool permission map (from tools object format in YAML).
    * If undefined, defaults to custom-settings.yaml or "ask".
    */
   toolPermissions?: ToolPermissions;
   systemPrompt: string;
   source: "user" | "project";
+  /** Path to the config file that defined this agent. */
   filePath: string;
 }
 
@@ -53,92 +64,68 @@ export interface AgentDiscoveryResult {
   projectAgentsDir: string | null;
 }
 
+// ── Built-in pi agent ──────────────────────────────────────────────────
+
+/**
+ * The default primary agent "pi" is always available even when not
+ * explicitly defined in custom-settings.yaml.
+ */
+const BUILTIN_PI_AGENT: AgentConfig = {
+  name: "pi",
+  description: "Default primary agent — full capabilities with all tools and extensions",
+  mode: "primary",
+  systemPrompt: "",
+  source: "user",
+  filePath: "(built-in)",
+};
+
 // ── Helpers ────────────────────────────────────────────────────────────
 
-function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig[] {
-  const agents: AgentConfig[] = [];
+/**
+ * Convert a raw agent definition from YAML into an AgentConfig.
+ */
+function agentDefToConfig(
+  name: string,
+  def: AgentYamlDefinition,
+  source: "user" | "project",
+  filePath: string,
+): AgentConfig {
+  let tools: string[] | undefined;
+  let toolPermissions: ToolPermissions | undefined;
 
-  if (!fs.existsSync(dir)) return agents;
-
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return agents;
+  if (Array.isArray(def.tools)) {
+    tools = def.tools.filter((t): t is string => typeof t === "string");
+  } else if (def.tools && typeof def.tools === "object") {
+    toolPermissions = def.tools as ToolPermissions;
+    tools = Object.keys(toolPermissions);
   }
 
-  for (const entry of entries) {
-    if (!entry.name.endsWith(".md")) continue;
-    if (!entry.isFile() && !entry.isSymbolicLink()) continue;
-
-    const filePath = path.join(dir, entry.name);
-    let content: string;
-    try {
-      content = fs.readFileSync(filePath, "utf-8");
-    } catch {
-      continue;
-    }
-
-    const { frontmatter, body } = parseFrontmatter<Record<string, unknown>>(content);
-
-    const name = typeof frontmatter.name === "string" ? frontmatter.name : "";
-    const description = typeof frontmatter.description === "string" ? frontmatter.description : "";
-    if (!name || !description) continue;
-
-    const mode: AgentMode =
-      typeof frontmatter.mode === "string" && frontmatter.mode === "primary"
-        ? "primary"
-        : "subagent";
-
-    const model = typeof frontmatter.model === "string" ? frontmatter.model : undefined;
-
-    // Parse tools — supports both old comma-separated string and new map format
-    let tools: string[] | undefined;
-    let toolPermissions: ToolPermissions | undefined;
-
-    const rawTools = frontmatter.tools;
-    if (typeof rawTools === "string") {
-      // Old format: "read,bash,edit"
-      tools = rawTools
-        .split(",")
-        .map((t: string) => t.trim())
-        .filter(Boolean);
-    } else if (typeof rawTools === "object" && rawTools !== null && !Array.isArray(rawTools)) {
-      // New format: { bash: "allow", mcp_atlassian_*: "allow" }
-      toolPermissions = rawTools as ToolPermissions;
-      // Derive tool availability from permission map keys
-      tools = Object.keys(toolPermissions);
-    }
-
-    agents.push({
-      name,
-      description,
-      mode,
-      model,
-      tools: tools && tools.length > 0 ? tools : undefined,
-      toolPermissions,
-      systemPrompt: body,
-      source,
-      filePath,
-    });
-  }
-
-  return agents;
+  return {
+    name,
+    description: def.description,
+    mode: def.mode,
+    model: def.model,
+    tools: tools && tools.length > 0 ? tools : undefined,
+    toolPermissions,
+    systemPrompt: def.prompt,
+    source,
+    filePath,
+  };
 }
 
-function isDirectory(p: string): boolean {
-  try {
-    return fs.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function findNearestProjectAgentsDir(cwd: string): string | null {
+/**
+ * Walk up from cwd to find the nearest .pi/agents.yaml file.
+ * Returns the YAML file path, or null if none found.
+ */
+function findNearestProjectAgentsFile(cwd: string): string | null {
   let currentDir = path.resolve(cwd);
   while (true) {
-    const candidate = path.join(currentDir, ".pi", "agents");
-    if (isDirectory(candidate)) return candidate;
+    const candidate = path.join(currentDir, ".pi", "agents.yaml");
+    try {
+      if (fs.existsSync(candidate)) return candidate;
+    } catch {
+      // permission denied, continue up
+    }
 
     const parentDir = path.dirname(currentDir);
     if (parentDir === currentDir) return null;
@@ -146,33 +133,64 @@ function findNearestProjectAgentsDir(cwd: string): string | null {
   }
 }
 
+/**
+ * Load project-level agents from .pi/agents.yaml.
+ * Resolves ${file:...} references relative to the YAML file's directory.
+ */
+function loadProjectAgents(filePath: string): AgentsConfig {
+  try {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const baseDir = path.dirname(filePath);
+    const resolved = resolveFileRefs(raw, baseDir);
+    const parsed = parseYaml(resolved) as { agents?: AgentsConfig } | undefined;
+    return parsed?.agents ?? {};
+  } catch (err) {
+    console.error(`[agents] Failed to load project agents from ${filePath}: ${err}`);
+    return {};
+  }
+}
+
 // ── Discovery ──────────────────────────────────────────────────────────
 
 export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryResult {
-  const userDir = path.join(getAgentDir(), "agents");
-  const projectAgentsDir = findNearestProjectAgentsDir(cwd);
+  const projectAgentsFile = findNearestProjectAgentsFile(cwd);
 
-  const userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");
-  const projectAgents =
-    scope === "user" || !projectAgentsDir ? [] : loadAgentsFromDir(projectAgentsDir, "project");
+  // Load user agents from custom-settings.yaml
+  const userDefs: AgentsConfig = scope === "project" ? {} : loadAgentsConfig();
 
-  const agentMap = new Map<string, AgentConfig>();
+  // Load project agents from .pi/agents.yaml
+  const projectDefs: AgentsConfig =
+    scope === "user" || !projectAgentsFile ? {} : loadProjectAgents(projectAgentsFile);
 
-  if (scope === "both") {
-    for (const agent of userAgents) agentMap.set(agent.name, agent);
-    for (const agent of projectAgents) agentMap.set(agent.name, agent); // project overrides
-  } else if (scope === "user") {
-    for (const agent of userAgents) agentMap.set(agent.name, agent);
-  } else {
-    for (const agent of projectAgents) agentMap.set(agent.name, agent);
+  // Merge: project overrides user for same-named agents
+  const mergedDefs: AgentsConfig =
+    scope === "both" ? { ...userDefs, ...projectDefs } : scope === "user" ? userDefs : projectDefs;
+
+  // Convert to AgentConfig array
+  const configs: AgentConfig[] = [];
+  const seen = new Set<string>();
+
+  for (const [name, def] of Object.entries(mergedDefs)) {
+    // Determine source (user vs project) for merged entries
+    const isProject = projectDefs[name] !== undefined;
+    const source: "user" | "project" = isProject ? "project" : "user";
+    const fp = isProject && projectAgentsFile ? projectAgentsFile : "custom-settings.yaml";
+
+    configs.push(agentDefToConfig(name, def, source, fp));
+    seen.add(name);
   }
 
-  const all = Array.from(agentMap.values());
+  // Always include built-in "pi" primary agent (unless explicitly overridden)
+  if (!seen.has("pi")) {
+    configs.push(BUILTIN_PI_AGENT);
+  }
+
+  const all = configs;
   return {
     agents: all,
     primaryAgents: all.filter((a) => a.mode === "primary"),
     subagents: all.filter((a) => a.mode === "subagent"),
-    projectAgentsDir,
+    projectAgentsDir: projectAgentsFile ? path.dirname(projectAgentsFile) : null,
   };
 }
 
