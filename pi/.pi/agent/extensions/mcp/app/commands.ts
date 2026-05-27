@@ -33,7 +33,7 @@ export async function mcpAuthCommand(args: string, ctx: ExtensionCommandContext)
     return;
   }
 
-  const flow = new OAuthFlow(serverName);
+  const flow = new OAuthFlow(serverName, definition.url, definition);
   const status = flow.authStatus;
 
   if (status === "authenticated") {
@@ -47,7 +47,7 @@ export async function mcpAuthCommand(args: string, ctx: ExtensionCommandContext)
   try {
     ctx.ui.notify(`Starting OAuth flow for ${serverName}...`, "info");
 
-    const result = await flow.authenticate(definition.url, definition);
+    const result = await flow.authenticate();
 
     if (result === "authenticated") {
       ctx.ui.notify(`✅ Authenticated: ${serverName}`, "info");

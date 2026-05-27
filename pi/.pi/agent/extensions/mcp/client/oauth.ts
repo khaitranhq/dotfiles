@@ -58,10 +58,12 @@ interface AuthEntry {
 export class AuthStorage {
   private readonly dir: string;
   private readonly tokensPath: string;
+  private readonly storedServerUrl?: string;
 
-  constructor(serverName: string) {
+  constructor(serverName: string, serverUrl?: string) {
     this.dir = this.computeDir(serverName);
     this.tokensPath = join(this.dir, "tokens.json");
+    this.storedServerUrl = serverUrl;
   }
 
   clearAll(): void {
@@ -105,7 +107,10 @@ export class AuthStorage {
 
   getForUrl(serverUrl: string): AuthEntry | undefined {
     const entry = this.getEntry();
-    if (!entry?.serverUrl) return undefined;
+    if (!entry) return undefined;
+    // Backward-compat: if entry lacks serverUrl (older storage), trust it —
+    // storage is already scoped to one server via SHA-256 directory.
+    if (!entry.serverUrl) return entry;
     if (entry.serverUrl !== serverUrl) return undefined;
     return entry;
   }
@@ -145,6 +150,7 @@ export class AuthStorage {
 
   saveEntry(entry: AuthEntry, serverUrl?: string): void {
     if (serverUrl) entry.serverUrl = serverUrl;
+    else if (!entry.serverUrl && this.storedServerUrl) entry.serverUrl = this.storedServerUrl;
     this.ensureDir();
     writeFileSync(this.tokensPath, JSON.stringify(entry, null, 2), { mode: 0o600 });
   }
@@ -241,7 +247,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
     private config: McpOAuthConfig,
     private callbacks: McpOAuthCallbacks,
   ) {
-    this.storage = new AuthStorage(serverName);
+    this.storage = new AuthStorage(serverName, serverUrl);
     this.redirectUrlSnapshot =
       config.grantType === "client_credentials"
         ? undefined
@@ -392,6 +398,7 @@ type AuthStatus = "authenticated" | "expired" | "not_authenticated";
 
 const pendingTransports = new Map<string, StreamableHTTPClientTransport>();
 const pendingAuthentications = new Map<string, Promise<AuthStatus>>();
+const pendingRefreshes = new Map<string, Promise<StoredTokens | null>>();
 
 export function extractOAuthConfig(definition: ServerEntry): McpOAuthConfig {
   if (definition.oauth === false) return {};
@@ -439,8 +446,12 @@ export function supportsOAuth(definition: ServerEntry): boolean {
 export class OAuthFlow {
   readonly storage: AuthStorage;
 
-  constructor(private readonly serverName: string) {
-    this.storage = new AuthStorage(serverName);
+  constructor(
+    private readonly serverName: string,
+    private readonly serverUrl: string,
+    private readonly definition?: ServerEntry,
+  ) {
+    this.storage = new AuthStorage(serverName, serverUrl);
   }
 
   get authStatus(): AuthStatus {
@@ -448,11 +459,21 @@ export class OAuthFlow {
     return this.storage.isExpired ? "expired" : "authenticated";
   }
 
-  async authenticate(serverUrl: string, definition?: ServerEntry): Promise<AuthStatus> {
+  async authenticate(): Promise<AuthStatus> {
+    // Avoid concurrent runSdkAuth: await any in-flight refresh before starting auth.
+    const pendingRefresh = pendingRefreshes.get(this.serverName);
+    if (pendingRefresh) {
+      try {
+        await pendingRefresh;
+      } catch {
+        /* refresh failed — proceed with full auth */
+      }
+    }
+
     const inFlight = pendingAuthentications.get(this.serverName);
     if (inFlight) return inFlight;
 
-    const op = this.doAuthenticate(serverUrl, definition);
+    const op = this.doAuthenticate();
     pendingAuthentications.set(this.serverName, op);
     try {
       return await op;
@@ -463,6 +484,8 @@ export class OAuthFlow {
   }
 
   async removeAuth(): Promise<void> {
+    pendingAuthentications.delete(this.serverName);
+    pendingRefreshes.delete(this.serverName);
     const oauthState = this.storage.oauthState;
     if (oauthState) callbackServer.cancel(oauthState);
     const pt = pendingTransports.get(this.serverName);
@@ -471,12 +494,15 @@ export class OAuthFlow {
       await pt.close().catch(() => {});
     }
     this.storage.clearAll();
-    this.storage.clearOAuthState();
     console.log(`MCP Auth: Removed credentials for ${this.serverName}`);
   }
 
+  /**
+   * Check token validity and attempt refresh if expired.
+   * Returns null when tokens are missing or refresh fails.
+   */
   async validToken(): Promise<StoredTokens | null> {
-    const entry = this.storage.getForUrl("");
+    const entry = this.storage.getForUrl(this.serverUrl);
     if (!entry?.tokens) return null;
     if (this.storage.isExpired !== true) return entry.tokens;
     if (!entry.tokens.refreshToken) return null;
@@ -487,20 +513,17 @@ export class OAuthFlow {
     const transport = pendingTransports.get(this.serverName);
     if (!transport) throw new Error(`No pending OAuth flow for server: ${this.serverName}`);
 
-    const oauthState = this.storage.oauthState;
     try {
       await transport.finishAuth(authorizationCode);
       return "authenticated";
     } finally {
-      if (oauthState) callbackServer.release(oauthState);
-      this.storage.clearOAuthState();
       pendingTransports.delete(this.serverName);
       await transport.close().catch(() => {});
     }
   }
 
-  private async doAuthenticate(serverUrl: string, definition?: ServerEntry): Promise<AuthStatus> {
-    const { authorizationUrl } = await this.startAuth(serverUrl, definition);
+  private async doAuthenticate(): Promise<AuthStatus> {
+    const { authorizationUrl } = await this.startAuth();
     if (!authorizationUrl) return "authenticated";
 
     const oauthState = this.storage.oauthState;
@@ -531,45 +554,74 @@ export class OAuthFlow {
   }
 
   private async doRefresh(): Promise<StoredTokens | null> {
+    // Deduplicate concurrent refresh attempts.
+    const inFlight = pendingRefreshes.get(this.serverName);
+    if (inFlight) return inFlight;
+
+    const op = this.doRefreshImpl();
+    pendingRefreshes.set(this.serverName, op);
+    try {
+      return await op;
+    } finally {
+      if (pendingRefreshes.get(this.serverName) === op) pendingRefreshes.delete(this.serverName);
+    }
+  }
+
+  private async doRefreshImpl(): Promise<StoredTokens | null> {
+    // Avoid concurrent runSdkAuth: await any in-flight auth before starting refresh.
+    const pendingAuth = pendingAuthentications.get(this.serverName);
+    if (pendingAuth) {
+      try {
+        await pendingAuth;
+      } catch {
+        /* authenticate failed — proceed with our own refresh attempt */
+      }
+    }
+
     console.log(`MCP Auth: Token expired for ${this.serverName}, attempting refresh`);
     try {
-      const provider = new McpOAuthProvider(
-        this.serverName,
-        "",
-        {},
-        { onRedirect: async () => {} },
-      );
-      const ci = await provider.clientInformation();
-      if (!ci) return null;
+      const config = this.definition ? extractOAuthConfig(this.definition) : {};
+      const provider = new McpOAuthProvider(this.serverName, this.serverUrl, config, {
+        onRedirect: async () => {
+          throw new UnauthorizedError(
+            `Interactive re-authentication required for ${this.serverName}. Run /mcp-auth ${this.serverName}.`,
+          );
+        },
+      });
 
-      const result = await runSdkAuth(provider, { serverUrl: "" });
-      if (result !== "AUTHORIZED") return null;
-      return this.storage.getForUrl("")?.tokens ?? null;
+      const result = await runSdkAuth(provider, { serverUrl: this.serverUrl });
+      if (result !== "AUTHORIZED") {
+        console.warn(`MCP Auth: Token refresh returned ${result} for ${this.serverName}`);
+        return null;
+      }
+      return this.storage.getForUrl(this.serverUrl)?.tokens ?? null;
     } catch (error) {
-      console.error(`MCP Auth: Token refresh failed for ${this.serverName}`, { error });
+      if (error instanceof UnauthorizedError) {
+        console.warn(`MCP Auth: Re-auth needed for ${this.serverName}: ${error.message}`);
+      } else {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`MCP Auth: Token refresh failed for ${this.serverName}: ${message}`);
+      }
       return null;
     }
   }
 
-  private async startAuth(
-    serverUrl: string,
-    definition?: ServerEntry,
-  ): Promise<{ authorizationUrl: string }> {
-    const config = definition ? extractOAuthConfig(definition) : {};
+  private async startAuth(): Promise<{ authorizationUrl: string }> {
+    const config = this.definition ? extractOAuthConfig(this.definition) : {};
 
     if (config.grantType === "client_credentials") {
-      const storedAuth = this.storage.getForUrl(serverUrl);
+      const storedAuth = this.storage.getForUrl(this.serverUrl);
       if (storedAuth?.clientInfo && !storedAuth.tokens && !config.clientId) {
         this.storage.clearClientInfo();
         this.storage.clearCodeVerifier();
         this.storage.clearOAuthState();
       }
-      const provider = new McpOAuthProvider(this.serverName, serverUrl, config, {
+      const provider = new McpOAuthProvider(this.serverName, this.serverUrl, config, {
         onRedirect: async () => {
           throw new Error("Browser redirect is not used for client_credentials flow");
         },
       });
-      const result = await runSdkAuth(provider, { serverUrl });
+      const result = await runSdkAuth(provider, { serverUrl: this.serverUrl });
       if (result !== "AUTHORIZED") throw new UnauthorizedError("Failed to authorize");
       return { authorizationUrl: "" };
     }
@@ -598,14 +650,14 @@ export class OAuthFlow {
     }
 
     let capturedUrl: URL | undefined;
-    const provider = new McpOAuthProvider(this.serverName, serverUrl, config, {
+    const provider = new McpOAuthProvider(this.serverName, this.serverUrl, config, {
       onRedirect: async (url) => {
         capturedUrl = url;
       },
     });
 
     try {
-      const storedAuth = this.storage.getForUrl(serverUrl);
+      const storedAuth = this.storage.getForUrl(this.serverUrl);
       if (storedAuth?.clientInfo && !config.clientId) {
         if (!storedAuth.tokens) {
           this.storage.clearClientInfo();
@@ -623,7 +675,7 @@ export class OAuthFlow {
       }
 
       this.storage.oauthState = oauthState;
-      const result = await runSdkAuth(provider, { serverUrl });
+      const result = await runSdkAuth(provider, { serverUrl: this.serverUrl });
       if (result === "AUTHORIZED") {
         callbackServer.release(oauthState);
         this.storage.clearOAuthState();
@@ -632,7 +684,7 @@ export class OAuthFlow {
       if (!capturedUrl) throw new UnauthorizedError("OAuth authorization URL was not provided");
       pendingTransports.set(
         this.serverName,
-        new StreamableHTTPClientTransport(new URL(serverUrl), { authProvider: provider }),
+        new StreamableHTTPClientTransport(new URL(this.serverUrl), { authProvider: provider }),
       );
       return { authorizationUrl: capturedUrl.toString() };
     } catch (error) {

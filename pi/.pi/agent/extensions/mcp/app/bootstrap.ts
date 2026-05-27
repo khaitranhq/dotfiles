@@ -109,12 +109,12 @@ export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtension
     const serverUrl = definition.url;
     if (!serverUrl) continue;
     try {
-      const flow = new OAuthFlow(name);
+      const flow = new OAuthFlow(name, definition.url!, definition);
       const authStatus = flow.authStatus;
       if (authStatus !== "authenticated") {
         logger.info(`Authenticating OAuth server: ${name} (status: ${authStatus})`);
         try {
-          const result = await flow.authenticate(serverUrl, definition);
+          const result = await flow.authenticate();
           logger.info(`OAuth authentication complete for ${name}: ${result}`);
         } catch (authError) {
           const message = authError instanceof Error ? authError.message : String(authError);

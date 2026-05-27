@@ -23,6 +23,7 @@ import type {
   ToolMetadata,
 } from "../core/types";
 import { formatToolName, isToolExcluded } from "../core/types";
+import { OAuthFlow, supportsOAuth } from "../client/oauth";
 import type { MetadataCache } from "../core/cache";
 import { MetadataCacheManager } from "../core/cache";
 import { isServerCacheValid } from "../core/cache";
@@ -148,6 +149,28 @@ export function createToolExecutor(
         content: [{ type: "text" as const, text: `MCP server "${spec.serverName}" not connected` }],
         details: { error: "not_connected", server: spec.serverName },
       };
+    }
+
+    // Proactive OAuth token check — attempt refresh before the 401 round trip.
+    const definition = state.config.mcpServers[spec.serverName];
+    if (definition?.url && supportsOAuth(definition)) {
+      const flow = new OAuthFlow(spec.serverName, definition.url, definition);
+      if (flow.authStatus === "expired") {
+        const refreshed = await flow.validToken();
+        if (refreshed === null) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `OAuth token expired for MCP server "${spec.serverName}". ` +
+                  `Run /mcp-auth ${spec.serverName} to re-authenticate.`,
+              },
+            ],
+            details: { error: "oauth_expired", server: spec.serverName },
+          };
+        }
+      }
     }
 
     try {
