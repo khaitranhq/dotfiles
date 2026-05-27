@@ -1,8 +1,5 @@
 mcp:
   servers:
-    # - name: atlassian
-    #   transport: http
-    #   url: https://mcp.atlassian.com/v1/mcp/authv2
     - name: obsidian
       transport: http
       url: http://127.0.0.1:27123/mcp/
@@ -75,6 +72,7 @@ tools:
     oxlint: allow
     uniq: allow
     cp: allow
+    pnpm lint: allow
   read: allow
   write: allow
   edit: allow
@@ -83,27 +81,20 @@ tools:
   web_search: allow
   web_fetch: allow
   todowrite: allow
-  mcp_atlassian_*: deny
-  mcp_obsidian_*: allow
+  atlassian_*: deny
+  obsidian_*: allow
   mcp: allow
-
-# ── Agent definitions ────────────────────────────────────────────────
-# Replaces individual agent markdown files in ~/.pi/agent/agents/.
-# Prompts support ${file:/path/to/prompt.md} references.
-
 agents:
   architect-orchestrator:
     mode: primary
     description: Orchestrates complex multi-agent workflows for architecture and design
     model: claude-sonnet-4-5
-    prompt: "${file:agents/architect-orchestrator.md}"
-
+    prompt: ${file:agents/architect-orchestrator.md}
   development-coordinator:
     mode: primary
     description: Coordinates development workflows across subagents for implementation tasks
     model: claude-sonnet-4-5
-    prompt: "${file:agents/development-coordinator.md}"
-
+    prompt: ${file:agents/development-coordinator.md}
   atlassian:
     mode: subagent
     description: Atlassian specialist for Jira issue and Confluence page operations via MCP
@@ -119,8 +110,7 @@ agents:
       todowrite: allow
       mcp: allow
       mcp_atlassian_*: allow
-    prompt: "${file:agents/atlassian.md}"
-
+    prompt: ${file:agents/atlassian.md}
   code-reviewer:
     mode: subagent
     description: Senior code reviewer for quality, security, and maintainability
@@ -131,8 +121,7 @@ agents:
       - find
       - ls
       - bash
-    prompt: "${file:agents/code-reviewer.md}"
-
+    prompt: ${file:agents/code-reviewer.md}
   coder:
     mode: subagent
     description: General-purpose coding subagent with full tool capabilities
@@ -145,8 +134,7 @@ agents:
       - grep
       - find
       - ls
-    prompt: "${file:agents/coder.md}"
-
+    prompt: ${file:agents/coder.md}
   planner:
     mode: subagent
     description: Creates implementation plans from context and requirements
@@ -156,8 +144,7 @@ agents:
       - grep
       - find
       - ls
-    prompt: "${file:agents/planner.md}"
-
+    prompt: ${file:agents/planner.md}
   scout:
     mode: subagent
     description: Fast codebase recon returning structured context for other agents
@@ -169,4 +156,4 @@ agents:
       - find
       - ls
       - bash
-    prompt: "${file:agents/scout.md}"
+    prompt: ${file:agents/scout.md}

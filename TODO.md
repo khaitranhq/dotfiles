@@ -15,7 +15,7 @@ Active tasks and improvements across the dotfiles ecosystem.
 - [ ] [ID: 03] Secret masking capability for the read tool
 - [ ] [ID: 04] change layout to OpenCode style
 - [ ] [ID: 05] Auto-refresh access token for MCP Atlassian
-- [ ] [ID: 06] Change agent config:
+- [x] [ID: 06] Change agent config:
   - Target format of agent config in pi/.pi/agent/custom-settings.yaml
 
   ```yaml
@@ -35,7 +35,6 @@ Active tasks and improvements across the dotfiles ecosystem.
     - `subagent` extensions handle agent-specific logic: parallel, delegate subagent, switch primary agent, set the default primary agent name is `pi`
 
 - [ ] [ID: 07] fix subagent to just support global level, remove project level
-- [ ] [ID: 08] subagent handle tools in shared
 - [ ] [ID: 09] refactor comments
 - [ ] [ID: 10] simplify subagent/index.ts
 - [ ] [ID: 11] Enable/disable tools for specific subagents and global (needs testing)

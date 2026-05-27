@@ -4,8 +4,7 @@ Spawns separate `pi` processes for subagent invocation with isolated context.
 
 **Modes:** Single, Parallel (max 8, 4 concurrent), Chain (`{previous}` placeholder).
 
-Agent definitions in `custom-settings.yaml` under the `agents` key (user-level).
-Project-level agents in `.pi/agents.yaml` (walked up from cwd).
+Agent definitions in `~/.pi/agent/custom-settings.yaml` under the `agents` key.
 
 Built-in default primary agent: **pi** (always available, no config needed).
 
@@ -46,23 +45,8 @@ agents:
 | `/agent pi` | Reset to default primary agent |
 | `/agent` | List available primary agents |
 
-## Settings (`subagent`, `tools` in `custom-settings.yaml`)
+## Tool Restrictions
 
-```yaml
-subagent:
-  defaultScope: "both"          # "user" | "project" | "both"
-  confirmProjectAgents: true
-
-tools:
-  global:
-    allow: [read, bash, edit, write]
-  agents:
-    code-reviewer:
-      allow: [read, grep, find, ls]
-```
-
-### Tool Override Resolution
-
-1. Agent defaults (`tools:` in agent YAML definition)
-2. Per-agent override (`tools.agents.<name>`)
-3. Global override (`tools.global`)
+Each agent can specify a `tools` list in their definition to limit available tools.
+For subagents, these are passed as `--tools` when spawning the pi subprocess.
+For primary agents, `pi.setActiveTools()` is applied on switch.
