@@ -11,7 +11,7 @@ export async function mcpAuthCommand(args: string, ctx: ExtensionCommandContext)
     return;
   }
 
-  const config = loadMcpConfig(undefined, ctx.cwd);
+  const config = loadMcpConfig();
   const definition = config.mcpServers[serverName];
 
   if (!definition) {

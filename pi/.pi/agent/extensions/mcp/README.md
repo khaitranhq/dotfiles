@@ -20,35 +20,37 @@ Pi extension providing **Model Context Protocol (MCP)** client support. Connects
 | **Session lifecycle** | Clean startup/shutdown tied to agent sessions |
 | **OAuth callback server** | Built-in local HTTP server for OAuth redirect handling |
 | **Env interpolation** | `${VAR}` and `$env:VAR` in config values resolved from process environment |
-| **Layered config** | Merges global → user → project configs, plus YAML overrides |
 
 ## Configuration
 
-### Config sources (merged in order)
+All MCP server configuration lives in `~/.pi/agent/custom-settings.yaml` under the `mcp.servers` key.
 
-1. `~/.config/mcp/mcp.json` — shared global standard MCP config
-2. `~/.pi/agent/mcp.json` — Pi global override
-3. `.mcp.json` — project standard MCP config
-4. `.pi/mcp.json` — project Pi override
-5. `~/.pi/agent/custom-settings.yaml` (key `mcp.servers`) — YAML override (highest priority)
+```yaml
+mcp:
+  servers:
+    - name: atlassian
+      transport: http
+      url: https://mcp.atlassian.com/v1/mcp/authv2
+      auth: oauth
+```
 
-All sources use the same JSON format. Sources 2–4 are **layered over** source 1; later sources can add servers and override settings.
+### Server definition
 
-### Server definition (`mcpServers.<name>`)
+Each entry in the `mcp.servers` array has a `name`, `transport`, and transport-specific fields.
 
 #### stdio transport
 
-```json
-{
-  "mcpServers": {
-    "my-local-tool": {
-      "command": "node",
-      "args": ["server.js"],
-      "env": { "NODE_ENV": "production" },
-      "cwd": "/path/to/server"
-    }
-  }
-}
+```yaml
+mcp:
+  servers:
+    - name: my-local-tool
+      transport: stdio
+      command: node
+      args:
+        - server.js
+      env:
+        NODE_ENV: production
+      cwd: /path/to/server
 ```
 
 | Field | Type | Description |
@@ -60,47 +62,43 @@ All sources use the same JSON format. Sources 2–4 are **layered over** source 
 
 #### HTTP transport
 
-```json
-{
-  "mcpServers": {
-    "atlassian": {
-      "url": "https://mcp.atlassian.com/v1/mcp/authv2",
-      "auth": "oauth"
-    },
-    "obsidian": {
-      "url": "http://127.0.0.1:27123/mcp/",
-      "headers": { "Authorization": "Bearer ${OBSIDIAN_TOKEN}" }
-    }
-  }
-}
+```yaml
+mcp:
+  servers:
+    - name: atlassian
+      transport: http
+      url: https://mcp.atlassian.com/v1/mcp/authv2
+      auth: oauth
+    - name: obsidian
+      transport: http
+      url: http://127.0.0.1:27123/mcp/
+      headers:
+        Authorization: Bearer ${OBSIDIAN_TOKEN}
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `url` | string | MCP server URL |
 | `headers` | Record<string,string> | HTTP headers (supports `${VAR}` interpolation) |
-| `auth` | `"oauth"` \| `"bearer"` \| `false` | Auth type. OAuth auto-detected if URL present and no explicit auth header |
+| `auth` | `"oauth"` \| `"bearer"` | Auth type. OAuth auto-detected if URL present and no explicit auth header |
 | `bearerToken` | string | Static Bearer token (supports env interpolation) |
 | `bearerTokenEnv` | string | Env var name containing Bearer token |
 
 #### OAuth configuration
 
-```json
-{
-  "mcpServers": {
-    "my-api": {
-      "url": "https://api.example.com/mcp",
-      "auth": "oauth",
-      "oauth": {
-        "grantType": "authorization_code",
-        "clientId": "my-client-id",
-        "clientSecret": "my-secret",
-        "scope": "read write",
-        "redirectUri": "http://localhost:19876/callback"
-      }
-    }
-  }
-}
+```yaml
+mcp:
+  servers:
+    - name: my-api
+      transport: http
+      url: https://api.example.com/mcp
+      auth: oauth
+      oauth:
+        grantType: authorization_code
+        clientId: my-client-id
+        clientSecret: my-secret
+        scope: read write
+        redirectUri: http://localhost:19876/callback
 ```
 
 If `oauth` is omitted, the SDK performs **dynamic client registration** automatically.
@@ -120,43 +118,13 @@ If `oauth` is omitted, the SDK performs **dynamic client registration** automati
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `lifecycle` | `"keep-alive"` \| `"lazy"` \| `"eager"` | `"lazy"` | Connection lifecycle |
-| `idleTimeout` | number | 10 (global) | Idle timeout in minutes (overrides global). 0 = never idle |
+| `idleTimeout` | number | `10` | Idle timeout in minutes. 0 = never idle |
 | `exposeResources` | boolean | `true` | Expose MCP resources as `get_*` tools |
 | `directTools` | boolean \| string[] | — | Register tools directly as agent tools. `true` = all, `string[]` = list |
 | `excludeTools` | string[] | — | Tool names to exclude |
 | `debug` | boolean | `false` | Show server stderr in agent output |
 
-### Global settings (`settings`)
-
-```json
-{
-  "settings": {
-    "toolPrefix": "short",
-    "idleTimeout": 10,
-    "directTools": false
-  }
-}
-```
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `toolPrefix` | `"server"` \| `"none"` \| `"short"` | `"server"` | How to prefix tool names |
-| `idleTimeout` | number | `10` | Default idle timeout in minutes. 0 = disabled |
-| `directTools` | boolean | — | Global default for `directTools` |
-| `sampling` | boolean | — | Enable MCP sampling |
-| `samplingAutoApprove` | boolean | — | Auto-approve sampling requests |
-
-### Tool prefixing modes
-
-| Mode | Server `my-mcp-server`, tool `do_thing` → |
-|------|-------------------------------------------|
-| `server` | `my_mcp_server_do_thing` |
-| `short` | Strips trailing `-mcp`, replaces `-` with `_`: `my_mcp_server_do_thing` |
-| `none` | `do_thing` (risk of collisions) |
-
-### YAML config (`custom-settings.yaml`)
-
-Server arrays defined here take highest priority:
+#### Full example
 
 ```yaml
 mcp:
@@ -165,12 +133,31 @@ mcp:
       transport: http
       url: https://mcp.atlassian.com/v1/mcp/authv2
       auth: oauth
-    - name: local-tool
+    - name: obsidian
+      transport: http
+      url: http://127.0.0.1:27123/mcp/
+      headers:
+        Authorization: Bearer ${OBSIDIAN_TOKEN}
+    - name: my-local-tool
       transport: stdio
       command: node
-      args: [server.js]
+      args:
+        - server.js
       lifecycle: eager
+      debug: true
 ```
+
+### Tool prefixing
+
+Servers are prefixed automatically to avoid name collisions:
+
+| Server name | Tool name | Result |
+|-------------|-----------|--------|
+| `my-mcp-server` | `do_thing` | `my_mcp_server_do_thing` |
+
+Prefixing strips trailing `-mcp` from server names and replaces all `-` with `_`.
+
+If `exposeResources` is enabled (default), resources become `get_<resource_name>` tools under the same server prefix.
 
 ## Commands
 
@@ -206,7 +193,7 @@ extensions/mcp/
 │   └── oauth-callback.ts  Local HTTP server for OAuth redirects
 ├── core/
 │   ├── cache.ts           Persistent metadata cache (7-day TTL, atomic writes)
-│   ├── config.ts          Config loading (layered JSON + YAML merge)
+│   ├── config.ts          Config loading from custom-settings.yaml
 │   ├── config.spec.ts     Config tests
 │   ├── logger.ts          Structured logging (console + file, rotation)
 │   ├── types.ts           All TypeScript type definitions

@@ -47,7 +47,7 @@ export function getFailureAgeSeconds(state: McpExtensionState, serverName: strin
 
 /** Bootstrap MCP: load config, connect servers, hydrate tool metadata. */
 export async function initializeMcp(ctx: ExtensionContext): Promise<McpExtensionState> {
-  const config = loadMcpConfig(undefined, ctx.cwd);
+  const config = loadMcpConfig();
 
   const manager = new McpServerManager();
   const lifecycle = new McpLifecycleManager(manager);
