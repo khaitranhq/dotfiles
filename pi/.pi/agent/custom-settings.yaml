@@ -83,34 +83,19 @@ tools:
   web_search: allow
   web_fetch: allow
   todowrite: allow
-  atlassian_*: deny
   obsidian_*: allow
-  mcp: allow
+  ls: allow
+  grep: allow
 agents:
   atlassian:
     mode: subagent
     description: Atlassian specialist for Jira issue and Confluence page operations via MCP
-    tools:
-      mcp_atlassian_*: allow
     prompt: ${file:agents/atlassian.md}
   code-reviewer:
     mode: subagent
     description: Senior code reviewer for quality, security, and maintainability
-    tools:
-      - read
-      - grep
-      - find
-      - ls
-      - bash
     prompt: ${file:agents/code-reviewer.md}
   scout:
     mode: subagent
     description: Fast codebase recon returning structured context for other agents
-    tools:
-      - read
-      - rg
-      - grep
-      - find
-      - ls
-      - bash
     prompt: ${file:agents/scout.md}
