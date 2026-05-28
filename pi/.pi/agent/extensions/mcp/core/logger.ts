@@ -5,10 +5,10 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from "node:fs";
-import { dirname } from "node:path";
-import { getAgentPath } from "../../shared/config";
+import * as path from "node:path";
+import { defaultConfig } from "../../shared/config";
 
-const LOG_FILE_PATH = getAgentPath("mcp", "mcp.log");
+const LOG_FILE_PATH = path.join(defaultConfig.getAgentDir(), "mcp", "mcp.log");
 const MAX_LOG_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 type LogLevel = "debug" | "info" | "warn" | "error";
@@ -141,7 +141,7 @@ class Logger {
   private writeToFile(entry: LogEntry): void {
     try {
       // Ensure directory exists
-      const dir = dirname(LOG_FILE_PATH);
+      const dir = path.dirname(LOG_FILE_PATH);
       if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true, mode: 0o700 });
       }

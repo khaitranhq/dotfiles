@@ -1,8 +1,5 @@
 mcp:
   servers:
-    - name: atlassian
-      transport: http
-      url: https://mcp.atlassian.com/v1/mcp/authv2
     - name: obsidian
       transport: http
       url: http://127.0.0.1:27123/mcp/
@@ -77,6 +74,7 @@ tools:
     cp: allow
     pnpm lint: allow
     pnpm test: allow
+    gh pr diff: allow
   read: allow
   write: allow
   edit: allow

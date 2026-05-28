@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { INPUT_HISTORY_FILE, INPUT_HISTORY_LIMIT, type PersistedInputHistoryFile } from "./types";
+import { defaultConfig } from "../shared";
 
 export class InputHistoryManager {
   private runtimeHistories: Record<string, string[]> | null = null;
@@ -58,7 +58,7 @@ export class InputHistoryManager {
 }
 
 function getHistoryFilePath(): string {
-  return path.join(getAgentDir(), INPUT_HISTORY_FILE);
+  return path.join(defaultConfig.getAgentDir(), INPUT_HISTORY_FILE);
 }
 
 function loadPersistedInputHistories(): Record<string, string[]> {

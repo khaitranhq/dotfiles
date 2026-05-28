@@ -1,16 +1,5 @@
 /** Shared utilities barrel — no extension to register. */
-export {
-  loadCustomSettings,
-  saveCustomSettings,
-  updateCustomSettings,
-  loadSubagentConfig,
-  loadToolPermissions,
-  loadAgentsConfig,
-  resolveFileRefs,
-  configPath,
-  getAgentDir,
-  getAgentPath,
-} from "./config";
+export { Config, defaultConfig } from "./config";
 export type {
   SubagentConfig,
   CustomSettings,

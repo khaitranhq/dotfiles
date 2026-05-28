@@ -4,7 +4,6 @@
  * Centralised loader for ~/.pi/agent/custom-settings.yaml.
  *
  * Uses YAML format with native comment support.
- * Automatically migrates legacy custom-settings.json on first load.
  *
  * Extensions import this module instead of duplicating path resolution
  * and YAML loading/saving logic.
@@ -141,142 +140,160 @@ export interface CustomSettings {
   [key: string]: unknown;
 }
 
-// ── Path resolution ───────────────────────────────────────────────────
-
-export function getAgentDir(): string {
-  return process.env.PI_CODING_AGENT_DIR ?? path.join(os.homedir(), ".pi", "agent");
-}
-
-export function getAgentPath(...segments: string[]): string {
-  return path.join(getAgentDir(), ...segments);
-}
-
-export function configPath(): string {
-  return getAgentPath("custom-settings.yaml");
-}
-
-/** Legacy JSON config path (migrated to YAML on first load). */
-function legacyConfigPath(): string {
-  return path.join(getAgentDir(), "custom-settings.json");
-}
-
-// ── JSON → YAML migration ────────────────────────────────────────────
+// ── Config class ──────────────────────────────────────────────────────
 
 /**
- * If custom-settings.json exists but custom-settings.yaml does not,
- * migrate the legacy JSON file to YAML automatically.
- */
-function migrateJsonToYaml(): void {
-  const yamlPath = configPath();
-  const jsonPath = legacyConfigPath();
-
-  if (fs.existsSync(yamlPath) || !fs.existsSync(jsonPath)) return;
-
-  try {
-    const raw = fs.readFileSync(jsonPath, "utf-8");
-    // Strip JSONC comments (// and /* */)
-    let cleaned = raw;
-    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, "");
-    cleaned = cleaned.replace(/(?<!:)\/\/.*$/gm, "");
-    const settings = JSON.parse(cleaned);
-
-    // Write as YAML
-    fs.mkdirSync(path.dirname(yamlPath), { recursive: true });
-    fs.writeFileSync(yamlPath, stringifyYaml(settings), "utf-8");
-    console.error(`[config] Migrated custom-settings.json → custom-settings.yaml`);
-  } catch (err) {
-    console.error(`[config] Failed to migrate custom-settings.json: ${err}`);
-  }
-}
-
-// ── Load / Save ───────────────────────────────────────────────────────
-
-export function loadCustomSettings(): CustomSettings {
-  const p = configPath();
-
-  // One-time migration from legacy JSON
-  migrateJsonToYaml();
-
-  try {
-    if (fs.existsSync(p)) {
-      const raw = fs.readFileSync(p, "utf-8");
-      return (parseYaml(raw) as CustomSettings) ?? {};
-    }
-  } catch (err) {
-    console.error(`[config] Failed to load custom-settings.yaml: ${err}`);
-  }
-  return {};
-}
-
-export function saveCustomSettings(settings: CustomSettings): void {
-  const p = configPath();
-  try {
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.writeFileSync(p, stringifyYaml(settings), "utf-8");
-  } catch (err) {
-    console.error(`[config] Failed to save custom-settings.yaml: ${err}`);
-  }
-}
-
-/**
- * Atomic read-modify-write helper.
+ * Centralised configuration loader for ~/.pi/agent/custom-settings.yaml.
  *
- * Usage:
- *   updateCustomSettings(s => ({ ...s, always_approve: { ...s.always_approve, tools: ["ls"] } }))
+ * Singleton — use {@link Config.getInstance} or the pre-built
+ * {@link defaultConfig} export. The single instance holds an in-memory
+ * cache and resolves paths relative to the default agent directory.
  */
-export function updateCustomSettings(updater: (settings: CustomSettings) => CustomSettings): void {
-  saveCustomSettings(updater(loadCustomSettings()));
-}
+export class Config {
+  private static instance: Config | null = null;
 
-// ── Convenience getters ───────────────────────────────────────────────
+  private cachedSettings: CustomSettings | null = null;
+  private cachedSettingsDir: string | null = null;
+  private readonly agentDir: string;
 
-export function loadSubagentConfig(): SubagentConfig {
-  return loadCustomSettings().subagent ?? {};
-}
-
-// ── File reference resolution ─────────────────────────────────────────
-
-/**
- * Resolve `${file:/path/to/file}` references in YAML content.
- * Reads the referenced file and inlines its content.
- */
-export function resolveFileRefs(yaml: string, baseDir: string): string {
-  return yaml.replace(/\$\{file:([^}]+)\}/g, (_match: string, filePath: string) => {
-    const resolved = filePath.startsWith("/") ? filePath : path.join(baseDir, filePath);
-    try {
-      return fs.readFileSync(resolved, "utf-8");
-    } catch {
-      console.error(`[config] Failed to resolve file ref: ${resolved}`);
-      return `[File not found: ${resolved}]`;
-    }
-  });
-}
-
-// ── Agent config loader ───────────────────────────────────────────────
-
-/**
- * Load agent definitions from custom-settings.yaml `agents` key.
- * Resolves `${file:...}` references in agent prompts.
- */
-export function loadAgentsConfig(): AgentsConfig {
-  const settings = loadCustomSettings();
-  const raw = settings.agents;
-  if (!raw) return {};
-
-  // Resolve file references in each agent's prompt
-  const baseDir = path.dirname(configPath());
-  const resolved: AgentsConfig = {};
-  for (const [name, def] of Object.entries(raw)) {
-    resolved[name] = {
-      ...def,
-      prompt: resolveFileRefs(def.prompt, baseDir),
-    };
+  private constructor() {
+    this.agentDir = path.join(os.homedir(), ".pi", "agent");
   }
-  return resolved;
+
+  /** Return the singleton Config instance, creating it on first call. */
+  static getInstance(): Config {
+    if (!Config.instance) {
+      Config.instance = new Config();
+    }
+    return Config.instance;
+  }
+
+  // ── Path helpers ──────────────────────────────────────────────────
+
+  /** Return the agent directory this instance is bound to. */
+  getAgentDir(): string {
+    return this.agentDir;
+  }
+
+  /** Full path to `custom-settings.yaml` in the agent directory. */
+  configPath(): string {
+    return path.join(this.agentDir, "custom-settings.yaml");
+  }
+
+  // ── Cache management ──────────────────────────────────────────────
+
+  /** Invalidate the cached config so the next read reloads from disk. */
+  invalidateConfigCache(): void {
+    this.cachedSettings = null;
+    this.cachedSettingsDir = null;
+  }
+
+  // ── Load / Save ───────────────────────────────────────────────────
+
+  /**
+   * Parse and return the current settings from custom-settings.yaml.
+   * Returns a shallow clone to prevent callers from mutating the cache.
+   */
+  loadCustomSettings(): CustomSettings {
+    if (this.cachedSettings !== null && this.cachedSettingsDir === this.agentDir) {
+      return { ...this.cachedSettings };
+    }
+
+    const p = this.configPath();
+
+    try {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p, "utf-8");
+        this.cachedSettings = (parseYaml(raw) as CustomSettings) ?? {};
+        this.cachedSettingsDir = this.agentDir;
+        return { ...this.cachedSettings };
+      }
+    } catch (err) {
+      console.error(`[config] Failed to load custom-settings.yaml: ${err}`);
+    }
+    this.cachedSettings = {};
+    this.cachedSettingsDir = this.agentDir;
+    return { ...this.cachedSettings };
+  }
+
+  /**
+   * Atomic read-modify-write helper.
+   *
+   * Usage:
+   *   cfg.updateCustomSettings(s => ({ ...s, always_approve: { ...s.always_approve, tools: ["ls"] } }))
+   */
+  updateCustomSettings(updater: (settings: CustomSettings) => CustomSettings): void {
+    this.saveCustomSettings(updater(this.loadCustomSettings()));
+  }
+
+  // ── Convenience getters ───────────────────────────────────────────
+
+  /** Load the `subagent` config section with defaults. */
+  loadSubagentConfig(): SubagentConfig {
+    return this.loadCustomSettings().subagent ?? {};
+  }
+
+  /**
+   * Load agent definitions from the `agents` key.
+   * Resolves `${file:...}` references in agent prompts.
+   */
+  loadAgentsConfig(): AgentsConfig {
+    const settings = this.loadCustomSettings();
+    const raw = settings.agents;
+    if (!raw) return {};
+
+    const baseDir = path.dirname(this.configPath());
+    const resolved: AgentsConfig = {};
+    for (const [name, def] of Object.entries(raw)) {
+      resolved[name] = {
+        ...def,
+        prompt: Config.resolveFileRefs(def.prompt, baseDir),
+      };
+    }
+    return resolved;
+  }
+
+  /** Load the tool permissions map from the `tools` key. */
+  loadToolPermissions(): ToolPermissions {
+    const settings = this.loadCustomSettings();
+    return (settings.tools as ToolPermissions) ?? {};
+  }
+
+  // ── Static utilities ──────────────────────────────────────────────
+
+  /**
+   * Resolve `${file:/path/to/file}` references in YAML content.
+   * Reads the referenced file and inlines its content.
+   */
+  static resolveFileRefs(yaml: string, baseDir: string): string {
+    return yaml.replace(/\$\{file:([^}]+)\}/g, (_match: string, filePath: string) => {
+      const resolved = filePath.startsWith("/") ? filePath : path.join(baseDir, filePath);
+      try {
+        return fs.readFileSync(resolved, "utf-8");
+      } catch {
+        console.error(`[config] Failed to resolve file ref: ${resolved}`);
+        return `[File not found: ${resolved}]`;
+      }
+    });
+  }
+
+  /**
+   * Serialize settings to custom-settings.yaml and update the cache.
+   */
+  private saveCustomSettings(settings: CustomSettings): void {
+    const p = this.configPath();
+    try {
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.writeFileSync(p, stringifyYaml(settings), "utf-8");
+      this.cachedSettings = settings;
+      this.cachedSettingsDir = this.agentDir;
+    } catch (err) {
+      console.error(`[config] Failed to save custom-settings.yaml: ${err}`);
+    }
+  }
 }
 
-/** Load the tool permissions map from custom-settings.yaml `tools` key. */
-export function loadToolPermissions(): ToolPermissions {
-  const settings = loadCustomSettings();
-  return (settings.tools as ToolPermissions) ?? {};
-}
+// ── Default singleton ─────────────────────────────────────────────────
+
+/** Pre-built Config singleton using the default agent directory. */
+export const defaultConfig = Config.getInstance();

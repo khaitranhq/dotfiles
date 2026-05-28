@@ -12,7 +12,7 @@ import type { AgentToolResult } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import {
-  loadAgentsConfig,
+  defaultConfig,
   type AgentYamlDefinition,
   type AgentsConfig,
   type ToolPermissions,
@@ -65,10 +65,6 @@ export interface AgentConfig {
   /** Tool permission map (from tools object format in YAML). */
   toolPermissions?: ToolPermissions;
   systemPrompt: string;
-  /** Source of the agent definition (always "user"). */
-  source: "user";
-  /** Path to the config file that defined this agent. */
-  filePath: string;
 }
 
 export interface AgentDiscoveryResult {
@@ -91,13 +87,11 @@ export const BUILTIN_PI_AGENT: AgentConfig = {
   description: "Default primary agent — full capabilities with all tools and extensions",
   mode: "primary",
   systemPrompt: "",
-  source: "user",
-  filePath: "(built-in)",
 };
 
 // ── Agent discovery (user config only) ─────────────────────────────────
 
-function agentDefToConfig(name: string, def: AgentYamlDefinition, filePath: string): AgentConfig {
+function agentDefToConfig(name: string, def: AgentYamlDefinition): AgentConfig {
   let tools: string[] | undefined;
   let toolPermissions: ToolPermissions | undefined;
 
@@ -116,8 +110,6 @@ function agentDefToConfig(name: string, def: AgentYamlDefinition, filePath: stri
     tools: tools && tools.length > 0 ? tools : undefined,
     toolPermissions,
     systemPrompt: def.prompt,
-    source: "user" as const,
-    filePath,
   };
 }
 
@@ -128,11 +120,11 @@ function agentDefToConfig(name: string, def: AgentYamlDefinition, filePath: stri
  * that are ignored (only user-level agents are supported).
  */
 export function discoverAgents(_cwd?: string, _scope?: string): AgentDiscoveryResult {
-  const userDefs: AgentsConfig = loadAgentsConfig();
+  const userDefs: AgentsConfig = defaultConfig.loadAgentsConfig();
   const configs: AgentConfig[] = [];
 
   for (const [name, def] of Object.entries(userDefs)) {
-    configs.push(agentDefToConfig(name, def, "custom-settings.yaml"));
+    configs.push(agentDefToConfig(name, def));
   }
 
   // Always include built-in "pi" primary agent (unless explicitly overridden)

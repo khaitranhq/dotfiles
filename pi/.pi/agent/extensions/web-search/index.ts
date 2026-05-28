@@ -38,7 +38,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { loadCustomSettings } from "../shared/config";
+import { defaultConfig } from "../shared/config";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ function getApiKey(): string {
 
 function loadConfig(): Required<WebSearchConfig> {
   try {
-    const settings = loadCustomSettings();
+    const settings = defaultConfig.loadCustomSettings();
     const ws = (settings.web_search ?? {}) as WebSearchConfig;
     return {
       maxResults: ws.maxResults ?? DEFAULTS.maxResults,

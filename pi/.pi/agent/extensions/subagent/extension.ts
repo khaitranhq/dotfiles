@@ -5,9 +5,21 @@
 import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import type { Message } from "@earendil-works/pi-ai";
-import { type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { type ExtensionAPI, type ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { matchesToolPattern } from "../shared/command-utils";
+import {
+  extractAllCommandSegments,
+  extractCommandBasis,
+  matchesToolPattern,
+} from "../shared/command-utils";
+import { defaultConfig, type ToolPermissions } from "../shared/config";
+import {
+  addBashPermission,
+  addToolPermission,
+  lookupPermission,
+  resolveBashPermission,
+} from "../shared/tool-permissions";
+import { notifyPermissionRequired } from "../notification/index";
 import {
   discoverAgents,
   getFinalOutput,
@@ -75,11 +87,19 @@ export class SubagentExtension {
   /** Per-agent tool overrides (overrides agent's default tools from YAML). */
   private agentToolOverrides = new Map<string, ToolOverride>();
 
+  // ── Permission-gate state ─────────────────────────────────────────
+
+  /** Tools/commands granted session-only approval. */
+  private sessionApprovals = new Set<string>();
+  /** Permission map loaded from custom-settings.yaml `tools` key. */
+  private settingsPerms: ToolPermissions = {};
+
   constructor(pi: ExtensionAPI) {
     this.pi = pi;
     this.registerTool();
     this.registerCommand();
     this.registerEvents();
+    this.setupPermissionGate();
   }
 
   // ── Tool registration ──────────────────────────────────────────────
@@ -553,6 +573,8 @@ export class SubagentExtension {
 
     if (effective) {
       const allToolNames = resolveAll();
+
+      // Expand wildcards
       const expanded = new Set<string>();
       for (const entry of effective) {
         if (entry.includes("*")) {
@@ -566,7 +588,17 @@ export class SubagentExtension {
           expanded.add(entry);
         }
       }
-      effective = Array.from(expanded);
+
+      // Remove globally denied tools (from custom-settings.yaml `tools` key)
+      const filtered = new Set<string>();
+      for (const name of expanded) {
+        const perm = lookupPermission(name, this.settingsPerms);
+        if (perm !== "deny") {
+          filtered.add(name);
+        }
+      }
+
+      effective = Array.from(filtered);
     }
 
     return effective && effective.length > 0 ? effective : undefined;
@@ -612,6 +644,7 @@ export class SubagentExtension {
       if (this.activePrimaryAgent) {
         this.activePrimaryAgent = null;
         this.pi.events.emit("agent:changed", { name: "pi" });
+        this.applyActiveTools();
         ctx.ui.notify("Switched to default agent: pi", "info");
         ctx.ui.setStatus("agent", undefined);
       } else {
@@ -640,6 +673,8 @@ export class SubagentExtension {
 
     if (agent.tools) {
       this.pi.setActiveTools(agent.tools);
+    } else {
+      this.applyActiveTools();
     }
 
     this.activePrimaryAgent = targetName;
@@ -690,8 +725,250 @@ export class SubagentExtension {
   };
 
   onSessionStart = async (_event: any, ctx: any) => {
+    this.sessionApprovals.clear();
+    this.reloadPermissions();
+    this.applyActiveTools();
     if (this.activePrimaryAgent) {
       ctx.ui.setStatus("agent", `agent: ${this.activePrimaryAgent}`);
     }
   };
+
+  // ── Permission gate ────────────────────────────────────────────────
+
+  private setupPermissionGate(): void {
+    this.reloadPermissions();
+
+    this.pi.on("tool_call", async (event: ToolCallEvent, ctx) => {
+      return this.handleToolCall(event, ctx);
+    });
+  }
+
+  private reloadPermissions(): void {
+    defaultConfig.invalidateConfigCache();
+    this.settingsPerms = defaultConfig.loadToolPermissions();
+  }
+
+  /** Load agent-level permissions from PI_AGENT_TOOL_PERMISSIONS env var. */
+  private loadAgentToolPermissions(): ToolPermissions | null {
+    try {
+      const raw = process.env.PI_AGENT_TOOL_PERMISSIONS;
+      if (!raw) return null;
+      return JSON.parse(raw) as ToolPermissions;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Compute the set of active tools by removing denied ones. */
+  private applyActiveTools(): void {
+    const allTools = this.pi.getAllTools().map((t) => t.name);
+    const agentPerms = this.loadAgentToolPermissions();
+    const denied = new Set<string>();
+
+    for (const name of allTools) {
+      // Decision order: agent config > global config > default "ask"
+      const agentResult = lookupPermission(name, agentPerms);
+      if (agentResult === "deny") {
+        denied.add(name);
+        continue;
+      }
+      if (agentResult !== null) continue; // allow or ask — keep active
+
+      const settingsResult = lookupPermission(name, this.settingsPerms);
+      if (settingsResult === "deny") {
+        denied.add(name);
+      }
+    }
+
+    if (denied.size > 0) {
+      const active = allTools.filter((n) => !denied.has(n));
+      this.pi.setActiveTools(active);
+    }
+  }
+
+  /** Gate every tool call with permission checks. */
+  private async handleToolCall(
+    event: ToolCallEvent,
+    ctx: any,
+  ): Promise<{ block: boolean; reason?: string } | undefined> {
+    const toolName = event.toolName;
+    const agentPerms = this.loadAgentToolPermissions();
+
+    // ── Bash: resolve command-level permission ──────────────────────
+    if (toolName === "bash") {
+      const command = (event.input as { command: string }).command;
+      const segments = extractAllCommandSegments(command);
+
+      // Empty/whitespace-only command — skip permission check
+      if (segments.length === 0) return undefined;
+
+      // Check if ALL segments are session-approved (using basis keys)
+      const allSessionApproved = segments.every((s) =>
+        this.sessionApprovals.has(extractCommandBasis(s)),
+      );
+      if (allSessionApproved) return undefined;
+
+      // Memoize permission lookups per segment to avoid redundant calls
+      const bashPermCache = new Map<string, "allow" | "deny" | "ask" | null>();
+      const getBashPerm = (seg: string): "allow" | "deny" | "ask" | null => {
+        const cached = bashPermCache.get(seg);
+        if (cached !== undefined) return cached;
+        const agentResult = resolveBashPermission(seg, agentPerms);
+        if (agentResult !== null) {
+          bashPermCache.set(seg, agentResult);
+          return agentResult;
+        }
+        const settingsResult = resolveBashPermission(seg, this.settingsPerms);
+        bashPermCache.set(seg, settingsResult);
+        return settingsResult;
+      };
+
+      let denied = false;
+
+      for (const seg of segments) {
+        // Session approval uses the command basis (strips flags/args)
+        const basis = extractCommandBasis(seg);
+        if (this.sessionApprovals.has(basis)) continue;
+
+        const perm = getBashPerm(seg);
+        if (perm === "deny") {
+          denied = true;
+          break;
+        }
+        if (perm === "allow") continue;
+        // perm is null or "ask" — will prompt
+      }
+
+      if (denied) {
+        return { block: true, reason: "Bash command denied by tool permissions." };
+      }
+
+      // If all segments are session-approved or explicitly allowed, skip prompt
+      if (
+        segments.every(
+          (s) => this.sessionApprovals.has(extractCommandBasis(s)) || getBashPerm(s) === "allow",
+        )
+      ) {
+        return undefined;
+      }
+    } else {
+      // ── Non-bash tool ────────────────────────────────────────────
+      if (this.sessionApprovals.has(toolName)) return undefined;
+
+      const agentResult = lookupPermission(toolName, agentPerms);
+      if (agentResult === "deny") {
+        return { block: true, reason: `Tool "${toolName}" denied by agent permissions.` };
+      }
+      if (agentResult === "allow") return undefined;
+
+      if (agentResult === null) {
+        const settingsResult = lookupPermission(toolName, this.settingsPerms);
+        if (settingsResult === "deny") {
+          return {
+            block: true,
+            reason: `Tool "${toolName}" denied by tool permissions.`,
+          };
+        }
+        if (settingsResult === "allow") return undefined;
+      }
+    }
+
+    // ── Ask ──────────────────────────────────────────────────────────
+    if (!ctx.hasUI) {
+      return {
+        block: true,
+        reason: `Tool "${toolName}" requires approval (no UI available).`,
+      };
+    }
+
+    const desc = this.describeCall(event);
+    notifyPermissionRequired(desc);
+
+    const selected = await ctx.ui.select(`🔐 Permission required — ${desc}`, [
+      "✅ Allow",
+      "❌ Deny (with reason)",
+      "🔓 Always approve",
+      "🕐 Approve in this session only",
+    ]);
+
+    if (selected === null || selected === undefined) {
+      return { block: true, reason: "Cancelled by user." };
+    }
+
+    switch (selected) {
+      case "✅ Allow":
+        return undefined;
+
+      case "❌ Deny (with reason)": {
+        const reason = await ctx.ui.input("Reason for denial:", "e.g., not needed, dangerous, ...");
+        return { block: true, reason: reason || "Blocked by user." };
+      }
+
+      case "🔓 Always approve": {
+        if (toolName === "bash") {
+          const command = (event.input as { command: string }).command;
+          const segments = extractAllCommandSegments(command);
+          if (segments.length > 0) {
+            for (const seg of segments) {
+              const basis = extractCommandBasis(seg);
+              if (basis) {
+                defaultConfig.updateCustomSettings((s) => addBashPermission(s, basis, "allow"));
+              }
+            }
+          }
+        } else {
+          defaultConfig.updateCustomSettings((s) => addToolPermission(s, toolName, "allow"));
+        }
+        this.reloadPermissions();
+        this.applyActiveTools();
+        return undefined;
+      }
+
+      case "🕐 Approve in this session only": {
+        if (toolName === "bash") {
+          const command = (event.input as { command: string }).command;
+          const segments = extractAllCommandSegments(command);
+          if (segments.length > 0) {
+            for (const seg of segments) {
+              const basis = extractCommandBasis(seg);
+              if (basis) this.sessionApprovals.add(basis);
+            }
+          } else {
+            this.sessionApprovals.add(toolName);
+          }
+        } else {
+          this.sessionApprovals.add(toolName);
+        }
+        return undefined;
+      }
+
+      default:
+        return { block: true, reason: "Unknown choice." };
+    }
+  }
+
+  /** Build a human-readable description of the tool call for the prompt. */
+  private describeCall(event: ToolCallEvent): string {
+    const toolName = event.toolName;
+    const input = event.input as Record<string, unknown>;
+
+    switch (toolName) {
+      case "bash":
+        return `bash: ${input.command ?? "(no command)"}`;
+      case "read":
+        return `read: ${input.path ?? "?"}`;
+      case "write":
+        return `write: ${input.path ?? "?"}`;
+      case "edit":
+        return `edit: ${input.path ?? "?"}`;
+      case "ls":
+        return `ls: ${input.path ?? "."}`;
+      case "grep":
+        return `grep: ${input.pattern ?? "?"} in ${input.path ?? "?"}`;
+      case "find":
+        return `find: ${input.path ?? "."}`;
+      default:
+        return `${toolName}: ${JSON.stringify(input).slice(0, 120)}`;
+    }
+  }
 }

@@ -1,8 +1,8 @@
 // config/cache.ts - Persistent MCP metadata cache
 import { existsSync, readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import * as path from "node:path";
 import { createHash } from "node:crypto";
-import { getAgentPath } from "../../shared/config";
+import { defaultConfig } from "../../shared/config";
 import type { McpTool, McpResource, ServerEntry, ToolMetadata } from "./types";
 import { formatToolName, isToolExcluded } from "./types";
 import { resourceNameToToolName } from "../app/tools";
@@ -41,7 +41,9 @@ export interface MetadataCache {
 // ── CacheManager class ───────────────────────────────────────────────
 
 export class MetadataCacheManager {
-  constructor(private cachePath: string = getAgentPath("mcp-cache.json")) {}
+  constructor(
+    private cachePath: string = path.join(defaultConfig.getAgentDir(), "mcp-cache.json"),
+  ) {}
 
   /** Reconstruct tool metadata from cache. */
   buildMetadata(
@@ -119,7 +121,7 @@ export class MetadataCacheManager {
   }
 
   save(cache: MetadataCache): void {
-    const dir = dirname(this.cachePath);
+    const dir = path.dirname(this.cachePath);
     mkdirSync(dir, { recursive: true });
 
     let merged: MetadataCache = { version: CACHE_VERSION, servers: {} };
@@ -174,7 +176,7 @@ export function computeServerHash(definition: ServerEntry): string {
 }
 
 export function getMetadataCachePath(): string {
-  return getAgentPath("mcp-cache.json");
+  return path.join(defaultConfig.getAgentDir(), "mcp-cache.json");
 }
 
 export function isServerCacheValid(

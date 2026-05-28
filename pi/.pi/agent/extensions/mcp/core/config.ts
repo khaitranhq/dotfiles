@@ -1,5 +1,5 @@
 // config.ts - Config loading from custom-settings.yaml
-import { loadCustomSettings } from "../../shared/config";
+import { defaultConfig } from "../../shared/config";
 import type { McpYamlServer } from "../../shared/config";
 import type { McpConfig, ServerEntry } from "./types";
 
@@ -31,7 +31,7 @@ export function convertYamlMcpToConfig(servers: McpYamlServer[] | undefined): Mc
  * Load MCP config from {@link ~/.pi/agent/custom-settings.yaml} (sole source).
  */
 export function loadMcpConfig(): McpConfig {
-  const customSettings = loadCustomSettings();
+  const customSettings = defaultConfig.loadCustomSettings();
   if (customSettings.mcp?.servers) {
     return convertYamlMcpToConfig(customSettings.mcp.servers);
   }

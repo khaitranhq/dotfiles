@@ -9,7 +9,7 @@
 
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import * as path from "node:path";
 import { spawn } from "node:child_process";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { auth as runSdkAuth, UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
@@ -20,7 +20,7 @@ import type {
   OAuthClientInformationFull,
 } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { getAgentPath } from "../../shared/config";
+import { defaultConfig } from "../../shared/config";
 import { callbackServer } from "./oauth-callback";
 import type { ServerEntry } from "../core/types";
 
@@ -62,7 +62,7 @@ export class AuthStorage {
 
   constructor(serverName: string, serverUrl?: string) {
     this.dir = this.computeDir(serverName);
-    this.tokensPath = join(this.dir, "tokens.json");
+    this.tokensPath = path.join(this.dir, "tokens.json");
     this.storedServerUrl = serverUrl;
   }
 
@@ -172,8 +172,8 @@ export class AuthStorage {
 
   private computeDir(name: string): string {
     const storageKey = createHash("sha256").update(name, "utf8").digest("hex");
-    const base = process.env.MCP_OAUTH_DIR?.trim() || getAgentPath("mcp");
-    return join(base, `sha256-${storageKey}`);
+    const base = process.env.MCP_OAUTH_DIR?.trim() || path.join(defaultConfig.getAgentDir(), "mcp");
+    return path.join(base, `sha256-${storageKey}`);
   }
 
   private ensureDir(): void {
