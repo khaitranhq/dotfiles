@@ -2,6 +2,12 @@
 
 Unified input experience for pi: `@mention` autocomplete, input transforms, and per-directory prompt history.
 
+## Commands
+
+| Command          | Description                             |
+| ---------------- | --------------------------------------- |
+| `/active-tools`  | Show currently active tools grouped by source |
+
 ## Features
 
 | Prefix        | Matches              | Action                              |

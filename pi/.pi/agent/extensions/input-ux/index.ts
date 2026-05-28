@@ -29,6 +29,18 @@ export default function (pi: ExtensionAPI) {
   const historyManager = new InputHistoryManager();
   const ranker = new CandidateRanker(fileIndex);
 
+  pi.registerCommand("active-tools", {
+    description: "Show currently active tools",
+    handler: async (_args, ctx) => {
+      const names = pi.getActiveTools();
+      if (names.length === 0) {
+        ctx.ui.notify("No active tools.", "info");
+        return;
+      }
+      ctx.ui.notify(`🔧 Active tools: ${names.join(", ")}`, "info");
+    },
+  });
+
   pi.on("tool_result", async (event) => {
     if (
       event.toolName === "write" ||
