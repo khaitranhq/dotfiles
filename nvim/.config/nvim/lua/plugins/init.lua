@@ -1,7 +1,10 @@
 local M = {}
 
 local function setup_theme()
-  vim.cmd([[colorscheme tokyonight-night]])
+  require("everforest").setup({
+    background = "soft",
+  })
+  vim.cmd("colorscheme everforest")
 
   -- Customize trailing whitespace highlighting
   vim.api.nvim_set_hl(0, "Whitespace", {
@@ -13,8 +16,7 @@ M.setup = function()
   vim.pack.add({
     "https://github.com/khaitranhq/nvim-web-devicons",
     "https://github.com/khaitranhq/snacks.nvim",
-    "https://github.com/khaitranhq/tokyonight.nvim",
-    -- NOTE: Hope that this plugin won't be attacked :)
+    "https://github.com/neanias/everforest-nvim",
     "https://github.com/neovim/nvim-lspconfig",
     "https://github.com/khaitranhq/gitsigns.nvim",
     "https://github.com/khaitranhq/blink.cmp",

@@ -12,14 +12,18 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `03` Secret masking capability for the read tool
-- [ ] `06` Auto-refresh access token for MCP Atlassian
+- [ ] `03` Secret masking capability for tools
+  - using package: https://github.com/secretlint/secretlint
+  - applied for all tools result
+  - implement in pi/.pi/agent/extensions/defender
+- [ ] `04` Auto-refresh access token for MCP Atlassian
   - failed, still open browser again
-- [ ] `07` refactor comments
+- [ ] `05` refactor comments
+- [ ] `06` subagent spawn subagent
 
 ### Measure AI System Efficiency
 
-- [ ] `09` Implement metrics tool:
+- [ ] `07` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
@@ -28,5 +32,5 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ### General
 
-- [ ] `10` Refactor tools
-- [ ] `11` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills, wiki
+- [ ] `08` Refactor tools
+- [ ] `09` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills, wiki

@@ -130,7 +130,7 @@ web_client {
     font "monospace"
 }
 pane_frames false
-theme "tokyo-night"
+theme "everforest-dark"
 default_layout "welcome"
 layout_dir "/home/khaitran/.config/zellij/layouts"
 show_startup_tips false
