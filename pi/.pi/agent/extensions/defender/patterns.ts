@@ -23,7 +23,6 @@ export const DANGEROUS_PATTERNS: RegExp[] = [
   /\bperl\b.*\bunlink\b/i, // perl unlink
   /\bpython\b.*\bos\.remove\b/i, // python os.remove
   /\bpython\b.*\bshutil\.rmtree\b/i, // python shutil.rmtree
-  /\bruby\b.*\bFileUtils\.rm/i, // ruby FileUtils.rm
 ];
 
 /** Message sent to the agent when a dangerous command is blocked. */

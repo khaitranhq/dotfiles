@@ -8,16 +8,18 @@ Registers a `question` tool for structured user prompts with tab-based navigatio
 
 ```json
 {
-  "questions": [{
-    "id": "scope",
-    "label": "Scope",
-    "prompt": "What scope?",
-    "type": "select",
-    "options": [
-      { "value": "full", "label": "Full refactor" },
-      { "value": "partial", "label": "Targeted fix" }
-    ],
-    "allowOther": true
-  }]
+  "questions": [
+    {
+      "id": "scope",
+      "label": "Scope",
+      "prompt": "What scope?",
+      "type": "select",
+      "options": [
+        { "value": "full", "label": "Full refactor" },
+        { "value": "partial", "label": "Targeted fix" }
+      ],
+      "allowOther": true
+    }
+  ]
 }
 ```
