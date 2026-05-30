@@ -77,45 +77,72 @@ This ensures consistent code quality and prevents runtime type errors.
 
 ## Member Ordering
 
-Functions, methods, and declarations in classes and files must follow this strict top-to-bottom order:
-
-1. **Exported declarations** — `export` functions, classes, interfaces, types, constants, and `export default`
-2. **Public module-level declarations** — non-exported functions, interfaces, types, and constants used across the module
-3. **Private helpers** — internal implementation details (non-exported utility functions, private class methods)
+Declarations in files and classes must follow this strict top-to-bottom order.
 
 ### In Files
 
+1. **Imports** — all `import` statements
+2. **Interfaces** — `interface` declarations
+3. **Types** — `type` alias declarations
+4. **Constants** — `const` declarations
+5. **Exported functions / classes** — `export function`, `export class`, `export default`
+6. **Internal functions / classes** — non-exported functions and classes
+
 ```typescript
-// ✅ Correct: exports → public → private
+// ✅ Correct: imports → interfaces → types → const → export → internal
+import { … } from "…";
 
-// 1. Exported declarations
-export interface Config { … }
+interface Config { … }
+
+type Status = "active" | "inactive";
+
+const DEFAULT_TIMEOUT = 5000;
+
 export function loadConfig(): Config { … }
-export const DEFAULT_TIMEOUT = 5000;
+export default function entryPoint(): void { … }
 
-// 2. Public (non-exported, module-level)
 function normalizePath(p: string): string { … }
-const CACHE = new Map<string, unknown>();
-
-// 3. Private helpers
-function internalOnly(): void { … }
+function internalHelper(): void { … }
 ```
 
 ```typescript
-// ❌ Incorrect: private functions mixed among exports
+// ❌ Incorrect: internal function before export, const before types
 import { … } from "…";
 
-function privateHelper(): void { … }  // ← private before export
+function privateHelper(): void { … }  // ← internal before export
+
+const CACHE = new Map();               // ← const before types/interfaces
+
+type Options = { … };
 
 export function publicApi(): void { … }
 ```
 
 ### In Classes
 
+1. **Fields** — instance properties
+2. **Constructor** — the class constructor
+3. **Static public methods** — `static` methods that are public
+4. **Public methods** — public instance methods and accessors (getters/setters)
+5. **Private methods** — `private` instance methods
+
 ```typescript
-// ✅ Correct: public → private
+// ✅ Correct: fields → constructor → static public → public → private
 class Service {
+  // Fields
+  private cache = new Map<string, unknown>();
+  private timeout: number;
+
+  // Constructor
+  constructor(timeout: number) {
+    this.timeout = timeout;
+  }
+
+  // Static public methods
+  static create(): Service { … }
+
   // Public methods
+  get status(): string { … }
   async connect(): Promise<void> { … }
   disconnect(): void { … }
 
@@ -126,20 +153,24 @@ class Service {
 ```
 
 ```typescript
-// ❌ Incorrect: private methods before public
+// ❌ Incorrect: private field after public methods, private methods before public
 class Service {
-  private async handshake(): Promise<void> { … }  // ← private before public
-
   async connect(): Promise<void> { … }
+
+  private cache = new Map();  // ← field after public method
+
+  private handshake(): Promise<void> { … }  // ← private before public
+
+  disconnect(): void { … }
 }
 ```
 
 ### For Extension Entry Points
 
-When a file's primary purpose is an `export default function` that serves as an extension entry point, place it first after imports. All supporting declarations (types, constants, helper functions) follow below:
+When a file's primary purpose is an `export default function` that serves as an extension entry point, place it after imports and before supporting declarations (interfaces, types, constants, internal helpers):
 
 ```typescript
-// ✅ Correct: default export first, then supporting code
+// ✅ Correct: imports → default export → supporting declarations
 import { … } from "…";
 
 export default function (pi: ExtensionAPI) {
