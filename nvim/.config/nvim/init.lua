@@ -7,6 +7,7 @@ vim.filetype.add({
 		["docker-compose%.yml"] = "yaml.docker-compose",
 		["go.work"] = "gowork",
 		["%.mytemplate"] = "gotmpl",
+		["%.d2"] = "d2",
 	},
 })
 
