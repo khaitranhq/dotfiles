@@ -6,12 +6,14 @@ vim.filetype.add({
 	pattern = {
 		["docker-compose%.yml"] = "yaml.docker-compose",
 		["go.work"] = "gowork",
-		["%.mytemplate"] = "gotmpl",
-		["%.d2"] = "d2",
+	},
+	extension = {
+		d2 = "d2",
 	},
 })
 
 require("core.opts")
-require("core.command").setup()
+require("core.treesitter").setup()
 require("plugins").setup()
+require("core.command").setup()
 require("core.keymap").setup()

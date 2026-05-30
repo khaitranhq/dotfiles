@@ -92,10 +92,6 @@
     "todo-comments.nvim": {
       "rev": "31e3c38ce9b29781e4422fc0322eb0a21f4e8668",
       "src": "https://github.com/khaitranhq/todo-comments.nvim"
-    },
-    "tree-sitter-manager.nvim": {
-      "rev": "fa63bc63ae08b661843d9976a43becfbd3daf76c",
-      "src": "https://github.com/khaitranhq/tree-sitter-manager.nvim"
     }
   }
 }

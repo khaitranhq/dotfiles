@@ -26,7 +26,6 @@ M.setup = function()
     "https://github.com/khaitranhq/nvim-surround",
     "https://github.com/khaitranhq/todo-comments.nvim",
     "https://github.com/khaitranhq/nvim-early-retirement",
-    "https://github.com/khaitranhq/tree-sitter-manager.nvim",
     "https://github.com/khaitranhq/render-markdown.nvim",
     "https://github.com/khaitranhq/codediff.nvim",
     "https://github.com/khaitranhq/copilot.lua",
@@ -75,9 +74,6 @@ M.setup = function()
     },
   })
   require("todo-comments").setup({})
-  require("tree-sitter-manager").setup({
-    auto_install = true, -- Automatically install missing parsers when entering buffer
-  })
 
   setup_theme()
 end
