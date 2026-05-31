@@ -34,3 +34,9 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 - [ ] `08` Refactor tools
 - [ ] `09` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills, wiki
+
+## JSON language server
+
+- lint
+- format
+- schema validation `$schema` property in JSON file to specify schema URL
