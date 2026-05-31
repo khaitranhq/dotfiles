@@ -101,6 +101,7 @@ end
 
 #=========================Aliases=========================
 alias v='nvim'
+alias t='tmux'
 alias l='eza -lah --sort modified --icons --group-directories-first --git'
 alias cat="bat -p"
 alias ld='lazydocker'
@@ -111,7 +112,6 @@ alias qq="exit"
 alias k='kubectl'
 alias kx='kubectx'
 alias p='pulumi'
-alias zi='zellij'
 alias acg='agentcrew chat'
 alias ppd='pulumi preview --diff'
 alias pp='pulumi preview'

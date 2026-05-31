@@ -3,10 +3,10 @@
 
 colourful: true
 
-# Everforest Medium Palette
-# Background: #2d353b
+# Everforest Soft Palette
+# Background: #333c43
 # Foreground: #d3c6aa
-# Black: #343f44
+# Black: #3a464c
 # Red: #e67e80
 # Green: #a7c080
 # Yellow: #dbbc7f
@@ -15,7 +15,7 @@ colourful: true
 # Cyan: #83c092
 # White: #d3c6aa
 # Gray: #859289
-# Bright Black: #475258
+# Bright Black: #4d5960
 # Bright Red: #e67e80
 # Bright Green: #a7c080
 # Bright Yellow: #dbbc7f
@@ -28,27 +28,27 @@ filekinds:
   normal: { foreground: "#d3c6aa" }
   directory: { foreground: "#e69875" }
   symlink: { foreground: "#859289" }
-  pipe: { foreground: "#475258" }
+  pipe: { foreground: "#4d5960" }
   block_device: { foreground: "#e67e80" }
   char_device: { foreground: "#dbbc7f" }
-  socket: { foreground: "#343f44" }
+  socket: { foreground: "#3a464c" }
   special: { foreground: "#d699b6" }
   executable: { foreground: "#a7c080" }
-  mount_point: { foreground: "#475258" }
+  mount_point: { foreground: "#4d5960" }
 
 perms:
   user_read: { foreground: "#859289" }
-  user_write: { foreground: "#475258" }
+  user_write: { foreground: "#4d5960" }
   user_execute_file: { foreground: "#a7c080" }
   user_execute_other: { foreground: "#a7c080" }
   group_read: { foreground: "#859289" }
-  group_write: { foreground: "#475258" }
+  group_write: { foreground: "#4d5960" }
   group_execute: { foreground: "#a7c080" }
   other_read: { foreground: "#859289" }
-  other_write: { foreground: "#475258" }
+  other_write: { foreground: "#4d5960" }
   other_execute: { foreground: "#a7c080" }
   special_user_file: { foreground: "#d699b6" }
-  special_other: { foreground: "#475258" }
+  special_other: { foreground: "#4d5960" }
   attribute: { foreground: "#859289" }
 
 size:
@@ -70,7 +70,7 @@ users:
   user_root: { foreground: "#e67e80" }
   user_other: { foreground: "#d699b6" }
   group_yours: { foreground: "#859289" }
-  group_other: { foreground: "#475258" }
+  group_other: { foreground: "#4d5960" }
   group_root: { foreground: "#e67e80" }
 
 links:
@@ -83,7 +83,7 @@ git:
   deleted: { foreground: "#e67e80" }
   renamed: { foreground: "#83c092" }
   typechange: { foreground: "#d699b6" }
-  ignored: { foreground: "#475258" }
+  ignored: { foreground: "#4d5960" }
   conflicted: { foreground: "#e67e80" }
 
 git_repo:
@@ -96,20 +96,20 @@ security_context:
   colon: { foreground: "#859289" }
   user: { foreground: "#e69875" }
   role: { foreground: "#d699b6" }
-  typ: { foreground: "#475258" }
+  typ: { foreground: "#4d5960" }
   range: { foreground: "#d699b6" }
 
 file_type:
   image: { foreground: "#dbbc7f" }
   video: { foreground: "#e67e80" }
   music: { foreground: "#e69875" }
-  lossless: { foreground: "#475258" }
-  crypto: { foreground: "#343f44" }
+  lossless: { foreground: "#4d5960" }
+  crypto: { foreground: "#3a464c" }
   document: { foreground: "#859289" }
   compressed: { foreground: "#d699b6" }
   temp: { foreground: "#e67e80" }
   compiled: { foreground: "#83c092" }
-  build: { foreground: "#475258" }
+  build: { foreground: "#4d5960" }
   source: { foreground: "#a7c080" }
 
 punctuation: { foreground: "#859289" }
