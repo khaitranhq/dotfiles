@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore tmux sessions from saved state
+Documentation=https://github.com/khaitran/dotfiles
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tmux-restore-sessions
+
+[Install]
+WantedBy=default.target
