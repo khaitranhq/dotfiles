@@ -94,6 +94,25 @@ zoxide init fish | source
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
 add-keys-ssh-agent
 
+#=========================Tmux Session Restore=========================
+# Restore tmux sessions once per ssh-agent instance.
+# Runs only after add-keys-ssh-agent finishes so keys are loaded.
+# Sentinel is keyed to SSH_AGENT_PID so a new agent (e.g. after reboot)
+# triggers a fresh restore. Old sentinels are cleaned up on each run.
+# Runs in background so shell startup is not blocked.
+if set -q SSH_AGENT_PID
+    set -l restore_flag_dir "$HOME/.local/share/tmux"
+    mkdir -p $restore_flag_dir
+    set -l restore_flag "$restore_flag_dir/.restored-$SSH_AGENT_PID"
+    if not test -f $restore_flag
+        for f in $restore_flag_dir/.restored-*
+            rm -f $f
+        end
+        touch $restore_flag
+        tmux-restore-sessions &
+    end
+end
+
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish
     source $HOME/.config/fish/ai.fish
