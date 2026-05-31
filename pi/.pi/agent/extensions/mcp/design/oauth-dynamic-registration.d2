@@ -8,36 +8,31 @@ remote: MCP Server (Resource)
 browser: Browser
 callback: Callback
 
-Initial Connect (Discovery) {
+Initial Connect (Discovery): {
   pi.note: No clientId config
-  provider.note: OAuth 2.0 client abstraction — handles dynamic client registration, \ntoken exchange (auth code → access/refresh), token storage, and \nsilent refresh when tokens expire. Bridges pi ↔ OAuth server ↔ MCP server.
+  provider."OAuth 2.1 client abstraction — handles dynamic client registration, \ntoken exchange (auth code → access/refresh), token storage, and \nsilent refresh when tokens expire. Bridges pi ↔ OAuth server ↔ MCP server."
+  pi -> callback: start HTTP server
+  pi."Callback HTTP server must be running\nbefore creating the provider — the\nconstructor captures redirect_uri\nfrom the active callback port/path."
   pi -> provider: new McpOAuthProvider
   pi -> remote: connect(authProvider)
 
   remote -> pi: 401UnauthorizedError\n(authorizationUrl, tokenUrl, registrationUrl)
-  pi.note: 401 reveals OAuth metadata.\nGroup2 uses it to register + authorize.\n\nThis 401 is NOT a failure — it is the MCP\nOAuth discovery protocol (RFC 8414 style).\n\nBut we cannot proceed yet: no callback\nHTTP server -> no redirect_uri to register.
+  pi."401 reveals OAuth metadata.\n\nThis 401 is NOT a failure — it is the MCP\nOAuth discovery protocol (RFC 8414 style).\n\nThe same provider instance handles\ndiscovery, registration, and authorization\n— no re-creation needed."
 }
 
-Registration + Authorization {
-  pi -> callback: start HTTP server
-
+Registration + Authorization: {
   Registration: {
-    pi -> provider: create provider again
-    pi.note: Second provider instance is different:\nit is created AFTER the callback\nHTTP server is up, so the constructor\nnow has the redirect_uri available.\n\nFirst creation: discovery-only (no URI).\nSecond creation: full OAuth capable.
-    pi -> remote: connect(authProvider)
-
-    remote -> pi: 401(same metadata)
     pi -> provider: setMetadata(metadata)
 
-    provider.note: RFC 7591 registration includes\nredirect_uris (the callback URL)\nso the OAuth server can validate\nredirects after user auth.
+    provider."RFC 7591 registration includes\nredirect_uris (the callback URL)\nso the OAuth server can validate\nredirects after user auth."
     provider -> oauth: POST register client (RFC 7591)
     oauth -> provider: clientId + clientSecret
     provider -> store: save clientInfo
   }
 
   Authorization Request: {
-    provider -> provider: build authorization URL\n(endpoint + clientId + redirectUri + state + scope)
-    provider.note: state = CSRF token.\nSaved to store for callback validation.
+    provider -> provider: build authorization URL\n(endpoint + clientId + redirectUri + codeChallenge + state + scope)
+    provider."state = CSRF token.\nSaved to store for callback validation."
     provider -> store: save state
     provider -> pi: onRedirect(url)
     pi -> browser: open(url)
