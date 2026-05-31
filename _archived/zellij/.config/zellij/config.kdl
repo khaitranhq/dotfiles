@@ -109,6 +109,15 @@ keybinds clear-defaults=true {
     renamepane {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }
     }
+    normal {
+        // Bind Alt + l to trigger the custom 20% left pane layout
+        bind "Alt l" {
+            NewPane "Left" {
+                // Defines the exact size of the newly spawned left pane
+                size "20%"
+            }
+        }
+    }
 }
 
 // Plugin aliases - can be used to change the implementation of Zellij
