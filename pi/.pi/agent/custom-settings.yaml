@@ -75,6 +75,8 @@ tools:
     pnpm lint: allow
     pnpm test: allow
     gh pr diff: allow
+    tree: allow
+    nvim: allow
   read: allow
   write: allow
   edit: allow
