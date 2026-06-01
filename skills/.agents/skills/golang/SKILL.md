@@ -214,26 +214,21 @@ After implementing Go code, follow these steps to ensure code quality. Run every
    - Use `-o /dev/null` to discard the output binary
 
 3. **Format Code**
-    **MUST run all available formatters in the following order.** If a formatter is installed and applicable, run it; do not skip one because another formatter already ran.
-    - **goimports**: Organize imports and fix missing/unused imports
-      ```bash
-      goimports -w .
-      ```
-    - **gofumpt**: Stricter formatting than gofmt
-      ```bash
-      gofumpt -w .
-      ```
-    - **golines**: Break long lines appropriately
-      ```bash
-      golines -w .
-      ```
-    - **gofmt**: Run if it is the only formatter available
-      ```bash
-      gofmt -w .
-      ```
+   **MUST run all available formatters in the following order.** If a formatter is installed and applicable, run it; do not skip one because another formatter already ran.
+   - **goimports**: Organize imports and fix missing/unused imports
+     ```bash
+     goimports -w .
+     ```
+   - **gofumpt**: Stricter formatting than gofmt
+     ```bash
+     gofumpt -w .
+     ```
+   - **gofmt**: Run if it is the only formatter available
+     ```bash
+     gofmt -w .
+     ```
 
 4. **Run Linters**
-
    - Run every available linter for the project and toolchain
    - `golangci-lint`
      ```bash
@@ -261,11 +256,13 @@ go doc <package>
 ```
 
 Example:
+
 ```bash
 go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2
 ```
 
 This shows all exported types and functions in the package. Look for:
+
 - **Constructors** - functions that create resources or values (e.g., `NewInstance`)
 - **Args structs** - e.g., `InstanceArgs` that define properties
 - **Result types** - structs returned by constructors (e.g., `*Instance`)
@@ -277,6 +274,7 @@ go doc <package> <type/func name>
 ```
 
 Examples:
+
 ```bash
 # Get details about a constructor function
 go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 NewInstance
@@ -289,6 +287,7 @@ go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 Instance
 ```
 
 This shows:
+
 - Function/type signature
 - Documentation explaining purpose
 - All fields in structs with their types and field tags

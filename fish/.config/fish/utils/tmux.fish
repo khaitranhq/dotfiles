@@ -18,20 +18,22 @@ function tw -d "Select or create a tmux workspace from saved list"
     if test $status -ne 0; or test -z "$selected"
         return 0
     end
+    echo "Selected workspace: $selected"
 
     # ── Resolve: existing workspace or new ──
     set -l target_path (yq -r ".[\"$selected\"]" "$workspace_file" 2>/dev/null)
+    set -l session_name
 
     if test -z "$target_path"; or test "$target_path" = null
         # ── New workspace ──
         set -l cwd (pwd)
         yq -i ".[\"$selected\"] = \"$cwd\"" "$workspace_file"
         echo "✅ Saved workspace '$selected' → $cwd"
-        set -l session_name $selected
-        set -l target_path $cwd
+        set session_name $selected
+        set target_path $cwd
     else
         # ── Existing workspace ──
-        set -l session_name $selected
+        set session_name $selected
 
         if not test -d "$target_path"
             echo "⚠️  Workspace path no longer exists: $target_path"
@@ -53,6 +55,7 @@ function tw -d "Select or create a tmux workspace from saved list"
     else
         tmux new-session -d -s "$session_name" -c "$target_path" -n v
         tmux new-window -t "$session_name" -c "$target_path" -n ai
+        tmux select-window -t "$session_name":v
         if set -q TMUX
             tmux switch-client -t "$session_name"
         else
