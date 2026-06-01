@@ -177,6 +177,13 @@ local blink_config = {
 local M = {}
 
 M.setup = function()
+	vim.g.format_on_save_enabled = true
+
+	vim.api.nvim_create_user_command("ToggleFormatOnSave", function()
+		vim.g.format_on_save_enabled = not vim.g.format_on_save_enabled
+		vim.notify("Format on save: " .. (vim.g.format_on_save_enabled and "enabled" or "disabled"))
+	end, {})
+
 	-- Configure each LSP server using the new vim.lsp.config API
 	for server, config in pairs(lsp_config) do
 		vim.lsp.config(server, config)
@@ -193,6 +200,9 @@ M.setup = function()
 	vim.api.nvim_create_autocmd("BufWritePre", {
 		pattern = "*.go",
 		callback = function()
+			if not vim.g.format_on_save_enabled then
+				return
+			end
 			local params = vim.lsp.util.make_range_params(0, "utf-8")
 			params.context = { only = { "source.organizeImports" } }
 			-- buf_request_sync defaults to a 1000ms timeout. Depending on your
@@ -228,6 +238,9 @@ M.setup = function()
 					group = vim.api.nvim_create_augroup("my.lsp", { clear = false }),
 					buffer = ev.buf,
 					callback = function()
+						if not vim.g.format_on_save_enabled then
+							return
+						end
 						vim.lsp.buf.format({ bufnr = ev.buf, id = client.id, timeout_ms = 1000 })
 					end,
 				})
