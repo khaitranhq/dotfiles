@@ -601,6 +601,11 @@ export class SubagentExtension {
       effective = Array.from(filtered);
     }
 
+    // Prevent subagents from spawning subagents (recursive delegation)
+    if (effective) {
+      effective = effective.filter((t) => t !== "subagent");
+    }
+
     return effective && effective.length > 0 ? effective : undefined;
   }
 
