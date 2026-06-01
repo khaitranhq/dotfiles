@@ -1,4 +1,4 @@
-; inherits: ecma
+; inherits: javascript
 
 "require" @keyword.import
 

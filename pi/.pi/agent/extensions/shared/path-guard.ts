@@ -16,7 +16,9 @@ import * as path from "node:path";
 const HOME_DIR = process.env.HOME || "/home/" + (process.env.USER || "user");
 
 /** Default safe prefixes — $HOME and /tmp (both resolved to absolute). */
-const DEFAULT_ALLOWED_PREFIXES = [HOME_DIR, "/tmp"].map((prefix) => path.resolve(prefix));
+const DEFAULT_ALLOWED_PREFIXES = [HOME_DIR, "/tmp", "/dev/null"].map((prefix) =>
+  path.resolve(prefix),
+);
 
 /** Regex matching .env file paths (bare filename or path component). */
 const ENV_FILE_RE = /(?:^|[\\/])\.env(?:\..*)?$|(?:^|[\\/])\..*\.env(?:\..*)?$/;
