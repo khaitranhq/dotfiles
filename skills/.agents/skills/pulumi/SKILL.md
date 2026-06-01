@@ -1,6 +1,6 @@
 ---
 name: pulumi
-description: Provides Pulumi-specific opinions for infrastructure-as-code stacks, focusing on safe exports and stack composition.
+description: Provides Pulumi-specific opinions for infrastructure-as-code stacks, focusing on safe exports, stack composition, structured configuration, component resources, and secrets handling. Use when working with Pulumi stacks, Pulumi code, Pulumi.yaml, Pulumi configuration, Pulumi IaC, Pulumi components, Pulumi resources, StackReference, ComponentResource, pulumi preview, pulumi up, pulumi destroy, pulumi config, pulumi stack, Pulumi plugins, Pulumi SDK, or any Pulumi project.
 license: MIT
 metadata:
   author: OpenCode
@@ -11,6 +11,37 @@ metadata:
     - Infrastructure as Code
     - IaC
     - Cloud engineering
+    - pulumi stack
+    - pulumi up
+    - pulumi preview
+    - pulumi destroy
+    - pulumi config
+    - pulumi refresh
+    - pulumi login
+    - pulumi logout
+    - pulumi new
+    - pulumi import
+    - pulumi export
+    - Pulumi.yaml
+    - Pulumi.dev.yaml
+    - pulumi component
+    - pulumi resource
+    - pulumi plugin
+    - pulumi SDK
+    - StackReference
+    - ComponentResource
+    - pulumi Output
+    - pulumi secret
+    - pulumi config
+    - pulumi project
+    - Pulumi IaC
+    - Pulumi stack
+    - Pulumi code
+    - Pulumi deployment
+    - Pulumi infrastructure
+    - Pulumi automation
+    - Pulumi module
+    - Pulumi provider
   role: specialist
   scope: implementation
   output-format: code
@@ -391,7 +422,7 @@ See [Authoring a Source-Based Plugin Package](https://www.pulumi.com/docs/iac/gu
 - **Document exported components** and stack outputs so downstream stacks know what to expect.
 - **Validate YAML and Pulumi configs** with `yamllint` when changes involve YAML files.
 - **Avoid panics for normal flow**; emit errors or fail the deployment explicitly.
-- **Use `go doc` commands** to discover types and functions — See `opencode/.config/opencode/skills/golang/SKILL.md` for `go doc` workflow details.
+- **Use `go doc` commands** to discover types and functions — See the Go skill (`golang/SKILL.md`) for `go doc` workflow details.
 
 ## Post-Implementation Steps
 
@@ -402,4 +433,4 @@ See [Authoring a Source-Based Plugin Package](https://www.pulumi.com/docs/iac/gu
 
 ## Reference
 
-- Go skill for related practice and `go doc` workflows: See `opencode/.config/opencode/skills/golang/SKILL.md`
+- Go skill for related practice and `go doc` workflows: See the Go skill (`golang/SKILL.md`)
