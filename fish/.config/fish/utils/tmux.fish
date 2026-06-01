@@ -1,46 +1,62 @@
-function ta -d "Interactive tmux session selector using fzf"
-    # Ensure fzf is available
-    if not command -v fzf >/dev/null 2>&1
-        echo "❌ Error: fzf command not found" >&2
-        return 1
+function tw -d "Select or create a tmux workspace from saved list"
+    set -l workspace_file "$HOME/.local/share/tmux/workspaces.json"
+
+    # Ensure file exists
+    if not test -f "$workspace_file"
+        echo '{}' >"$workspace_file"
     end
 
-    # Check if tmux server is running
-    if not tmux has-session 2>/dev/null
-        echo "No tmux server running. Starting a new session..."
-        tmux new-session -A -s main
-        return $status
+    # Read saved workspace names
+    set -l workspace_names (yq -r 'keys | .[]' "$workspace_file" 2>/dev/null)
+
+    # Fuzzy-filter workspaces; --no-strict returns typed text when no match
+    set -l selected (printf '%s\n' $workspace_names | gum filter \
+        --header="📂 Filter workspace or type new name" \
+        --placeholder="Search or create..." \
+        --no-strict)
+
+    if test $status -ne 0; or test -z "$selected"
+        return 0
     end
 
-    # List sessions with format: session_name
-    set -l sessions (tmux list-sessions -F "#{session_name}")
-    if test -z "$sessions"
-        echo "No tmux sessions found."
-        return 1
-    end
+    # ── Resolve: existing workspace or new ──
+    set -l target_path (yq -r ".[\"$selected\"]" "$workspace_file" 2>/dev/null)
 
-    # Auto-select if only one session
-    set -l session_count (count $sessions)
-    if test $session_count -eq 1
-        set -l selected $sessions[1]
+    if test -z "$target_path"; or test "$target_path" = null
+        # ── New workspace ──
+        set -l cwd (pwd)
+        yq -i ".[\"$selected\"] = \"$cwd\"" "$workspace_file"
+        echo "✅ Saved workspace '$selected' → $cwd"
+        set -l session_name $selected
+        set -l target_path $cwd
     else
-        set -l selected (printf '%s\n' $sessions | fzf \
-            --header="🎯 Select tmux session to attach" \
-            --layout=reverse \
-            --border \
-            --height=12 \
-            +s)
+        # ── Existing workspace ──
+        set -l session_name $selected
 
-        set -l select_exit_code $status
-        if test $select_exit_code -ne 0; or test -z "$selected"
-            return 0
+        if not test -d "$target_path"
+            echo "⚠️  Workspace path no longer exists: $target_path"
+            if gum confirm "Remove this workspace?" --default=false
+                yq -i "del(.[\"$selected\"])" "$workspace_file"
+                echo "🗑️  Removed workspace '$selected'"
+            end
+            return 1
         end
     end
 
-    # If already inside tmux, switch client; otherwise attach
-    if set -q TMUX
-        tmux switch-client -t "$selected"
+    # ── Attach or create tmux session ──
+    if tmux has-session -t "$session_name" 2>/dev/null
+        if set -q TMUX
+            tmux switch-client -t "$session_name"
+        else
+            tmux attach-session -t "$session_name"
+        end
     else
-        tmux attach-session -t "$selected"
+        tmux new-session -d -s "$session_name" -c "$target_path" -n v
+        tmux new-window -t "$session_name" -c "$target_path" -n ai
+        if set -q TMUX
+            tmux switch-client -t "$session_name"
+        else
+            tmux attach-session -t "$session_name"
+        end
     end
 end
