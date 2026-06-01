@@ -63,3 +63,61 @@ function tw -d "Select or create a tmux workspace from saved list"
         end
     end
 end
+
+function pick_files -d "Pick files with fzf and send to tmux pane"
+    set -l pane_dir (tmux display-message -p '#{pane_current_path}')
+    set -l pane_id (tmux display-message -p '#{pane_id}')
+
+    cd "$pane_dir"; or return 1
+
+    set -l git_root (git rev-parse --show-toplevel 2>/dev/null)
+
+    # If not in a git repo, use current directory
+    if test -z "$git_root"
+        set git_root "$pane_dir"
+    end
+
+    # Use rg and fzf to select files, then make paths relative to git root
+    set -l fzf_output (rg --files --no-ignore --hidden \
+        --glob '!.git/**' \
+        --glob '!node_modules/**' \
+        --glob '!dist/**' \
+        --glob '!.venv/**' \
+        --glob '!venv/**' \
+        --glob '!.mypy_cache/**' \
+        --glob '!.aider*/**' \
+        --glob '!cdk.out/**' \
+        --glob '!.vagrant/**' \
+        --glob '!build/**' \
+        --glob '!.chat_histories/**' \
+        --glob '!.ruff_cache/**' \
+        --ignore-file '.rgignore' \
+        --follow \
+        | fzf --multi \
+            --reverse \
+            --prompt="Select files: " \
+            --preview 'bat --style=numbers --color=always {} 2>/dev/null || cat {}' \
+            --preview-window=right:60%)
+
+    # Check if user cancelled (ESC or Ctrl+C)
+    if test $status -ne 0
+        return 0
+    end
+
+    # Process selected files
+    set -l relative_paths
+    for file in (printf '%s\n' $fzf_output)
+        if test -n "$file"
+            set -l relative_path (realpath --relative-to="$git_root" "$pane_dir/$file" 2>/dev/null)
+            if test -n "$relative_path"
+                set -a relative_paths "$relative_path"
+            end
+        end
+    end
+
+    # Send selected files to tmux pane
+    if test (count $relative_paths) -gt 0
+        set -l files_oneline (string join " " $relative_paths)
+        tmux send-keys -t "$pane_id" "$files_oneline"
+    end
+end

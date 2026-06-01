@@ -84,7 +84,7 @@ keymaps.git = {
       end,
       "Open Lazygit",
     },
-    ["<leader>ghp"] = {
+    ["<leader>gho"] = {
       require("gitsigns").preview_hunk,
       "Preview hunk",
     },
@@ -96,7 +96,7 @@ keymaps.git = {
       require("gitsigns").stage_hunk,
       "Stage hunk",
     },
-    ["<leader>ghr"] = {
+    ["<leader>ghp"] = {
       function()
         require("gitsigns").nav_hunk("prev")
       end,
