@@ -1,80 +1,77 @@
 shape: sequence_diagram
 
 pi: pi
-store: Auth Store (~/.pi/agent/mcp/)
-provider: OAuth Provider
+client: MCP Client\n(McpClientManager)
+store: Auth Store\n(~/.pi/agent/mcp/)
+provider: OAuth Provider\n(McpOAuthProvider)
 oauth: OAuth Authorization Server
 remote: MCP Server (Resource)
 browser: Browser
-callback: Callback
+callback: Callback Server
 
-Initial Connect (Discovery): {
-  pi.note: No clientId config
-  provider."OAuth 2.1 client abstraction — handles dynamic client registration, \ntoken exchange (auth code → access/refresh), token storage, and \nsilent refresh when tokens expire. Bridges pi ↔ OAuth server ↔ MCP server."
-  pi -> callback: start HTTP server
-  pi."Callback HTTP server must be running\nbefore creating the provider — the\nconstructor captures redirect_uri\nfrom the active callback port/path."
-  pi -> provider: new McpOAuthProvider
-  pi -> remote: connect(authProvider)
-
-  remote -> pi: 401UnauthorizedError\n(authorizationUrl, tokenUrl, registrationUrl)
-  pi."401 reveals OAuth metadata.\n\nThis 401 is NOT a failure — it is the MCP\nOAuth discovery protocol (RFC 8414 style).\n\nThe same provider instance handles\ndiscovery, registration, and authorization\n— no re-creation needed."
+Initial Connect \u0026 Discovery: {
+  pi -> client: connectAll()
+  client.note: Iterates configured servers at session_start — handles all MCP protocol and OAuth automatically.
+  provider."OAuth 2.1 client abstraction — handles dynamic client registration, \ntoken exchange (auth code → access/refresh), token storage, and \nsilent refresh when tokens expire. Bridges client ↔ OAuth server ↔ store."
+  client -> remote: initialize request (no auth)
+  remote -> client: 401 Unauthorized\nWWW-Authenticate: Bearer resource_metadata="..."
+  client."401 is not a failure — it is the MCP OAuth\ndiscovery protocol (RFC 9728). Triggers\nautomatic OAuth flow."
+  client -> provider: discoverFrom401(wwwAuthHeader)
+  provider -> oauth: fetch resource metadata (RFC 9728)\n+ authorization server metadata (RFC 8414)
+  oauth -> provider: authorizationUrl + tokenUrl +\nregistrationUrl
 }
 
-Registration + Authorization: {
-  Registration: {
-    pi -> provider: setMetadata(metadata)
-
-    provider."RFC 7591 registration includes\nredirect_uris (the callback URL)\nso the OAuth server can validate\nredirects after user auth."
-    provider -> oauth: POST register client (RFC 7591)
-    oauth -> provider: clientId + clientSecret
-    provider -> store: save clientInfo
-  }
-
-  Authorization Request: {
-    provider -> provider: build authorization URL\n(endpoint + clientId + redirectUri + codeChallenge + state + scope)
-    provider."state = CSRF token.\nSaved to store for callback validation."
-    provider -> store: save state
-    provider -> pi: onRedirect(url)
-    pi -> browser: open(url)
-  }
+Registration: {
+  client -> callback: start HTTP server (random port)
+  callback -> client: redirect_uri
+  provider."RFC 7591 registration includes\nredirect_uris (the callback URL)\nso the OAuth server can validate\nredirects after user auth."
+  provider -> oauth: POST register client (RFC 7591)\nredirect_uris, grant_types, ...
+  oauth -> provider: clientId + clientSecret
+  provider -> store: save clientInfo\n(serverName, resourceUrl, clientId, clientSecret)
 }
 
-group3: Browser Auth {
+Authorization Request: {
+  client -> provider: buildAuthorizationUrl(scopes)
+  provider -> provider: build URL (PKCE S256 +\nCSRF state + resource indicator RFC 8707)
+  provider."state = CSRF token.\nSaved to store for callback validation."
+  provider -> store: save state
+  provider -> client: authorization URL
+  client -> browser: open(url)
+}
+
+Browser Auth: {
   browser -> oauth: user authenticates + approves scopes
   oauth -> browser: 302 redirect to callback?code=xxx&state=yyy
-  browser -> callback: GET callback?code=xxx&state=yyy
-  callback -> store: get state (saved in group2)
+  browser -> callback: GET /callback?code=xxx&state=yyy
+  callback -> store: get state (saved in Authorization Request)
   callback -> callback: validate CSRF state
-  pi -> pi: receive callback(code)
+  callback -> client: resolve callback (code, state)
 }
 
-group4: Exchange + Connect {
-  pi -> pi: finishAuth(code)
-  pi -> provider: finishAuth(code)
-  provider -> oauth: POST /token (auth code → tokens)
+Token Exchange \u0026 Connect: {
+  client -> provider: validateState(state)
+  client -> provider: exchangeCode(code)
+  provider -> oauth: POST /token\n(authorization_code + code_verifier + resource)
   oauth -> provider: accessToken + refreshToken
-  provider -> store: saveTokens
-
-  pi -> remote: reconnect (Bearer token)
-  remote -> pi: 200 OK connected
-  pi -> pi: state = connected
+  provider -> store: save tokens\n(accessToken, refreshToken, expiresAt)
+  provider -> client: TokenSet
+  client -> remote: reconnect (Bearer token)
+  remote -> client: 200 OK (connected) — tool definitions
+  client -> pi: tools registered (mcp_ prefix)
 }
 
-group5: Token Refresh {
-  pi -> remote: tools/list (Bearer expired)
-  remote -> pi: 401 Unauthorized
-
-  pi -> provider: tokens()
-  provider.note: Lookup by server identifier\nand resource endpoint URL.
-  provider -> store: getForUrl(serverName, resourceUrl)
+Token Refresh: {
+  client -> remote: tools/list (Bearer expired)
+  remote -> client: 401 Unauthorized
+  client -> provider: getAccessToken()
+  provider -> store: get(serverName, resourceUrl)
   store -> provider: expired accessToken + refreshToken
-  provider -> pi: tokens expired
-
-  pi -> provider: refresh
+  provider -> provider: expired → trigger refresh
   provider -> oauth: POST /token (refresh_token grant)
-  oauth -> provider: new accessToken + refreshToken
-  provider -> store: saveTokens
-
-  pi -> remote: retry (new Bearer)
-  remote -> pi: tool definitions
+  oauth -> provider: new accessToken + refreshToken (rotated)
+  provider -> store: save tokens
+  provider -> client: new accessToken
+  client -> remote: retry (new Bearer)
+  remote -> client: tool result
+  pi <- client: result
 }
