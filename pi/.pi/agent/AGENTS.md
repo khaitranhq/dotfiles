@@ -112,6 +112,8 @@ When processing YAML and JSON files, use the following tools in order of prefere
 
 ⚠️ **Do not use jq** - Since `yq` handles both YAML and JSON natively, using `jq` is redundant and can lead to inconsistent handling.
 
+⚠️ **Do not use python or node** - Python (pyyaml, json) and Node.js (js-yaml, JSON.parse) scripts add unnecessary complexity and dependency overhead. Use `yq` for all YAML/JSON processing.
+
 ### YAML Validation
 
 All YAML files in this project must be validated using `yamllint` before being committed or merged.
