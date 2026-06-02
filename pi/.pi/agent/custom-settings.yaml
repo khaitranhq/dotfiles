@@ -85,7 +85,7 @@ tools:
   web_search: allow
   web_fetch: allow
   todowrite: allow
-  obsidian_*: allow
+  mcp_obsidian_*: allow
   ls: allow
   grep: allow
 agents:

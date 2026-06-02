@@ -1,0 +1,1 @@
+Implement custom error types in Go by defining a struct that implements the error interface. Include fields for error code, message, and underlying cause. Implement Unwrap, Is, and As methods for proper error chain inspection. Create sentinel errors and demonstrate wrapping with fmt.Errorf and %w.

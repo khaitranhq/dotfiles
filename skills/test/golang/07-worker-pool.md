@@ -1,0 +1,1 @@
+Implement a context-aware worker pool in Go that processes jobs concurrently. Use goroutines with proper lifecycle management, channels for job distribution, and context for cancellation. Handle graceful termination when the context is cancelled.

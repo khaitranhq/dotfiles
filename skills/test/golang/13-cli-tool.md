@@ -1,0 +1,1 @@
+Build a Go CLI tool using the flag package that processes CSV files. The tool should accept input/output file paths, a delimiter flag, and a verbose mode. Use proper error handling, validate inputs at boundaries, and follow Go conventions for main package simplicity. Include table-driven tests.

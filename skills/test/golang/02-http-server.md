@@ -1,0 +1,1 @@
+Create a Go HTTP server with proper error handling and graceful termination on SIGTERM. The server should have at least two endpoints, use context for cancellation, and follow Go best practices for project structure.

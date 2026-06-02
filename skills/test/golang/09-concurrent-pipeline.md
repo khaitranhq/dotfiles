@@ -1,0 +1,1 @@
+Build a concurrent data processing pipeline in Go using channels and goroutines. The pipeline should have three stages: read input, transform data, and write output. Use context for cancellation and handle errors properly at each stage. Show goroutine lifecycle management.

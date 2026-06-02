@@ -1,0 +1,1 @@
+Design Go interfaces for a file storage system following interface segregation and Go conventions. Create small, focused interfaces (1-3 methods each) for reading, writing, listing, and deleting files. Show how they compose into a Store interface. Include proper error handling with sentinel errors.

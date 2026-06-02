@@ -1,0 +1,1 @@
+Implement HTTP middleware in Go for logging, authentication, and request tracing. Use the standard library http.Handler interface pattern. Each middleware should wrap the next handler, extract or inject context values, and follow Go conventions for composable middleware chains.

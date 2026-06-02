@@ -1,0 +1,1 @@
+Show the recommended Go project structure for a web API service. Organize packages following Go conventions: separate handlers, services, repositories, and models. Show proper import grouping (stdlib, third-party, local) and file organization order within each source file.

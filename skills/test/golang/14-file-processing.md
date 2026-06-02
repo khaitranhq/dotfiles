@@ -1,0 +1,1 @@
+Write a Go function that reads a large file line by line and counts word frequencies. Use buffered I/O, handle file open errors properly, and use defer for resource cleanup. The function should accept a context for cancellation and return results or an error. Write table-driven tests with temporary test files.

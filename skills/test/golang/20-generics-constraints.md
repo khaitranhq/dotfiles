@@ -1,0 +1,1 @@
+Write a generic function in Go 1.18+ that finds duplicate elements in a slice of any comparable type. Use type constraints properly, handle edge cases like empty slices, and write table-driven tests for multiple types (int, string, custom struct). Follow Go conventions for generic code organization and naming.

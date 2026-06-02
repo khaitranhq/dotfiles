@@ -1,0 +1,1 @@
+Write Go code for JSON marshaling and unmarshaling with custom field tags. Handle nested structs, omitempty tags, and custom MarshalJSON/UnmarshalJSON methods. Include proper error handling and table-driven tests for edge cases like missing fields and invalid JSON.

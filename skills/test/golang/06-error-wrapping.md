@@ -1,0 +1,1 @@
+Implement error handling in Go for a user service. Create sentinel errors using errors.New, wrap errors with fmt.Errorf and %w, and demonstrate how to use errors.Is and errors.As for error inspection. Show proper context propagation through the error chain.

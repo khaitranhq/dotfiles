@@ -1,0 +1,1 @@
+Write Go code that demonstrates proper goroutine lifecycle management. Spawn multiple goroutines that fetch data from URLs concurrently, collect results via channels, handle errors with an errgroup, and ensure all goroutines terminate cleanly when the context is cancelled or all work is done.

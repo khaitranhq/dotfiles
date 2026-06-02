@@ -1,0 +1,1 @@
+Optimize a Go function that processes a large slice of structs. Write benchmarks to measure performance, use pprof to identify bottlenecks, reduce allocations by pre-allocating slices, and consider sync.Pool for reusable objects. Show before/after benchmarks following Go testing conventions.

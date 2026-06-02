@@ -1,0 +1,1 @@
+Design a dependency injection pattern in Go without using a framework. Use constructor functions (NewXxx) that accept interfaces as dependencies. Show how high-level modules depend on abstractions rather than concrete implementations. Include a main wire-up function that assembles all dependencies.
