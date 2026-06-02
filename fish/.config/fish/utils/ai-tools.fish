@@ -42,9 +42,9 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
     end
 
     # Build prompt with branch context for Jira ticket awareness
-    set ai_prompt "Generate a short but concise conventional commit message from this staged diff. Output only the commit message, no explanation, no markdown."
+    set ai_prompt "Generate a short but concise conventional commit message from this staged diff. If the diff contains more than one kind of change, include a commit body that describes each change on a separate line, with an empty line between the title and body. Output only the commit message, no explanation, no markdown."
     if test -n "$jira_ticket"
-        set ai_prompt "Generate a short but concise commit message from this staged diff. The commit message must start with \"$jira_ticket: \". IMPORTANT: do NOT include any conventional commit prefix like 'fix:' or 'feat:' — the Jira ticket ID serves as the prefix. Output only the commit message, no explanation, no markdown."
+        set ai_prompt "Generate a short but concise commit message from this staged diff. The commit message must start with \"$jira_ticket: \". IMPORTANT: do NOT include any conventional commit prefix like 'fix:' or 'feat:' — the Jira ticket ID serves as the prefix. If the diff contains more than one kind of change, include a commit body that describes each change on a separate line, with an empty line between the title and body. Output only the commit message, no explanation, no markdown."
     end
 
     set generated_message "$(gum spin \
