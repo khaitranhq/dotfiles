@@ -1,4 +1,111 @@
 local M = {}
+
+--- Resolve a path to its real filesystem path (follows symlinks).
+--- @param p string Path to resolve
+--- @return string|nil Real path, or nil if it doesn't exist or is a file
+local function _realpath(p)
+    if not p or p == "" then return nil end
+    if not vim.loop or not vim.loop.fs_realpath then return nil end
+    return vim.loop.fs_realpath(p)
+end
+
+--- Walk cwd directory to find which child path (including symlinked children) contains the buffer.
+--- For each directory entry, resolve to real path and check if it matches the buffer's real path.
+--- @param buf_real string Resolved real path of the buffer file (e.g. "/tmp/abc/xyz.go")
+--- @param cwd_user string User-visible cwd path (e.g. "./" or "/home/user/project")
+--- @return string|nil Relative path from cwd to the buffer, or nil if not found
+local function _find_via_symlink_walk(buf_real, cwd_user)
+    local function _walk(dir_user, parts, depth)
+        if depth > 15 then return nil end
+
+        local loop = vim.loop
+        if not loop or not loop.fs_scandir then return nil end
+
+        local handle = loop.fs_scandir(dir_user)
+        if not handle then return nil end
+
+        while true do
+            local name, ftype = loop.fs_scandir_next(handle)
+            if not name then break end
+
+            -- Build the user-facing path for this child entry
+            -- Normalize dir_user to always end with "/"
+            local base = dir_user
+            if base == "." or base == "./" then
+                base = "./"
+            elseif base:sub(-1) ~= "/" then
+                base = base .. "/"
+            end
+            local child_user = base .. name
+
+            -- Resolve this child path to its real filesystem path (follows symlinks)
+            local child_real = _realpath(child_user)
+            if not child_real or child_real == "" then
+                -- Entry doesn't exist or can't resolve — skip
+            elseif child_real == buf_real or buf_real:sub(1, #child_real + 1) == child_real .. "/" then
+                -- Found: this child (or one under it) is our buffer
+                local parts_copy = {}
+                for _, v in ipairs(parts) do
+                    table.insert(parts_copy, v)
+                end
+                table.insert(parts_copy, name)
+                local display = table.concat(parts_copy, "/")
+
+                -- Add the remainder of buf_real after child_real
+                local rest = buf_real:sub(#child_real + 2) -- skip the "/" separator
+                while rest:sub(1, 1) == "/" do
+                    rest = rest:sub(2)
+                end
+
+                if rest == "" then
+                    return display
+                end
+                return display .. "/" .. rest
+            end
+
+            -- Recurse into directories and symlinks to directories (skip files)
+            if ftype == "directory" or ftype == "link" then
+                parts[#parts + 1] = name
+                local result = _walk(child_user, parts, depth + 1)
+                table.remove(parts)
+                if result then return result end
+            end
+        end
+
+        return nil
+    end
+
+    return _walk(cwd_user, {}, 0)
+end
+
+--- Compute relative path from cwd to a buffer file, resolving symlinks.
+--- If the buffer is under cwd (possibly via a symlink), returns a relative display path.
+--- If not under cwd, returns the buffer name as-is (usually absolute).
+--- @param buf_name string The buffer name (may be absolute, relative, or empty)
+--- @return string The path to display
+local function _get_relative_buf_name(buf_name)
+    if buf_name == "" then
+        return buf_name
+    end
+
+    -- 1. Direct relative conversion (works when buffer name is already accessible via cwd)
+    local rel = vim.fn.fnamemodify(buf_name, ":.")
+    if not rel:match("^/") then
+        return rel
+    end
+
+    -- 2. Buffer name starts with "/" — try to find a user-visible cwd-relative path
+    --    This handles the case where vim stores the resolved (real) path but the user
+    --    accessed the file via a symlink (e.g. ./infra -> /tmp/abc)
+    local buf_real = _realpath(buf_name)
+    if not buf_real or buf_real == "" then
+        -- File doesn't exist yet (new buffer) — can't resolve, return original
+        return buf_name
+    end
+
+    return _find_via_symlink_walk(buf_real, vim.fn.getcwd()) or buf_name
+end
+
 --- Prompt user to copy current buffer's absolute or relative path to clipboard.
 --- Uses vim.ui.select for UI, copies result to system clipboard.
 --- - Absolute: Full path to file.
@@ -156,7 +263,7 @@ function M.select_buffer()
 
 			local key = keys:sub(entry_count, entry_count)
 			local bufnr = buf.bufnr
-			local name = buf.name ~= "" and vim.fn.fnamemodify(buf.name, ":.") or "[No Name]"
+			local name = buf.name ~= "" and _get_relative_buf_name(buf.name) or "[No Name]"
 			local modified = buf.changed == 1
 			local icon = modified and "●" or "○" -- Filled circle for modified, empty circle for normal
 			local status = modified and " (modified)" or ""
