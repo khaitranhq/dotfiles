@@ -9,11 +9,14 @@ function tw -d "Select or create a tmux workspace from saved list"
     # Read saved workspace names
     set -l workspace_names (yq -r 'keys | .[]' "$workspace_file" 2>/dev/null)
 
-    # Fuzzy-filter workspaces; --no-strict returns typed text when no match
-    set -l selected (printf '%s\n' $workspace_names | gum filter \
-        --header="📂 Filter workspace or type new name" \
-        --placeholder="Search or create..." \
-        --no-strict)
+    # Fuzzy-filter workspaces with fzf
+    # Enter → create new workspace with typed text (via become)
+    # Tab  → select highlighted existing workspace
+    set -l selected (printf '%s\n' $workspace_names | fzf \
+        --bind "enter:become(printf '%s\n' {q})" \
+        --bind "tab:accept" \
+        --header="📂 Enter → create new | Tab → select existing" \
+        --prompt="Search or create: ")
 
     if test $status -ne 0; or test -z "$selected"
         return 0
@@ -46,7 +49,7 @@ function tw -d "Select or create a tmux workspace from saved list"
     end
 
     # ── Attach or create tmux session ──
-    if tmux has-session -t "$session_name" 2>/dev/null
+    if tmux has-session -t="$session_name" 2>/dev/null
         if set -q TMUX
             tmux switch-client -t "$session_name"
         else
@@ -62,6 +65,51 @@ function tw -d "Select or create a tmux workspace from saved list"
             tmux attach-session -t "$session_name"
         end
     end
+end
+
+function td -d "Delete a tmux workspace (kill session + remove from workspace list)"
+    set -l workspace_file "$HOME/.local/share/tmux/workspaces.json"
+
+    # Ensure file exists
+    if not test -f "$workspace_file"
+        echo '{}' >"$workspace_file"
+        echo "📭 No workspaces to delete."
+        return 0
+    end
+
+    # Read saved workspace names
+    set -l workspace_names (yq -r 'keys | .[]' "$workspace_file" 2>/dev/null)
+
+    if test -z "$workspace_names"
+        echo "📭 No workspaces to delete."
+        return 0
+    end
+
+    # Fuzzy-select workspace to delete with fzf
+    set -l selected (printf '%s\n' $workspace_names | fzf \
+        --header="🗑️  Select workspace to DELETE" \
+        --prompt="Delete: ")
+
+    if test $status -ne 0; or test -z "$selected"
+        return 0
+    end
+
+    # Confirm deletion
+    if not gum confirm "Delete workspace '$selected'?" --default=false
+        return 0
+    end
+
+    # Kill tmux session if it exists
+    if tmux has-session -t="$selected" 2>/dev/null
+        tmux kill-session -t "$selected"
+        echo "💀 Killed tmux session: $selected"
+    else
+        echo "⚠️  No tmux session named '$selected' found."
+    end
+
+    # Remove workspace from JSON
+    yq -i "del(.[\"$selected\"])" "$workspace_file"
+    echo "🗑️  Removed workspace '$selected'"
 end
 
 function pick_files -d "Pick files with fzf and send to tmux pane"
