@@ -1,4 +1,24 @@
 import { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+function getAgentDir(): string {
+  return join(process.env.HOME ?? ".", ".pi", "agent");
+}
+
+function getApiKeyFromAuthJson(provider: string): string | undefined {
+  const authPath = join(getAgentDir(), "auth.json");
+  try {
+    const data = JSON.parse(readFileSync(authPath, "utf-8"));
+    const cred = data[provider];
+    if (cred?.type === "api_key" && cred?.key) {
+      return cred.key;
+    }
+  } catch {
+    // auth.json may not exist or be invalid — fall through to env fallback
+  }
+  return undefined;
+}
 
 interface DeepInfraModel {
   model_name: string;
@@ -16,9 +36,9 @@ interface DeepInfraModel {
 }
 
 export default async function (pi: ExtensionAPI) {
-  const apiKey = process.env.DEEPINFRA_API_KEY;
+  const apiKey = getApiKeyFromAuthJson("deepinfra") ?? process.env.DEEPINFRA_API_KEY;
   if (!apiKey) {
-    console.warn("DEEPINFRA_API_KEY not set, skipping DeepInfra provider registration");
+    console.warn("No DeepInfra API key found in auth.json or env, skipping provider registration");
     return;
   }
 
