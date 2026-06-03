@@ -1,11 +1,11 @@
 ---
 name: write-a-skill
-description: Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, or build a new skill.
+description: Create or update agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, build, update, modify, change, extend, improve, or fix a skill.
 ---
 
 # Writing Skills
 
-## Process
+## Process: Creating a New Skill
 
 1. **Gather requirements** - ask user about:
    - What task/domain does the skill cover?
@@ -22,6 +22,27 @@ description: Create new agent skills with proper structure, progressive disclosu
    - Does this cover your use cases?
    - Anything missing or unclear?
    - Should any section be more/less detailed?
+
+## Process: Updating an Existing Skill
+
+1. **Read the current skill** - load SKILL.md and all bundled files to understand current structure, triggers, and content.
+
+2. **Identify what needs to change** - clarify with user:
+   - Adding new workflows or capabilities?
+   - Fixing gaps, inaccuracies, or outdated instructions?
+   - Expanding triggers so agent loads it in more contexts?
+   - Modifying bundled scripts or reference files?
+
+3. **Apply changes surgically** - follow the [coding skill] guidelines:
+   - Touch only what needs to change
+   - Match existing style and terminology
+   - Update the description when expanding triggers
+
+4. **Verify** - re-read the updated skill and confirm:
+   - Description still fits in one sentence (max 1024 chars)
+   - SKILL.md stays under 100 lines
+   - No broken cross-references
+   - All linked files still exist and are consistent
 
 ## Skill Structure
 
@@ -107,9 +128,9 @@ Split into separate files when:
 
 ## Review Checklist
 
-After drafting, verify:
+After creating or updating, verify:
 
-- [ ] Description includes triggers ("Use when...")
+- [ ] Description includes triggers ("Use when...") covering both creation and modification keywords
 - [ ] SKILL.md under 100 lines
 - [ ] No time-sensitive info
 - [ ] Consistent terminology
