@@ -216,13 +216,6 @@ type User struct {
 }
 ```
 
-Benefits:
-
-- Easier to read and understand each concern
-- Reusable components (e.g., `Address` can be used for other entities)
-- Better organization of related data
-- Improved maintainability and testability
-
 ### 3. Post-Implementation Steps
 
 After implementing Go code, follow these steps to ensure code quality. Run every available formatter, linter, and static-analysis tool for the project and toolchain; if a tool is installed and applicable, do not skip it.
@@ -260,14 +253,10 @@ After implementing Go code, follow these steps to ensure code quality. Run every
      gofmt -w .
      ```
 
-4. **Run Linters**
-   - Run every available linter for the project and toolchain
-   - `golangci-lint`
-     ```bash
-     golangci-lint run ./...
-     ```
+4. **Run linters**
+   - Run every available linter for the project and toolchain (e.g `golangci-lint run ./...`)
    - Fix any linting issues reported
-   - Mark any false positives with `//nolint` comments, but use sparingly and add justifying comments for why the lint is being ignored
+   - Mark any false positives with `//nolint` comments and add justifying comments for why the lint is being ignored
    - Ensure code follows best practices and conventions
 
 5. **Run Static Analysis Tools**
@@ -341,8 +330,6 @@ This shows:
 - Output fields use typed outputs (e.g., `StringOutput`, `IntOutput`) for lazy evaluation
 - Resource IDs are automatically managed; avoid hardcoding IDs
 
-### 5. Common Issues and Solutions
-
 ## Constraints
 
 ### MUST DO
@@ -364,113 +351,3 @@ This shows:
 - **Use panic for normal error handling** — Reserve panic for truly exceptional conditions; use errors for control flow
 - **Hardcode values** — Use configuration files, constants, or environment variables instead of hardcoded values
 - **Create goroutines without lifecycle management** — Always ensure goroutines can be cancelled or have bounded lifetime
-
-## Error Handling Example
-
-```go
-// Sentinel error for reuse
-var ErrNotFound = errors.New("item not found")
-
-func fetchUser(ctx context.Context, id string) (*User, error) {
-    // Check context cancellation
-    if err := ctx.Err(); err != nil {
-        return nil, fmt.Errorf("fetch user: %w", err)
-    }
-
-    // Do work...
-    user, err := db.GetUser(ctx, id)
-    if err != nil {
-        // Wrap errors with context
-        if errors.Is(err, sql.ErrNoRows) {
-            return nil, fmt.Errorf("fetch user %s: %w", id, ErrNotFound)
-        }
-        return nil, fmt.Errorf("fetch user %s: %w", id, err)
-    }
-
-    return user, nil
-}
-```
-
-## Table-Driven Tests Example
-
-```go
-func TestFetchUser(t *testing.T) {
-    tests := []struct {
-        name    string
-        userID  string
-        want    *User
-        wantErr bool
-        errType error
-    }{
-        {
-            name:   "valid user",
-            userID: "123",
-            want:   &User{ID: "123", Name: "John"},
-        },
-        {
-            name:    "not found",
-            userID:  "999",
-            wantErr: true,
-            errType: ErrNotFound,
-        },
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            ctx := context.Background()
-            got, err := fetchUser(ctx, tt.userID)
-
-            if tt.wantErr {
-                if !errors.Is(err, tt.errType) {
-                    t.Fatalf("got error %v, want %v", err, tt.errType)
-                }
-                return
-            }
-
-            if err != nil {
-                t.Fatalf("unexpected error: %v", err)
-            }
-
-            if got.ID != tt.want.ID {
-                t.Errorf("got ID %s, want %s", got.ID, tt.want.ID)
-            }
-        })
-    }
-}
-```
-
-## Interface Design Guidelines
-
-```go
-// Good: Small, focused interfaces
-type Reader interface {
-    Read(ctx context.Context, key string) ([]byte, error)
-}
-
-type Writer interface {
-    Write(ctx context.Context, key string, value []byte) error
-}
-
-// Composition over large interfaces
-type Store interface {
-    Reader
-    Writer
-}
-
-// Avoid: Large monolithic interfaces
-type BadStore interface {
-    Read(key string) ([]byte, error)
-    Write(key string, value []byte) error
-    Delete(key string) error
-    List() ([]string, error)
-    Exists(key string) bool
-    // ... many more methods
-}
-```
-
-## When to Use This Skill
-
-- Writing or debugging Go applications
-- Setting up Go projects and dependencies
-- Running tests and building binaries
-- Troubleshooting Go-specific issues
