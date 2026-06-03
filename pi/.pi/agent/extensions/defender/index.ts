@@ -13,6 +13,7 @@
  *  - Reading/writing any .env or .*.env file
  */
 
+import type { TextContent, ImageContent } from "@earendil-works/pi-ai";
 import type {
   ExtensionAPI,
   ExtensionContext,
@@ -20,6 +21,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { DEFAULT_ALLOWED_PREFIXES, isPathAllowed } from "../shared/path-guard";
 import { Defender } from "./defender";
+import { SecretMask } from "./secret-mask";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -48,6 +50,10 @@ export default function (pi: ExtensionAPI) {
         return handleWrite(defender, event.input.path as string, ctx);
     }
     return undefined;
+  });
+
+  pi.on("tool_result", async (event) => {
+    return maskToolResult(event.content);
   });
 }
 
@@ -109,6 +115,29 @@ function handleRead(
   if (result.blocked) {
     return blockNotify(ctx, result.reason!, `Blocked read: ${filePath}`);
   }
+}
+
+async function maskToolResult(
+  content: (TextContent | ImageContent)[] | undefined,
+): Promise<{ content?: (TextContent | ImageContent)[] } | undefined> {
+  if (!content || content.length === 0) return undefined;
+
+  let changed = false;
+  const masked: typeof content = [];
+
+  for (const block of content) {
+    if (block.type === "text" && block.text) {
+      const result = await SecretMask.mask(block.text);
+      if (result.count > 0) {
+        changed = true;
+        masked.push({ ...block, text: result.masked });
+        continue;
+      }
+    }
+    masked.push(block);
+  }
+
+  return changed ? { content: masked } : undefined;
 }
 
 function handleWrite(
