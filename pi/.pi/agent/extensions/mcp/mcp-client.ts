@@ -7,6 +7,7 @@
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { TSchema } from "typebox";
 import { Type } from "typebox";
@@ -36,7 +37,7 @@ export interface McpToolSchema {
 
 interface McpClientHandle {
   client: Client;
-  transport: StreamableHTTPClientTransport;
+  transport: StreamableHTTPClientTransport | StdioClientTransport;
 }
 
 // ─── Exported: JSON Schema → TypeBox converter ───────────────────────────
@@ -108,8 +109,22 @@ export class McpClientManager {
             });
           }
         } else if (server.transport === "stdio") {
-          status.status = "error";
-          status.error = "stdio transport not yet implemented";
+          const tools = await this.connectStdio(server);
+          status.status = "connected";
+          status.toolCount = tools.length;
+
+          for (const tool of tools) {
+            allTools.push({
+              name: `mcp_${server.name}_${tool.name}`,
+              description: tool.description ?? "",
+              inputSchema: (tool.inputSchema as Record<string, unknown>) ?? {
+                type: "object",
+                properties: {},
+              },
+              serverName: server.name,
+              originalName: tool.name,
+            });
+          }
         }
       } catch (err) {
         status.status = "error";
@@ -372,6 +387,50 @@ export class McpClientManager {
     };
     this.updateStatus(serverName, status);
   }
+
+  // ─── stdio transport ───────────────────────────────────────────────
+
+  private async connectStdio(server: McpYamlServer): Promise<
+    Array<{
+      name: string;
+      description?: string;
+      inputSchema: Record<string, unknown>;
+    }>
+  > {
+    const command = server.command;
+    if (!command) throw new Error(`No command configured for stdio server "${server.name}"`);
+
+    const transportEnv: Record<string, string> = {};
+    for (const [key, value] of Object.entries(process.env)) {
+      if (value !== undefined) transportEnv[key] = value;
+    }
+    Object.assign(transportEnv, server.env);
+
+    const transport = new StdioClientTransport({
+      command,
+      args: server.args ?? [],
+      env: transportEnv,
+      cwd: server.cwd ?? process.cwd(),
+      stderr: "pipe",
+    });
+
+    const client = new Client({ name: "pi-mcp-extension", version: "1.0.0" }, { capabilities: {} });
+
+    await client.connect(transport);
+    this.clients.set(server.name, { client, transport });
+
+    const result = await client.listTools();
+    return result.tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      inputSchema: (t.inputSchema as Record<string, unknown>) ?? {
+        type: "object",
+        properties: {},
+      },
+    }));
+  }
+
+  // ─── HTTP transport ─────────────────────────────────────────────────
 
   private async connectHttp(server: McpYamlServer): Promise<
     Array<{

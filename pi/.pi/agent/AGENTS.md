@@ -27,26 +27,6 @@ After completing implementation, update the project wiki:
 
 ---
 
-### ⚠️ MANDATORY: Load Skills Per Implementation Task
-
-**When starting to implement each todo task, agents MUST load the relevant skills for that specific task by using the `read` tool to read the skill's SKILL.md file.**
-
-This is a hard requirement, not optional. Do NOT front-load all skills during planning. Instead, load skills on-demand as you begin each implementation task:
-
-- **Before Task 1**: Load skills relevant to Task 1 → implement Task 1
-- **Before Task 2**: Load skills relevant to Task 2 → implement Task 2
-- ...and so on
-
-**How to choose which skills to load for a task**:
-
-- Parse the task's scope: language, tool, domain, problem type
-- Cross-reference against the available skills listed in your system prompt
-- **Always load `wiki` for every task** — Check wiki at start for domain knowledge, past decisions, and project context. Update wiki during exploration and after implementation.
-- **Always load `coding` for any task that writes, modifies, reviews, refactors, or deletes code** — regardless of language. This is the non-negotiable baseline for all code work.
-- **Always pair `tdd` with `coding` for code changes** — red-green-refactor is the default workflow
-- When in doubt, load a broader set — extra skill context costs little, but missing a skill risks suboptimal output
-- For compound tasks, load multiple skills (e.g., `wiki` + `golang` + `tdd` + `coding` for a Go feature)
-
 ### Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
@@ -133,8 +113,6 @@ The default yamllint configuration should be used. If a custom configuration is 
 yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
-
-
 
 ## Working Style
 

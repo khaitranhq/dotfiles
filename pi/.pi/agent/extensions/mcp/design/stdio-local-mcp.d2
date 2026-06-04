@@ -1,0 +1,48 @@
+shape: sequence_diagram
+
+pi: pi (Extension)
+manager: McpClientManager
+config: Config (custom-settings.yaml)
+process: MCP Server (child process)
+
+Startup and Spawn: {
+  pi -> manager: connectAll()
+  manager -> config: loadCustomSettings()
+  config -> manager: servers list, transport stdio
+  manager."For each stdio server, spawn the command with args, env, cwd."
+  manager -> process: spawn with stdio pipe
+  process."child_process.spawn creates long-lived subprocess. stdin for requests, stdout for responses."
+  process -> manager: child_process handle
+  manager."Manager retains handle for bidirectional JSON-RPC. Auto-restart on crash via keep-alive."
+}
+
+Initialize: {
+  manager -> process: JSON-RPC initialize request
+  process -> manager: JSON-RPC initialize response (serverInfo, capabilities)
+  manager -> process: JSON-RPC initialized notification
+  manager."Server state transitions to ready. Tools can now be listed."
+}
+
+Discovery: {
+  manager -> process: JSON-RPC tools/list request
+  process -> manager: JSON-RPC tools/list response (tools with name, description, inputSchema)
+  manager."Each tool prefixed mcp_server_tool to avoid collisions across servers."
+  manager -> pi: pi.registerTool for each discovered tool
+  pi."Tools exposed to LLM with mcp_ prefix in tool list."
+}
+
+Tool Call: {
+  pi -> manager: callTool(serverName, toolName, args)
+  manager -> process: JSON-RPC tools/call request (method: tools/call, with arguments)
+  process."Server executes tool logic. May call external APIs, DB, filesystem, etc."
+  process -> manager: JSON-RPC tools/call response (content text, isError)
+  manager -> pi: result: content, details, isError
+  pi."Result returned to LLM for next reasoning step."
+}
+
+Disconnect: {
+  pi -> manager: disconnectAll()
+  manager -> process: child.kill to terminate process
+  process -> manager: close event
+  manager."Cleanup complete. If lifecycle is keep-alive, spawn on next connectAll."
+}

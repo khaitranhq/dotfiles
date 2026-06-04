@@ -22,16 +22,21 @@ McpClientManager encapsulates all MCP protocol and OAuth complexity:
 
 ```
 McpClientManager
-  ├── Client (SDK)          — MCP Streamable HTTP transport
+  ├── Client (SDK)          — MCP Streamable HTTP or stdio transport
   ├── CallbackServer        — Local HTTP server for OAuth redirect callbacks
   └── McpOAuthProvider      — OAuth 2.1 client with DCR, PKCE, token exchange
 ```
 
 See [design/oauth-dynamic-registration.d2](design/oauth-dynamic-registration.d2) for the OAuth sequence diagram.
+See [design/stdio-local-mcp.d2](design/stdio-local-mcp.d2) for the stdio transport sequence diagram.
 
 ## MCP Server Configuration
 
-Configure servers in `~/.pi/agent/custom-settings.yaml` under the `mcp` key:
+Configure servers in `~/.pi/agent/custom-settings.yaml` under the `mcp` key.
+Two transport types are supported: `http` (Streamable HTTP, default) and `stdio`
+(local child process).
+
+### Streamable HTTP (`transport: http`)
 
 ```yaml
 mcp:
@@ -43,8 +48,37 @@ mcp:
         Authorization: Bearer ${MY_TOKEN}
 ```
 
-On startup, the extension connects to each configured server, calls `tools/list`,
-and registers every discovered tool with `pi.registerTool()`.
+### stdio (`transport: stdio`)
+
+Spawns a local MCP server as a child process, communicating over stdin/stdout
+via JSON-RPC. The process is started on connect and killed on disconnect.
+
+```yaml
+mcp:
+  servers:
+    - name: local-filesystem
+      transport: stdio
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+      env:
+        HOME: /home/user
+      cwd: /path/to/working/dir
+```
+
+Stdio servers auto-restart on reconnect (disconnect then connect again).
+OAuth is not used with stdio — authentication is handled by the local
+process environment.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `transport` | yes | Must be `"stdio"` |
+| `command` | yes | Executable or command to spawn |
+| `args` | no | Command arguments (default: `[]`) |
+| `env` | no | Extra environment variables merged into `process.env` |
+| `cwd` | no | Working directory for the child process (default: pi's cwd) |
+
+On startup, the extension connects to each configured server (HTTP or stdio),
+calls `tools/list`, and registers every discovered tool with `pi.registerTool()`.
 
 ### Tool Naming
 

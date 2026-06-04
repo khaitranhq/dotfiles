@@ -155,7 +155,7 @@ Because of sequence diagram scoping, referenced actors inside groups must exist 
 
 ### Notes
 
-Create a note by defining a nested object on an actor with no connections.
+Create a note by assigning text to a nested object on an actor with no connections. Prefer the shorthand `actor."text"` form:
 
 ```d2
 flow {
@@ -163,10 +163,12 @@ flow {
   alice
   bob
 
-  alice.note: retries after timeout
+  alice."retries after timeout"
   alice -> bob: ping
 }
 ```
+
+The explicit `actor.note: text` form also works but is more verbose.
 
 ### Self Messages
 
