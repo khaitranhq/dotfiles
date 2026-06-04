@@ -13,14 +13,9 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `04` Secret masking capability for tools
-  - using package: https://github.com/secretlint/secretlint
-  - applied for all tools result
-  - implement in /home/khaitran/dotfiles/pi/.pi/agent/extensions/defender
 - [ ] `05` Auto-refresh access token for MCP Atlassian
   - failed, still open browser again
 - [ ] `06` refactor comments
-- [ ] `07` subagent spawn subagent
 
 ### Measure AI System Efficiency
 
