@@ -121,6 +121,7 @@ alias tf='terraform'
 alias y='yazi'
 alias rpi='pi --provider github-copilot --model gpt-5.4'
 alias cpi='pi --provider commandcode --model deepseek-v4-pro'
+alias c='claude'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer

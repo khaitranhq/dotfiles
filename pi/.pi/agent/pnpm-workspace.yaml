@@ -1,0 +1,4 @@
+nodeVersion: 24.14.0
+onlyBuiltDependencies:
+  - tree-sitter
+  - tree-sitter-bash

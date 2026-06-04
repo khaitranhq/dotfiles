@@ -1,10 +1,10 @@
 mcp:
   servers:
-    - name: obsidian
-      transport: http
-      url: http://127.0.0.1:27123/mcp/
-      headers:
-        Authorization: Bearer ${OBSIDIAN_MCP_TOKEN}
+    # - name: obsidian
+    #   transport: http
+    #   url: http://127.0.0.1:27123/mcp/
+    #   headers:
+    #     Authorization: Bearer ${OBSIDIAN_MCP_TOKEN}
 tools:
   bash:
     find: allow
