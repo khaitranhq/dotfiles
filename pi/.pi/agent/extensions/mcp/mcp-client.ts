@@ -330,15 +330,16 @@ export class McpClientManager {
 
       // Register client or reuse stored
       const stored = this.authStore.get(serverName, url);
-      if (stored?.clientId) {
+      if (metadata.registrationUrl) {
+        // Always re-register to update redirect_uris with current port
+        this.updateOAuthStatus(serverName, "Registering client...");
+        await provider.register();
+      } else if (stored?.clientId) {
         provider.setClientInfo({
           clientId: stored.clientId,
           clientSecret: stored.clientSecret,
         });
         provider.setMetadata(metadata);
-      } else if (metadata.registrationUrl) {
-        this.updateOAuthStatus(serverName, "Registering client...");
-        await provider.register();
       } else if (oauthConfig && typeof oauthConfig === "object" && oauthConfig.clientId) {
         provider.setClientInfo({
           clientId: oauthConfig.clientId,
@@ -360,6 +361,7 @@ export class McpClientManager {
       const authUrl = provider.buildAuthorizationUrl(scopes);
 
       this.updateOAuthStatus(serverName, "Waiting for browser authorization...");
+      this.logger.log(`Opening browser for OAuth authorization at: ${authUrl}`);
       openUrl(authUrl);
 
       // Wait for callback

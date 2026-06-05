@@ -46,5 +46,3 @@ Keep it brief. Each README should cover:
 1. **Purpose** — 1-2 lines
 2. **Settings** — key YAML example + table of supported keys
 3. **Commands** — slash commands table (if any)
-
-The master reference is `pi/CUSTOM-SETTINGS.md` in this repo — keep READMEs consistent with it.

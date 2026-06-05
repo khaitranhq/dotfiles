@@ -14,9 +14,6 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `05` `#high` mcp - show URL if can't open browser
-- [ ] `06` `#high` mcp - invalid callback URL
-      -> check again how DCR works, ref: https://share.google/aimode/I6eaeFKIu8mdhuKqB
 - [ ] `07` new ext - auto harness my system
 - [ ] `08` ui - have a sidebar for models, mcp status, and todo list
 

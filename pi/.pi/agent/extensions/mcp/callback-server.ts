@@ -29,23 +29,59 @@ export class CallbackServer {
   private pendingRejecter: ((err: Error) => void) | null = null;
   private timeout: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Preferred port to use for the callback server.
+   * A fixed port ensures the redirect URI is stable across sessions,
+   * which is required for OAuth flows where the client's redirect_uris
+   * are registered once with the authorization server.
+   */
+  static readonly PREFERRED_PORT = 40211;
+
   constructor() {}
 
   /**
-   * Start the HTTP server on a random port. Resolves with the assigned port.
+   * Start the HTTP server, trying the preferred port first,
+   * then falling back through a range, finally to a random port.
+   * Resolves with the assigned port.
    */
   start(): Promise<number> {
+    return this.tryListen(CallbackServer.PREFERRED_PORT);
+  }
+
+  private tryListen(preferredPort: number): Promise<number> {
+    const portRange = 10;
+    const ports = [preferredPort];
+    for (let i = 1; i < portRange; i++) {
+      ports.push(preferredPort + i);
+    }
+    ports.push(0); // fallback: random port
+
+    return this.listenOnPorts(ports);
+  }
+
+  private listenOnPorts(ports: number[]): Promise<number> {
+    if (ports.length === 0) {
+      return Promise.reject(new Error("No ports available"));
+    }
+
+    const [port, ...remaining] = ports;
+
     return new Promise((resolve, reject) => {
       this.server = http.createServer((req, res) => {
         this.handleRequest(req, res);
       });
 
-      this.server.on("error", (err) => {
-        reject(err);
+      this.server.on("error", (err: Error & { code?: string }) => {
+        if (err.code === "EADDRINUSE") {
+          // Port busy — try the next one
+          this.server = null;
+          this.listenOnPorts(remaining).then(resolve).catch(reject);
+        } else {
+          reject(err);
+        }
       });
 
-      // Listen on localhost:0 for a random port
-      this.server.listen(0, "127.0.0.1", () => {
+      this.server.listen(port, "127.0.0.1", () => {
         const addr = this.server!.address();
         if (addr && typeof addr === "object") {
           this.port = addr.port;

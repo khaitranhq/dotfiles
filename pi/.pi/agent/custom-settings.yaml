@@ -4,7 +4,7 @@ mcp:
     #   transport: http
     #   url: https://mcp.atlassian.com/v1/mcp/authv2
     #   auth: oauth
-
+    #
     - name: codegraph
       transport: stdio
       command: codegraph

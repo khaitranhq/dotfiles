@@ -194,7 +194,7 @@ export class McpOAuthProvider {
     }
 
     const body: Record<string, unknown> = {
-      client_name: `pi-mcp-${this.serverName}`,
+      client_name: `ktran1-mcp-${this.serverName}`,
       redirect_uris: [this.redirectUri],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
