@@ -138,20 +138,19 @@ export default function (pi: ExtensionAPI) {
 
     const resolvedPath = path.resolve(ctx.cwd, name);
     if (fs.existsSync(resolvedPath)) {
-      const relativePath = path.relative(ctx.cwd, resolvedPath) || ".";
       const stat = fs.statSync(resolvedPath);
 
       if (stat.isFile()) {
         return {
           action: "transform",
-          text: buildPathInstruction("file", relativePath, trailing),
+          text: buildPathInstruction("file", resolvedPath, trailing),
         };
       }
 
       if (stat.isDirectory()) {
         return {
           action: "transform",
-          text: buildPathInstruction("directory", relativePath, trailing),
+          text: buildPathInstruction("directory", resolvedPath, trailing),
         };
       }
     }
@@ -196,9 +195,10 @@ export default function (pi: ExtensionAPI) {
       maybeNotifyMatch(name, ranked, ctx.ui.notify.bind(ctx.ui));
     }
 
+    const absolutePath = path.resolve(ctx.cwd, best.key);
     return {
       action: "transform",
-      text: buildPathInstruction(best.kind, best.key, trailing),
+      text: buildPathInstruction(best.kind, absolutePath, trailing),
     };
   });
 }

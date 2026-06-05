@@ -10,7 +10,7 @@ export function candidateToAutocompleteItem(candidate: Candidate): AutocompleteI
       return {
         value: `@${candidate.agent.name} `,
         label: `🤖 @${candidate.agent.name}`,
-        description: `${candidate.agent.description} (${candidate.agent.source}, ${candidate.agent.mode})`,
+        description: `${candidate.agent.description} (${candidate.agent.mode})`,
       };
     case "directory": {
       const dirBasename = path.posix.basename(candidate.key);
