@@ -1,0 +1,7 @@
+{
+  "model": "haiku",
+  "theme": "dark",
+  "permissions": {
+    "allow": ["Edit(*)", "Write(*)"]
+  }
+}
