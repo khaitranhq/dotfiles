@@ -9,7 +9,7 @@ Before writing any code or making changes, agents must understand the problem an
 1. **Analyze Requirements** — Carefully read and understand what the user is asking for.
 2. **Explore Context** — Understand the codebase and domain:
    - **Wiki first** — Check the project wiki/knowledge base for existing context, architecture decisions, known patterns, and past changes. Load the `wiki` skill and use it to search for relevant pages, entities, and concepts.
-   - **Code tools second** — Use `rg` and `read` to explore code structure, find definitions, and understand the codebase.
+   - **Code tools second** — Use `codegraph_explore` first for architecture, definitions, relationships, and understanding code flow. Fall back to `codegraph_search`/`codegraph_node` for symbol lookup. Only when codegraph can't answer (e.g. raw text search, file listing), use `rg` and `read`.
    - **Update wiki during exploration** — If you discover undocumented patterns, conventions, architecture decisions, or new entities/concepts, update the wiki immediately. Knowledge compounds across sessions.
 3. **Plan the Task** — Break the work into concrete, verifiable tasks using `TodoWrite`. Each task must have clear success criteria. Do not start implementing until the plan is complete.
 
@@ -47,24 +47,35 @@ For multi-step tasks, state a brief plan:
 
 ## Hard Constraints
 
-### File and Content Search
+### Code Exploration and File Search
 
-**Always use `rg` (ripgrep) for all file and content search operations.**
-Only fall back to `find` (files) or `grep` (content) when `rg` is unavailable.
+**Use codegraph tools first** for all code exploration — architecture understanding, symbol definitions, relationships, callers/callees, and impact analysis. Codegraph provides structured, indexed access to the codebase with full source context.
+
+Code exploration preference order:
+
+1. **`codegraph_explore`** — understanding architecture, how things work, finding definitions, surveying an area (primary tool)
+2. **`codegraph_search`** — quick symbol lookup by name (locations only)
+3. **`codegraph_node`** — detailed symbol info including full source body
+4. **`codegraph_callers`/`codegraph_callees`** — relationship queries
+5. **`codegraph_impact`** — pre-refactor analysis
+6. **`rg` (ripgrep)** — raw text/pattern search when codegraph tools can't answer
+7. **`find` / `grep`** — last resort only
 
 ```
-# ✅ Do this (rg first):
-rg --files -g '*.go'          # find Go files
-rg 'pattern' path/             # search content
-rg -t go 'pattern'             # search by file type
+# ✅ Do this first:
+codegraph_explore                    # understand architecture
+codegraph_explore -- query="handleRequest flow"  # ask questions in natural language
+codegraph_search "validateInput"     # find symbol locations
+codegraph_callers "sendEmail"        # find callers
 
-# ❌ Don't do this:
-find . -name '*.go'            # use rg instead
-grep -r 'pattern' .            # use rg instead
+# ✅ Fallback to rg when codegraph can't:
+rg --files -g '*.go'                # find Go files
+rg 'TODO:' path/                    # text pattern search
+rg -t go 'error handling'           # search by file type
 
-# ⚠️ Only when rg is unavailable:
-find . -name '*.go'
-grep -r 'pattern' .
+# ❌ Don't do this (use codegraph first):
+grep -r 'func.*Handler' .           # codegraph_explore instead
+find . -name '*handler*'            # codegraph_search instead
 ```
 
 ### Git Commits

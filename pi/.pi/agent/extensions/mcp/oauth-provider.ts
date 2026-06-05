@@ -18,7 +18,7 @@
  */
 
 import * as crypto from "node:crypto";
-import type { AuthStore, StoredAuthEntry } from "./auth-store.js";
+import type { AuthStore } from "./auth-store.js";
 
 export interface OAuthMetadata {
   authorizationUrl: string;

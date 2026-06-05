@@ -16,6 +16,7 @@ import { AuthStore } from "./auth-store.js";
 import { CallbackServer } from "./callback-server.js";
 import { McpOAuthProvider } from "./oauth-provider.js";
 import { defaultConfig, type McpYamlServer } from "../shared/config.js";
+import { Logger } from "../shared/logger.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -57,9 +58,11 @@ export class McpClientManager {
   private statuses: McpServerStatus[] = [];
   private onStatusChange?: (statuses: McpServerStatus[]) => void;
   private authStore: AuthStore;
+  private logger: Logger;
 
-  constructor(authStore: AuthStore) {
+  constructor(authStore: AuthStore, logger: Logger) {
     this.authStore = authStore;
+    this.logger = logger;
   }
 
   setStatusCallback(cb: (statuses: McpServerStatus[]) => void): void {
@@ -288,6 +291,8 @@ export class McpClientManager {
       const wwwAuth =
         response.headers.get("WWW-Authenticate") || response.headers.get("www-authenticate");
 
+      this.logger.log(`wwwAuth for ${server.name}: ${wwwAuth ?? "(none)"}`);
+
       if (response.ok) return null; // No OAuth needed
 
       if (response.status === 401 && wwwAuth) {
@@ -491,7 +496,7 @@ function openUrl(url: string): void {
     command = "cmd";
     args = ["/c", "start", '""', url];
   } else {
-    command = "xdg-open";
+    command = process.env.BROWSER || "xdg-open";
     args = [url];
   }
 

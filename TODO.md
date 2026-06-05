@@ -8,14 +8,17 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Skills
 
-- [ ] `02` `#high` create test suites to test trigger accuracy for all skills
-- [ ] `03` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
+- [ ] `02` `#high` remove unused skills
+- [ ] `03` `#high` create test suites to test trigger accuracy for all skills
+- [ ] `04` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
 
 ## Pi Agent
 
-- [ ] `05` Auto-refresh access token for MCP Atlassian
-  - failed, still open browser again
-- [ ] `06` refactor comments
+- [ ] `05` `#high` mcp - show URL if can't open browser
+- [ ] `06` `#high` mcp - invalid callback URL
+- [ ] ux - @<file> -> enter -> show absolute path
+- [ ] `07` new ext - auto harness my system
+- [ ] ui - have a sidebar for models, mcp status, and todo list
 
 ### Measure AI System Efficiency
 
@@ -27,9 +30,6 @@ Active tasks and improvements across the dotfiles ecosystem.
     → Identify bottlenecks and optimize
 
 ### General
-
-- [ ] `09` Refactor tools
-- [ ] `10` Define layers of agent rules/instructions: global rules, agent system prompt, pi extensions, skills, wiki
 
 ## JSON language server
 

@@ -39,6 +39,8 @@ export { interpolateEnvVars, interpolateEnvRecord, resolveConfigPath } from "./e
 
 export { parallelLimit } from "./async-utils";
 
+export { Logger } from "./logger";
+
 export { truncateAtWord } from "./text-utils";
 
 export {

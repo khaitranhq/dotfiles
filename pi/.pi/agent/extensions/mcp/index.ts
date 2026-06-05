@@ -14,12 +14,17 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Container, Text } from "@earendil-works/pi-tui";
 import { AuthStore } from "./auth-store.js";
 import { McpClientManager, buildToolParameters, type McpServerStatus } from "./mcp-client.js";
+import { Logger } from "../shared/logger.js";
+import * as os from "node:os";
+import * as path from "node:path";
 
 // ─── Extension Entry Point ──────────────────────────────────────────────
 
 export default async function (pi: ExtensionAPI) {
   const authStore = new AuthStore();
-  const mcpManager = new McpClientManager(authStore);
+  const logPath = path.join(os.homedir(), ".pi", "agent", "mcp", "mcp.log");
+  const logger = new Logger(logPath);
+  const mcpManager = new McpClientManager(authStore, logger);
 
   pi.on("session_start", async (_event, ctx) => {
     if (ctx.hasUI) {
