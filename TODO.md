@@ -17,13 +17,12 @@ Active tasks and improvements across the dotfiles ecosystem.
 - [ ] `05` `#high` mcp - show URL if can't open browser
 - [ ] `06` `#high` mcp - invalid callback URL
       -> check again how DCR works, ref: https://share.google/aimode/I6eaeFKIu8mdhuKqB
-- [ ] ux - @<file> -> enter -> show absolute path
 - [ ] `07` new ext - auto harness my system
-- [ ] ui - have a sidebar for models, mcp status, and todo list
+- [ ] `08` ui - have a sidebar for models, mcp status, and todo list
 
 ### Measure AI System Efficiency
 
-- [ ] `08` Implement metrics tool:
+- [ ] `09` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
