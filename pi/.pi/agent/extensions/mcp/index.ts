@@ -7,13 +7,11 @@
  * manual OAuth tools required.
  *
  * All MCP tools are registered with "mcp_" prefix.
- * Server connection status is shown in a TUI widget.
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Container, Text } from "@earendil-works/pi-tui";
 import { AuthStore } from "./auth-store.js";
-import { McpClientManager, buildToolParameters, type McpServerStatus } from "./mcp-client.js";
+import { McpClientManager, buildToolParameters } from "./mcp-client.js";
 import { Logger } from "../shared/logger.js";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -27,13 +25,6 @@ export default async function (pi: ExtensionAPI) {
   const mcpManager = new McpClientManager(authStore, logger);
 
   pi.on("session_start", async (_event, ctx) => {
-    if (ctx.hasUI) {
-      mcpManager.setStatusCallback((statuses) => {
-        ctx.ui.setWidget("mcp-status", () => createStatusWidget(statuses));
-      });
-      ctx.ui.setWidget("mcp-status", () => createStatusWidget([]));
-    }
-
     const tools = await mcpManager.connectAll();
 
     for (const tool of tools) {
@@ -75,26 +66,4 @@ export default async function (pi: ExtensionAPI) {
   pi.on("session_shutdown", async () => {
     await mcpManager.disconnectAll();
   });
-}
-
-// ─── Status Widget ───────────────────────────────────────────────────────
-
-function createStatusWidget(statuses: McpServerStatus[]): Container {
-  const container = new Container();
-
-  if (statuses.length === 0) {
-    container.addChild(new Text("  MCP: no servers configured", 0, 0));
-    return container;
-  }
-
-  for (const s of statuses) {
-    const icon = s.status === "connected" ? "●" : s.status === "connecting" ? "◌" : "✕";
-    const label =
-      `${icon} ${s.name}: ${s.status}` +
-      (s.status === "connected" ? ` (${s.toolCount} tools)` : "") +
-      (s.error ? ` — ${s.error}` : "");
-    container.addChild(new Text(`  ${label}`, 1, 0));
-  }
-
-  return container;
 }

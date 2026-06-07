@@ -5,7 +5,6 @@ and registers them with pi. Includes OAuth 2.1 Dynamic Client Registration
 for servers that require authentication.
 
 All MCP server tools are registered with `mcp_<server>_<tool>` prefix.
-Server connection status is shown in a TUI widget above the editor.
 
 ## Architecture
 
@@ -14,8 +13,7 @@ pi only talks to three modules directly:
 ```
 pi (Extension)
   ├── McpClientManager      — Connects to MCP servers, handles OAuth automatically
-  ├── AuthStore             — Persistent storage (~/.pi/agent/mcp/auth.json)
-  └── Status Widget         — TUI widget showing server connection status
+  └── AuthStore             — Persistent storage (~/.pi/agent/mcp/auth.json)
 ```
 
 McpClientManager encapsulates all MCP protocol and OAuth complexity:
@@ -93,20 +91,6 @@ discovery, dynamic client registration (RFC 7591), PKCE authorization, token exc
 and silent refresh — no manual OAuth tools needed.
 
 See [design/oauth-dynamic-registration.d2](design/oauth-dynamic-registration.d2) for the full sequence diagram.
-
-## Status Widget
-
-Server connection status appears above the editor input:
-
-```
-● myserver: connected (12 tools)
-✕ broken: error — Connection refused
-```
-
-Indicators:
-- ● green — connected
-- ◌ — connecting
-- ✕ red — error (with error message)
 
 ## Programmatic Use
 
