@@ -8,7 +8,7 @@
 After any code change (edit, write, or file creation), you **MUST** run lint and format:
 
 1. **Lint** — `pnpm lint` (runs `tsc --noEmit && oxlint`)
-2. **Format** — `oxfmt` on changed files
+2. **Format** — `pnpm format` on changed files
 
 Fix all errors before considering the change complete. Do not leave lint warnings or formatting issues behind.
 
