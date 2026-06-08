@@ -27,9 +27,3 @@ Active tasks and improvements across the dotfiles ecosystem.
     → Identify bottlenecks and optimize
 
 ### General
-
-## JSON language server
-
-- lint
-- format
-- schema validation `$schema` property in JSON file to specify schema URL

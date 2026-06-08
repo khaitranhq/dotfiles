@@ -24,7 +24,7 @@ export default async function (pi: ExtensionAPI) {
   const logger = new Logger(logPath);
   const mcpManager = new McpClientManager(authStore, logger);
 
-  pi.on("session_start", async (_event, ctx) => {
+  pi.on("session_start", async (_event, _) => {
     const tools = await mcpManager.connectAll();
 
     for (const tool of tools) {
@@ -55,12 +55,7 @@ export default async function (pi: ExtensionAPI) {
       });
     }
 
-    if (tools.length > 0 && ctx.hasUI) {
-      ctx.ui.notify(
-        `MCP: connected to ${mcpManager.getStatuses().filter((s) => s.status === "connected").length} server(s), ${tools.length} tools registered`,
-        "info",
-      );
-    }
+    // MCP connected silently — sidebar shows status via tool_execution events.
   });
 
   pi.on("session_shutdown", async () => {

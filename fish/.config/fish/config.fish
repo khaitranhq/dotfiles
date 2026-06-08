@@ -25,6 +25,7 @@ set -x DOTNET_ROOT "$HOME/.dotnet"
 
 set -x GOMAXPROCS 8
 set -x GOMEMLIMIT 20GiB
+set -x PI_SKIP_VERSION_CHECK 1
 
 if test -d $HOME/.linuxbrew
     # Homebrew is installed on Linux
