@@ -15,7 +15,6 @@ Active tasks and improvements across the dotfiles ecosystem.
 ## Pi Agent
 
 - [ ] `07` new ext - auto harness my system
-- [ ] `08` ui - have a sidebar for models, mcp status, and todo list
 
 ### Measure AI System Efficiency
 

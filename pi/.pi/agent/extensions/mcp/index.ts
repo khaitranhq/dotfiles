@@ -84,7 +84,7 @@ class McpStatusComponent extends Container {
     this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
   }
 
-  override handleInput(data: string): void {
+  handleInput(data: string): void {
     if (matchesKey(data, "escape") || matchesKey(data, "ctrl+c")) {
       this.onClose();
     }
