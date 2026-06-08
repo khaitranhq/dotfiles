@@ -12,8 +12,13 @@
  */
 
 import { StringEnum } from "@earendil-works/pi-ai";
-import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
-import { matchesKey, Text, truncateToWidth } from "@earendil-works/pi-tui";
+import {
+  type ExtensionAPI,
+  type ExtensionContext,
+  type Theme,
+  DynamicBorder,
+} from "@earendil-works/pi-coding-agent";
+import { Container, matchesKey, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -137,71 +142,56 @@ function summarize(todos: TodoItem[]): string {
 
 // ── TUI Component for /todos command ──────────────────────────────────
 
-class TodoListComponent {
+class TodoListComponent extends Container {
   private todos: TodoItem[];
-  private theme: Theme;
   private onClose: () => void;
-  private cachedWidth?: number;
-  private cachedLines?: string[];
 
   constructor(todos: TodoItem[], theme: Theme, onClose: () => void) {
+    super();
     this.todos = todos;
-    this.theme = theme;
     this.onClose = onClose;
+    this.rebuild(theme);
   }
 
-  handleInput(data: string): void {
+  private rebuild(theme: Theme): void {
+    this.clear();
+
+    this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+    this.addChild(new Text(theme.fg("accent", theme.bold(" Todos ")), 1, 0));
+
+    if (this.todos.length === 0) {
+      this.addChild(new Text("  No todos yet.", 1, 0));
+    } else {
+      const summary = summarize(this.todos);
+      this.addChild(new Text(`  ${theme.fg("muted", summary)}`, 1, 0));
+      this.addChild(new Text("", 0, 0));
+
+      for (const todo of this.todos) {
+        const icon = STATUS_ICONS[todo.status];
+        const text =
+          todo.status === "completed"
+            ? theme.fg("dim", todo.content)
+            : theme.fg("text", todo.content);
+        const priLabel = theme.fg(priorityColor(todo.priority), `[${todo.priority}]`);
+
+        this.addChild(
+          new Text(`  ${theme.fg(statusColor(todo.status), icon)} ${priLabel} ${text}`, 1, 0),
+        );
+      }
+    }
+
+    this.addChild(new Text(theme.fg("dim", "  Escape to close"), 1, 0));
+    this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+  }
+
+  override handleInput(data: string): void {
     if (matchesKey(data, "escape") || matchesKey(data, "ctrl+c")) {
       this.onClose();
     }
   }
 
-  render(width: number): string[] {
-    if (this.cachedLines && this.cachedWidth === width) return this.cachedLines;
-
-    const th = this.theme;
-    const lines: string[] = [];
-
-    lines.push("");
-    const title = th.fg("accent", " Todos ");
-    const headerLine =
-      th.fg("borderMuted", "─".repeat(3)) +
-      title +
-      th.fg("borderMuted", "─".repeat(Math.max(0, width - title.length - 6)));
-    lines.push(truncateToWidth(headerLine, width));
-    lines.push("");
-
-    if (this.todos.length === 0) {
-      lines.push(truncateToWidth(`  ${th.fg("dim", "No todos yet.")}`, width));
-    } else {
-      const summary = summarize(this.todos);
-      lines.push(truncateToWidth(`  ${th.fg("muted", summary)}`, width));
-      lines.push("");
-
-      for (const todo of this.todos) {
-        const icon = STATUS_ICONS[todo.status];
-        const text =
-          todo.status === "completed" ? th.fg("dim", todo.content) : th.fg("text", todo.content);
-        const priLabel = th.fg(priorityColor(todo.priority), `[${todo.priority}]`);
-
-        lines.push(
-          truncateToWidth(`  ${th.fg(statusColor(todo.status), icon)} ${priLabel} ${text}`, width),
-        );
-      }
-    }
-
-    lines.push("");
-    lines.push(truncateToWidth(`  ${th.fg("dim", "Press Escape to close")}`, width));
-    lines.push("");
-
-    this.cachedWidth = width;
-    this.cachedLines = lines;
-    return lines;
-  }
-
-  invalidate(): void {
-    this.cachedWidth = undefined;
-    this.cachedLines = undefined;
+  override invalidate(): void {
+    super.invalidate();
   }
 }
 
@@ -325,9 +315,20 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      await ctx.ui.custom<void>((_tui, theme, _kb, done) => {
-        return new TodoListComponent(todos, theme, () => done());
-      });
+      await ctx.ui.custom<void>(
+        (_tui, theme, _kb, done) => {
+          return new TodoListComponent(todos, theme, () => done());
+        },
+        {
+          overlay: true,
+          overlayOptions: {
+            width: "50%",
+            minWidth: 35,
+            maxHeight: "70%",
+            margin: 1,
+          },
+        },
+      );
     },
   });
 }

@@ -9,8 +9,9 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { CustomEditor, DynamicBorder, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { AutocompleteProvider, AutocompleteSuggestions } from "@earendil-works/pi-tui";
+import { Container, matchesKey, Text } from "@earendil-works/pi-tui";
 import { FileSystemIndex } from "./file-system-index";
 import { CandidateRanker } from "./candidate-ranker";
 import {
@@ -32,12 +33,50 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("active-tools", {
     description: "Show currently active tools",
     handler: async (_args, ctx) => {
-      const names = pi.getActiveTools();
-      if (names.length === 0) {
-        ctx.ui.notify("No active tools.", "info");
+      if (!ctx.hasUI) {
+        ctx.ui.notify("/active-tools requires interactive mode", "error");
         return;
       }
-      ctx.ui.notify(`🔧 Active tools: ${names.join(", ")}`, "info");
+
+      const names = pi.getActiveTools();
+
+      await ctx.ui.custom<void>(
+        (_tui, theme, _kb, done) => {
+          const container = new Container();
+          container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+          container.addChild(new Text(theme.fg("accent", theme.bold(" Active Tools ")), 1, 0));
+
+          if (names.length === 0) {
+            container.addChild(new Text("  No active tools.", 1, 0));
+          } else {
+            const sorted = [...names].sort();
+            for (const name of sorted) {
+              container.addChild(
+                new Text(`  ${theme.fg("success", "✓")} ${theme.fg("text", name)}`, 1, 0),
+              );
+            }
+          }
+
+          container.addChild(new Text(theme.fg("dim", "  Escape to close"), 1, 0));
+          container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+
+          return {
+            render: (w: number) => container.render(w),
+            invalidate: () => container.invalidate(),
+            handleInput: (data: string) => {
+              if (matchesKey(data, "escape") || matchesKey(data, "ctrl+c")) done();
+            },
+          };
+        },
+        {
+          overlay: true,
+          overlayOptions: {
+            width: "30%",
+            minWidth: 28,
+            maxHeight: "60%",
+          },
+        },
+      );
     },
   });
 

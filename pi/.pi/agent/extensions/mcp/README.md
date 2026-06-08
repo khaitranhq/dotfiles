@@ -6,6 +6,12 @@ for servers that require authentication.
 
 All MCP server tools are registered with `mcp_<server>_<tool>` prefix.
 
+## Commands
+
+| Command       | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `/mcp-status` | Show MCP server connection status overlay with icons |
+
 ## Architecture
 
 pi only talks to three modules directly:
@@ -67,13 +73,13 @@ Stdio servers auto-restart on reconnect (disconnect then connect again).
 OAuth is not used with stdio — authentication is handled by the local
 process environment.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `transport` | yes | Must be `"stdio"` |
-| `command` | yes | Executable or command to spawn |
-| `args` | no | Command arguments (default: `[]`) |
-| `env` | no | Extra environment variables merged into `process.env` |
-| `cwd` | no | Working directory for the child process (default: pi's cwd) |
+| Field       | Required | Description                                                 |
+| ----------- | -------- | ----------------------------------------------------------- |
+| `transport` | yes      | Must be `"stdio"`                                           |
+| `command`   | yes      | Executable or command to spawn                              |
+| `args`      | no       | Command arguments (default: `[]`)                           |
+| `env`       | no       | Extra environment variables merged into `process.env`       |
+| `cwd`       | no       | Working directory for the child process (default: pi's cwd) |
 
 On startup, the extension connects to each configured server (HTTP or stdio),
 calls `tools/list`, and registers every discovered tool with `pi.registerTool()`.
