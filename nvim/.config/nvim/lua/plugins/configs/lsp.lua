@@ -139,6 +139,15 @@ local lsp_config = {
 			},
 		},
 	},
+  terraformls = {
+    settings = {
+      terraform = {
+        formatting = {
+          command = "terraform fmt -",
+        },
+      },
+    },
+  },
 }
 
 local blink_config = {
