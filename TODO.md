@@ -14,11 +14,11 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `07` new ext - auto harness my system
+- [ ] `06` new ext - auto harness my system
 
 ### Measure AI System Efficiency
 
-- [ ] `09` Implement metrics tool:
+- [ ] `07` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy

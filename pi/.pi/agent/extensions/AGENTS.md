@@ -29,7 +29,6 @@ When modifying any extension under `~/.pi/agent/extensions/`, you **MUST** updat
 | `web-search`         | `~/.pi/agent/extensions/web-search/README.md`         |
 | `input-ux`           | `~/.pi/agent/extensions/input-ux/README.md`           |
 | `question`           | `~/.pi/agent/extensions/question/README.md`           |
-| `notification`       | `~/.pi/agent/extensions/notification/README.md`       |
 | `shared`             | `~/.pi/agent/extensions/shared/README.md`             |
 
 ### What to update

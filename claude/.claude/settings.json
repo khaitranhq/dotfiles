@@ -2,6 +2,6 @@
   "model": "haiku",
   "theme": "dark",
   "permissions": {
-    "allow": ["Edit(*)", "Write(*)"]
+    "allow": ["Edit(*)", "Write(*)", "Bash(go build:*)", "Bash(go test:*)"]
   }
 }

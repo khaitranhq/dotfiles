@@ -1,8 +1,8 @@
 # Subagent
 
 Spawns separate `pi` processes for subagent invocation with isolated context.
-Also handles **tool permission gating** (formerly the `permission-request` extension)
-and **active tool management** for primary agents.
+Also handles **tool permission gating** (formerly the `permission-request` extension),
+**desktop notifications**, and **active tool management** for primary agents.
 
 **Modes:** Single, Parallel (max 8, 4 concurrent), Chain (`{previous}` placeholder).
 
@@ -17,6 +17,7 @@ Built-in default primary agent: **pi** (always available, no config needed).
 | **Subagent spawning**       | Single, parallel, and chain modes for delegating tasks                   |
 | **Primary agent switching** | Switch active agent via `/agent <name>`                                  |
 | **Permission gating**       | Runtime prompt for tools set to "ask" in permissions                     |
+| **Desktop notifications**   | Toast notifications for permission requests, questions, and agent idle   |
 | **Active tool management**  | Denied tools are removed from active tools (not just blocked at runtime) |
 | **Session approvals**       | Temporarily approve tools for the current session                        |
 | **Persistent approvals**    | "Always approve" saves to `custom-settings.yaml`                         |
@@ -63,6 +64,18 @@ agents:
 Each agent can specify a `tools` list in their definition to limit available tools.
 For subagents, these are passed as `--tools` when spawning the pi subprocess.
 For primary agents, `pi.setActiveTools()` is applied on switch.
+
+## Desktop Notifications
+
+Sends desktop toast notifications for key events:
+
+| Event               | Trigger                                    |
+| ------------------- | ------------------------------------------ |
+| Permission required | "🔐 Permission required" prompt displayed  |
+| Question by LLM     | LLM calls the `question` tool              |
+| Agent done          | Primary agent finishes processing a prompt |
+
+Windows only — skipped on all other platforms.
 
 ## Tool Permissions
 

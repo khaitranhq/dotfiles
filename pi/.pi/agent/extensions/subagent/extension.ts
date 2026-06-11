@@ -19,7 +19,7 @@ import {
   lookupPermission,
   resolveBashPermission,
 } from "../shared/tool-permissions";
-import { notifyPermissionRequired } from "../notification/index";
+import { notifyAgentDone, notifyPermissionRequired, notifyQuestion } from "./notification";
 import {
   discoverAgents,
   getFinalOutput,
@@ -100,6 +100,7 @@ export class SubagentExtension {
     this.registerCommand();
     this.registerEvents();
     this.setupPermissionGate();
+    this.setupNotifications();
   }
 
   // ── Tool registration ──────────────────────────────────────────────
@@ -789,6 +790,36 @@ export class SubagentExtension {
       const active = allTools.filter((n) => !denied.has(n));
       this.pi.setActiveTools(active);
     }
+  }
+
+  // ── Notifications ────────────────────────────────────────────────
+
+  private setupNotifications(): void {
+    // Notify when the primary agent finishes processing.
+    this.pi.on("agent_end", async (event) => {
+      const msgCount = event.messages?.length ?? 0;
+      if (msgCount === 0) return;
+      const lastMsg = event.messages[msgCount - 1];
+      let preview = "";
+      if (lastMsg && lastMsg.role === "assistant" && Array.isArray(lastMsg.content)) {
+        for (const block of lastMsg.content) {
+          if (block.type === "text" && typeof block.text === "string") {
+            preview = block.text.slice(0, 80).replace(/\n/g, " ");
+            break;
+          }
+        }
+      }
+      notifyAgentDone(preview);
+    });
+
+    // Notify when the LLM uses the question tool.
+    this.pi.on("tool_call", async (event: ToolCallEvent, _ctx) => {
+      if (event.toolName !== "question") return;
+      const questions = (event.input as { questions?: Array<{ prompt: string }> }).questions;
+      if (!questions || questions.length === 0) return;
+      const prompts = questions.map((q) => q.prompt).join(" | ");
+      notifyQuestion(prompts);
+    });
   }
 
   /** Gate every tool call with permission checks. */
