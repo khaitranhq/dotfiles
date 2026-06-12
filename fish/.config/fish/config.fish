@@ -89,10 +89,17 @@ if test $agent_ok -ne 1
 end
 
 #=========================Initialize=========================
-oh-my-posh init fish --config "$HOME/.config/ohmyposh/everforest.omp.json" | source
+
 zoxide init fish | source
+
 complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); /usr/local/bin/aws_completer; end)'
+
 add-keys-ssh-agent
+
+if command -v starship > /dev/null
+  starship init fish | source
+  set -x STARSHIP_CONFIG "$HOME/.config/starship/config.toml"
+end
 
 #=========================Run other scripts=========================
 if test -e $HOME/.config/fish/ai.fish

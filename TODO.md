@@ -8,8 +8,6 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Skills
 
-- [ ] `02` `#high` remove unused skills
-- [ ] `03` `#high` create test suites to test trigger accuracy for all skills
 - [ ] `04` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
 
 ## Pi Agent
