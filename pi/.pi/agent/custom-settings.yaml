@@ -9,6 +9,11 @@ mcp:
       transport: stdio
       command: codegraph
       args: ["serve", "--mcp"]
+
+    - name: serena
+      transport: stdio
+      command: serena
+      args: ["start-mcp-server", "--context=ide", "--open-web-dashboard=false"]
 tools:
   bash:
     find: allow
@@ -82,14 +87,15 @@ tools:
     tree: allow
     nvim: allow
   read: allow
-  write: allow
-  edit: allow
+  write: deny
+  edit: deny
   subagent: allow
   question: allow
   web_search: allow
   web_fetch: allow
   todowrite: allow
   mcp_codegraph_*: allow
+  mcp_serena_*: allow
   ls: allow
   grep: allow
 agents:

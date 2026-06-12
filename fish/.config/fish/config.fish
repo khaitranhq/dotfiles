@@ -23,8 +23,7 @@ set -x RIPGREP_CONFIG_PATH "$HOME/.config/ripgrep/ripgreprc"
 set -x BROWSER '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 set -x DOTNET_ROOT "$HOME/.dotnet"
 
-set -x GOMAXPROCS 8
-set -x GOMEMLIMIT 20GiB
+set -x GOMAXPROCS 6
 set -x PI_SKIP_VERSION_CHECK 1
 
 if test -d $HOME/.linuxbrew

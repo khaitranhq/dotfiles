@@ -49,7 +49,9 @@ M.setup = function()
   end
 
   require("nvim-autopairs").setup({})
-  require("early-retirement").setup({})
+  require("early-retirement").setup({
+    retirementAgeMins = 5
+  })
   require("codediff").setup({
     explorer = {
       view_mode = "tree",
