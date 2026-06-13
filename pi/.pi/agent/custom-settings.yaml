@@ -83,7 +83,7 @@ tools:
     mv: allow
   read: allow
   write: allow
-  edit: deny
+  edit: allow
   subagent: allow
   question: allow
   web_search: allow
