@@ -58,6 +58,12 @@ function tw -d "Select or create a tmux workspace from saved list"
     else
         tmux new-session -d -s "$session_name" -c "$target_path" -n v
         tmux split-window -h -l 5 -t "$session_name":v -c "$target_path"
+        tmux send-keys -t "$session_name":v.1 nvim Enter
+        if string match -q "$HOME/Workspaces/Radicle*" "$target_path"
+            tmux send-keys -t "$session_name":v.2 c Enter
+        else
+            tmux send-keys -t "$session_name":v.2 cpi Enter
+        end
         tmux select-pane -t "$session_name":v.1
         if set -q TMUX
             tmux switch-client -t "$session_name"
