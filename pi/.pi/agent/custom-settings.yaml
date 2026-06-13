@@ -6,13 +6,6 @@ mcp:
       args:
         - serve
         - --mcp
-    - name: serena
-      transport: stdio
-      command: serena
-      args:
-        - start-mcp-server
-        - --context=ide
-        - --open-web-dashboard=false
 tools:
   bash:
     find: allow
