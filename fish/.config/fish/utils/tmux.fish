@@ -57,8 +57,8 @@ function tw -d "Select or create a tmux workspace from saved list"
         end
     else
         tmux new-session -d -s "$session_name" -c "$target_path" -n v
-        tmux new-window -t "$session_name" -c "$target_path" -n ai
-        tmux select-window -t "$session_name":v
+        tmux split-window -h -l 5 -t "$session_name":v -c "$target_path"
+        tmux select-pane -t "$session_name":v.1
         if set -q TMUX
             tmux switch-client -t "$session_name"
         else

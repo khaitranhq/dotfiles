@@ -96,9 +96,9 @@ complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (comma
 
 add-keys-ssh-agent
 
-if command -v starship > /dev/null
-  starship init fish | source
-  set -x STARSHIP_CONFIG "$HOME/.config/starship/config.toml"
+if command -v starship >/dev/null
+    starship init fish | source
+    set -x STARSHIP_CONFIG "$HOME/.config/starship/config.toml"
 end
 
 #=========================Run other scripts=========================
@@ -131,6 +131,7 @@ alias cpi='pi --provider commandcode --model deepseek-v4-pro'
 alias c='claude'
 alias j='just'
 alias tf='terraform'
+alias nvim-lsp-logs='tail -f ~/.local/state/nvim/lsp.log'
 
 #=========================Key Bindings=========================
 bind alt-w edit_command_buffer

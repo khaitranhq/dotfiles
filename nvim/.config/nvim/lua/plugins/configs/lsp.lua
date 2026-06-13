@@ -12,7 +12,7 @@ local lsp_config = {
 		},
 	},
 	docker_language_server = {},
-  docker_compose_language_service={},
+	docker_compose_language_service = {},
 	bashls = {},
 	yamlls = {
 		settings = {
@@ -125,7 +125,7 @@ local lsp_config = {
 					{ formatCommand = "stylua -", formatStdin = true },
 				},
 				go = {
-					{ formatCommand = "golines --max-len=120", formatStdin = true },
+					{ formatCommand = "golines --max-len=90", formatStdin = true },
 				},
 				-- TOOD: test
 				sh = {
@@ -140,15 +140,15 @@ local lsp_config = {
 			},
 		},
 	},
-  terraformls = {
-    settings = {
-      terraform = {
-        formatting = {
-          command = "terraform fmt -",
-        },
-      },
-    },
-  },
+	terraformls = {
+		settings = {
+			terraform = {
+				formatting = {
+					command = "terraform fmt -",
+				},
+			},
+		},
+	},
 }
 
 local blink_config = {

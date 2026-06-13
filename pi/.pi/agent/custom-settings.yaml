@@ -53,6 +53,7 @@ tools:
     go vet: allow
     go build: allow
     go list: allow
+    go mod: allow
     gofmt: allow
     gofumpt: allow
     goimports: allow
@@ -87,7 +88,7 @@ tools:
     tree: allow
     nvim: allow
   read: allow
-  write: deny
+  write: allow
   edit: deny
   subagent: allow
   question: allow
