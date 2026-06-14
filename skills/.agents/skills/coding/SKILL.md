@@ -17,6 +17,8 @@ metadata:
 
 Load for every task that creates, modifies, refactors, reviews, or deletes code. Always pair with `tdd` for code changes: **red → green → refactor** is default. Skip full TDD only when automation is genuinely impractical (tooling gaps, legacy constraints, missing hooks); still make the change testable where possible, add nearest practical coverage, and explicitly explain the limitation.
 
+**IaC exception**: Declarative infrastructure-as-code configs (Terraform HCL, Pulumi resource definitions, CDK Constructs, Bicep, CloudFormation) are exempt from TDD — they describe desired state, not executable logic. However, **helper/utility functions** within an IaC project (Go, Python, TypeScript code called by constructs or modules) must follow the full TDD workflow.
+
 ## Core Principles (ALL MANDATORY)
 
 > Every principle below is a hard requirement. Violating any is a defect.
@@ -75,6 +77,7 @@ Default workflow: **red → green → refactor**. Rules:
 - Design for testability: explicit dependencies, narrow interfaces, deterministic behavior, small I/O seams
 - For bugs: reproduce with a failing test first
 - For refactors: establish safety net of passing tests before changing behavior-critical code
+- IaC declarative configs (Terraform, Pulumi resource definitions, CDK Constructs) are exempt from TDD; helper/utility functions in IaC projects are not
 - If full TDD is impractical, state why, add nearest coverage, describe fallback validation
 
 ### 10. Naming Conventions
