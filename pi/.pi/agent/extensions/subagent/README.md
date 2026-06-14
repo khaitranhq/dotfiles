@@ -15,7 +15,7 @@ Built-in default primary agent: **pi** (always available, no config needed).
 | Feature                     | Description                                                              |
 | --------------------------- | ------------------------------------------------------------------------ |
 | **Subagent spawning**       | Single, parallel, and chain modes for delegating tasks                   |
-| **Primary agent switching** | Switch active agent via `/agent <name>`                                  |
+| **Primary agent switching** | Switch active agent via `/agent` (popup select) or `/agent <name>`                  |
 | **Permission gating**       | Runtime prompt for tools set to "ask" in permissions                     |
 | **Desktop notifications**   | Toast notifications for permission requests, questions, and agent idle   |
 | **Active tool management**  | Denied tools are removed from active tools (not just blocked at runtime) |
@@ -55,9 +55,9 @@ agents:
 
 | Command         | Description                    |
 | --------------- | ------------------------------ |
-| `/agent <name>` | Switch primary agent           |
+| `/agent <name>` | Switch primary agent (or select from popup if no name) |
 | `/agent pi`     | Reset to default primary agent |
-| `/agent`        | List available primary agents  |
+| `/agent`        | Show popup to select primary agent  |
 
 ## Tool Restrictions
 

@@ -81,6 +81,7 @@ tools:
     nvim: allow
     go fmt: allow
     mv: allow
+    pnpm format: allow
   read: allow
   write: allow
   edit: allow
@@ -104,5 +105,8 @@ agents:
     prompt: ${file:agents/code-reviewer.md}
   staff-engineer:
     mode: primary
-    description: Staff engineer for complex multi-step implementations — explores, designs 3 approaches, plans, implements via TDD, review-loops against code-reviewer, and documents. Use when task is complex, multi-file, architectural, or user wants thoroughness.
+    description: Staff engineer for complex multi-step implementations — explores,
+      designs 3 approaches, plans, implements via TDD, review-loops against
+      code-reviewer, and documents. Use when task is complex, multi-file,
+      architectural, or user wants thoroughness.
     prompt: ${file:agents/staff-engineer.md}

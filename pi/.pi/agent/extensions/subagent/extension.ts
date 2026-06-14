@@ -614,7 +614,7 @@ export class SubagentExtension {
 
   private registerCommand(): void {
     this.pi.registerCommand("agent", {
-      description: "Switch or list primary agents",
+      description: "Select or switch primary agents",
       handler: this.handleAgentCommand,
     });
   }
@@ -623,6 +623,9 @@ export class SubagentExtension {
     const discovery = discoverAgents();
     const primaryAgents = discovery.primaryAgents;
 
+    let targetName: string;
+
+    // No args: show select popup to pick a primary agent
     if (!args || args.trim() === "") {
       if (primaryAgents.length === 0) {
         ctx.ui.notify(
@@ -632,19 +635,19 @@ export class SubagentExtension {
         return;
       }
 
+      const activeName = this.activePrimaryAgent || "pi";
       const items = primaryAgents.map(
-        (a) =>
-          `${a.name}${
-            this.activePrimaryAgent === a.name || (!this.activePrimaryAgent && a.name === "pi")
-              ? " [active]"
-              : ""
-          }: ${a.description}`,
+        (a) => `${a.name}${a.name === activeName ? " [active]" : ""}: ${a.description}`,
       );
-      ctx.ui.notify(`Primary agents:\n${items.join("\n")}`, "info");
-      return;
-    }
+      const selected = await ctx.ui.select("Select Primary Agent", items);
+      if (selected === null || selected === undefined) return;
 
-    const targetName = args.trim();
+      // Parse agent name from selected display item. Format: "name [active]: description"
+      // TODO: use Map<string, Agent> instead of string parsing when item format changes.
+      targetName = selected.split(":")[0].replace(" [active]", "").trim();
+    } else {
+      targetName = args.trim();
+    }
 
     if (targetName === "pi") {
       if (this.activePrimaryAgent) {
