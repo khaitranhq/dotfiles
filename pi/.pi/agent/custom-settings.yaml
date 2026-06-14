@@ -102,7 +102,7 @@ agents:
     mode: subagent
     description: Senior code reviewer for quality, security, and maintainability
     prompt: ${file:agents/code-reviewer.md}
-  scout:
-    mode: subagent
-    description: Fast codebase recon returning structured context for other agents
-    prompt: ${file:agents/scout.md}
+  staff-engineer:
+    mode: primary
+    description: Staff engineer for complex multi-step implementations — explores, designs 3 approaches, plans, implements via TDD, review-loops against code-reviewer, and documents. Use when task is complex, multi-file, architectural, or user wants thoroughness.
+    prompt: ${file:agents/staff-engineer.md}
