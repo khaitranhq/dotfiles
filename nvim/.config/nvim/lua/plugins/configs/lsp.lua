@@ -162,6 +162,12 @@ local blink_config = {
 
 	cmdline = {
 		enabled = true,
+		completion = {
+			menu = {
+				-- This forces the menu to open automatically in cmdline
+				auto_show = true,
+			},
+		},
 	},
 
 	appearance = {
