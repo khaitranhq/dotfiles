@@ -3,13 +3,13 @@ vim.loader.enable()
 require("vim._core.ui2").enable()
 
 vim.filetype.add({
-	pattern = {
-		["docker-compose%.yml"] = "yaml.docker-compose",
-		["go.work"] = "gowork",
-	},
-	extension = {
-		d2 = "d2",
-	},
+  pattern = {
+    ["docker-compose%.yml"] = "yaml.docker-compose",
+    ["go.work"] = "gowork",
+  },
+  extension = {
+    d2 = "d2",
+  },
 })
 
 require("core.opts")
