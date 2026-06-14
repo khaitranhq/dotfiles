@@ -11,9 +11,6 @@ $git_status\
 $line_break\
 $character"""
 
-right_format = """
-$git_branch\
-"""
 
 add_newline = false
 palette = "everforest"

@@ -12,6 +12,10 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
+- [ ] simple development and complex development
+  - principles, requirements for each kind
+  - how sub-agents work
+  - skills, tools, what are needed, what are optional but recommended
 - [ ] `06` new ext - auto harness my system
 
 ### Measure AI System Efficiency
