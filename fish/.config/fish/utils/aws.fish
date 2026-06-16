@@ -1,3 +1,106 @@
+function aws_ec2_ssm -d "Select AWS profile and EC2 instance via fzf, then connect via SSM"
+    if not command -v fzf >/dev/null 2>&1
+        echo "❌ Error: fzf command not found" >&2
+        return 1
+    end
+
+    set -l config_file "$HOME/.aws/config"
+    if not test -f "$config_file"
+        echo "❌ Error: AWS config file not found at $config_file" >&2
+        return 1
+    end
+
+    set -l profiles (grep -oP '^\[profile \K[^\]]+' "$config_file" 2>/dev/null)
+    if test -z "$profiles"
+        echo "❌ Error: No AWS profiles found in $config_file" >&2
+        return 1
+    end
+
+    # Step 1: fzf select profile (small frame)
+    set -l profile (printf '%s\n' $profiles | fzf --height=~10 --layout=reverse --border --header="Select AWS Profile")
+    if test -z "$profile"
+        echo "No profile selected."
+        return 0
+    end
+    echo "🔑 Selected profile: $profile"
+
+    # Step 2: Extract region from config for this profile
+    set -l region ""
+    set -l in_section 0
+    while read -l line
+        if string match -qr "^\[profile $profile\]" "$line"
+            set in_section 1
+            continue
+        end
+        if test $in_section -eq 1
+            if string match -qr '^\[' "$line"
+                break
+            end
+            if string match -qr '^region\s*=\s*(.+)$' "$line"
+                set region (string match -r '^region\s*=\s*(.+)$' "$line")[2]
+                break
+            end
+        end
+    end <"$config_file"
+
+    if test -z "$region"
+        echo "❌ Error: No region found for profile '$profile'"
+        return 1
+    end
+    echo "🌍 Region: $region"
+
+    # Step 3: Check authentication
+    echo "🔍 Checking authentication..."
+    if not aws sts get-caller-identity --profile $profile --region $region >/dev/null 2>&1
+        echo "⚠️  Not authenticated. Running aws login..."
+        if not aws login --profile $profile
+            echo "❌ AWS login failed"
+            return 1
+        end
+        echo "✅ Login successful"
+    else
+        echo "✅ Authenticated"
+    end
+
+    # Step 4: List EC2 instances
+    echo "🔍 Fetching EC2 instances..."
+    set -l instances (aws ec2 describe-instances \
+        --profile $profile \
+        --region $region \
+        --filters "Name=instance-state-name,Values=running" \
+        --query 'Reservations[*].Instances[*].[Tags[?Key==`Name`].Value | [0], InstanceId]' \
+        --output text 2>&1)
+
+    if test $status -ne 0
+        echo "❌ Error fetching EC2 instances: $instances"
+        return 1
+    end
+
+    if test -z "$instances"
+        echo "⚠️  No EC2 instances found in region $region"
+        return 0
+    end
+
+    # Step 5: fzf select instance (small frame, show name only)
+    set -l selected (printf '%s\n' $instances | fzf --height=~10 --layout=reverse --border --header="Select EC2 Instance" --with-nth=1)
+    if test -z "$selected"
+        echo "No instance selected."
+        return 0
+    end
+
+    # Extract instance ID (last column) and name (rest)
+    set -l instance_id (echo "$selected" | awk '{print $NF}')
+    set -l instance_name (echo "$selected" | awk '{$NF=""; print $0}' | string trim)
+
+    echo "🖥️  Connecting to: $instance_name ($instance_id)"
+
+    # Step 6: SSM start session
+    aws ssm start-session \
+        --target $instance_id \
+        --profile $profile \
+        --region $region
+end
+
 function aws_auth
     set -l profile $argv[1]
     set -l region $argv[2]
@@ -149,7 +252,7 @@ function aws_auth
                         break
                     end
                 end
-            end < "$config_file"
+            end <"$config_file"
 
             if test -z "$region"
                 echo "⚠️  No region found for profile '$profile' in config file"
