@@ -9,44 +9,53 @@ function tw -d "Select or create a tmux workspace from saved list"
     # Read saved workspace names
     set -l workspace_names (yq -r 'keys | .[]' "$workspace_file" 2>/dev/null)
 
-    # Fuzzy-filter workspaces with fzf
-    # Enter → create new workspace with typed text (via become)
-    # Tab  → select highlighted existing workspace
-    set -l selected (printf '%s\n' $workspace_names | fzf \
-        --bind "enter:become(printf '%s\n' {q})" \
-        --bind "tab:accept" \
-        --header="📂 Enter → create new | Tab → select existing" \
-        --prompt="Search or create: ")
+    # Build selection list: existing sessions + "Create new session" option
+    set -l options $workspace_names
+    set -a options "✨ Create new session"
+
+    # Select session with gum filter
+    set -l selected (printf '%s\n' $options | gum filter \
+        --header="Select a tmux session" \
+        --prompt="Session: " \
+        --height=20)
 
     if test $status -ne 0; or test -z "$selected"
         return 0
     end
-    echo "Selected workspace: $selected"
 
-    # ── Resolve: existing workspace or new ──
-    set -l target_path (yq -r ".[\"$selected\"]" "$workspace_file" 2>/dev/null)
     set -l session_name
+    set -l target_path
 
-    if test -z "$target_path"; or test "$target_path" = null
-        # ── New workspace ──
-        set -l cwd (pwd)
-        yq -i ".[\"$selected\"] = \"$cwd\"" "$workspace_file"
-        echo "✅ Saved workspace '$selected' → $cwd"
-        set session_name $selected
-        set target_path $cwd
+    if test "$selected" = "✨ Create new session"
+        # ── Create new session via gum input ──
+        set session_name (gum input --header="Create new tmux session" --prompt="Name: ")
+        if test $status -ne 0; or test -z "$session_name"
+            return 0
+        end
+        set target_path (pwd)
+        yq -i ".[\"$session_name\"] = \"$target_path\"" "$workspace_file"
+        echo "✅ Saved workspace '$session_name' → $target_path"
     else
         # ── Existing workspace ──
-        set session_name $selected
+        set session_name "$selected"
+        set target_path (yq -r ".[\"$session_name\"]" "$workspace_file" 2>/dev/null)
+
+        if test -z "$target_path"; or test "$target_path" = null
+            echo "⚠️  Workspace '$session_name' has no path defined."
+            return 1
+        end
 
         if not test -d "$target_path"
             echo "⚠️  Workspace path no longer exists: $target_path"
             if gum confirm "Remove this workspace?" --default=false
-                yq -i "del(.[\"$selected\"])" "$workspace_file"
-                echo "🗑️  Removed workspace '$selected'"
+                yq -i "del(.[\"$session_name\"])" "$workspace_file"
+                echo "🗑️  Removed workspace '$session_name'"
             end
             return 1
         end
     end
+
+    echo "Selected workspace: $session_name"
 
     # ── Attach or create tmux session ──
     if tmux has-session -t="$session_name" 2>/dev/null
@@ -91,10 +100,11 @@ function td -d "Delete a tmux workspace (kill session + remove from workspace li
         return 0
     end
 
-    # Fuzzy-select workspace to delete with fzf
-    set -l selected (printf '%s\n' $workspace_names | fzf \
+    # Select workspace to delete with gum filter
+    set -l selected (printf '%s\n' $workspace_names | gum filter \
         --header="🗑️  Select workspace to DELETE" \
-        --prompt="Delete: ")
+        --prompt="Delete: " \
+        --height=20)
 
     if test $status -ne 0; or test -z "$selected"
         return 0
