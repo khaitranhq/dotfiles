@@ -14,6 +14,11 @@ M.setup = function()
   })
 
   vim.api.nvim_create_user_command("Trouble", vim.diagnostic.setqflist, {})
+
+  vim.api.nvim_create_user_command("SaveWithoutFormat", function()
+    vim.b.skip_format_on_save = true
+    vim.cmd("write")
+  end, { desc = "Save the current buffer without running formatters" })
 end
 
 return M

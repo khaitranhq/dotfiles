@@ -1,49 +1,21 @@
 ---
 name: golang
-description: Provides specialized instructions and workflows for Go/Golang programming tasks including code organization, struct design, error handling, testing, and production-grade implementation patterns. Use when working with Go code, .go files, Go modules, Go packages, Go tests, Go builds, Go tools (go mod, go test, go build, go vet, go doc, gofumpt, goimports, golangci-lint), goroutines, Go interfaces, Go structs, Go error handling, Go concurrency, Go CLI, or any Go project.
+description: Go/Golang workflow including code organization, struct design, error handling, table-driven tests, and post-impl quality steps (test, build, goimports, gofumpt, gofmt, golangci-lint, go vet). Use for any Go project, .go file, Go module/package, or Go tool (go mod/test/build/vet/doc).
 license: MIT
 metadata:
   author: OpenCode
   version: "1.0.0"
   domain: language
   triggers:
-    - Go
-    - Golang
-    - Go programming
-    - Go development
-    - Go debugging
     - .go
-    - go file
-    - Go source
-    - Go project
-    - Go code
-    - Go module
-    - Go package
-    - go mod
+    - go.mod
     - go test
     - go build
     - go vet
-    - go doc
-    - go run
-    - go get
-    - go install
-    - gofmt
     - gofumpt
     - goimports
     - golangci-lint
-    - goroutine
-    - Go interface
-    - Go struct
-    - Go error
-    - Go concurrency
-    - Go CLI
-    - Go toolchain
-    - Go dependency
-    - Go binary
     - table-driven test
-    - Go constructor
-    - Go receiver
-    - Go pattern
   role: specialist
   scope: implementation
   output-format: code
