@@ -1,4 +1,4 @@
-function aws_ec2_ssm -d "Select AWS profile and EC2 instance via fzf, then connect via SSM"
+function aws-ec2-ssm -d "Select AWS profile and EC2 instance via fzf, then connect via SSM"
     if not command -v fzf >/dev/null 2>&1
         echo "❌ Error: fzf command not found" >&2
         return 1

@@ -82,6 +82,8 @@ tools:
     go fmt: allow
     mv: allow
     pnpm format: allow
+    od: allow
+    pnpm exec tsc: allow
   read: allow
   write: allow
   edit: allow
