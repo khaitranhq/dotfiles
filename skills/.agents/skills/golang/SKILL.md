@@ -320,6 +320,9 @@ This shows:
 ### MUST NOT DO
 
 - **Ignore errors** — Avoid `_ = ` assignments without explicit justification; handle or propagate all errors
+- **Inline error wrapping** — Never wrap a function's error return directly inside `fmt.Errorf` (e.g., `return x, fmt.Errorf("msg: %w", fn())`). Assign to `err` first, check `if err != nil`, then wrap.
+  ✅ `err := fn(); if err != nil { return fmt.Errorf("msg: %w", err) }`
+  ❌ `return x, fmt.Errorf("msg: %w", fn())`
 - **Use panic for normal error handling** — Reserve panic for truly exceptional conditions; use errors for control flow
 - **Hardcode values** — Use configuration files, constants, or environment variables instead of hardcoded values
 - **Create goroutines without lifecycle management** — Always ensure goroutines can be cancelled or have bounded lifetime

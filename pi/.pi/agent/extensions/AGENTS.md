@@ -3,12 +3,16 @@
 > **Note:** Files under `/home/khaitran/dotfiles/pi/.pi/agent/**` are symlinked to `~/.pi/agent/`. The dotfiles repo is the canonical source. Changes made here are reflected immediately in pi's runtime.
 > Run test commands (vitest) in`/home/khaitran/dotfiles/pi/.pi/agent/**` instead of `~/.pi/agent/**` to ensure changes are tracked in version control.
 
-## Mandatory: Lint and Format After Code Changes
+## Mandatory: Lint, Format, and Test After Code Changes
 
-After any code change (edit, write, or file creation), you **MUST** run lint and format:
+After any code change (edit, write, or file creation), you **MUST** run lint, format, and tests:
 
 1. **Lint** — `pnpm lint` (runs `tsc --noEmit && oxlint`)
-2. **Format** — `pnpm format` on changed files
+2. **Format** — `pnpm format` (oxfmt has no per-file flag; rewrites all files)
+3. **Test** — `pnpm test [<path-filter>]` (runs `vitest run`)
+
+`pnpm exec vitest` is **not** equivalent to `pnpm test` — `pnpm test` is the
+canonical entry point. Always invoke via `pnpm test`.
 
 Fix all errors before considering the change complete. Do not leave lint warnings or formatting issues behind.
 
@@ -23,6 +27,7 @@ When modifying any extension under `~/.pi/agent/extensions/`, you **MUST** updat
 | Extension            | README                                                |
 | -------------------- | ----------------------------------------------------- |
 | `permission-request` | `~/.pi/agent/extensions/permission-request/README.md` |
+| `codegraph-hooks`    | `~/.pi/agent/extensions/codegraph-hooks/README.md`    |
 | `defender`           | `~/.pi/agent/extensions/defender/README.md`           |
 | `subagent`           | `~/.pi/agent/extensions/subagent/README.md`           |
 | `mcp`                | `~/.pi/agent/extensions/mcp/README.md`                |
