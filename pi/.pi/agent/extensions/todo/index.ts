@@ -19,6 +19,7 @@ import {
   DynamicBorder,
 } from "@earendil-works/pi-coding-agent";
 import { Container, matchesKey, Text } from "@earendil-works/pi-tui";
+import { encode as toonEncode } from "@toon-format/toon";
 import { Type } from "typebox";
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -222,7 +223,7 @@ export default function (pi: ExtensionAPI) {
     name: "todowrite",
     label: "TodoWrite",
     description: DESCRIPTION,
-    promptSnippet: "Create and manage a structured task list (full replacement)",
+    promptSnippet: "Create and manage a structured task list (TOON-formatted output)",
     promptGuidelines: [
       "Use todowrite to track tasks for complex multi-step work. Send the COMPLETE todo list every call — the tool replaces the entire list. Keep exactly one todo in_progress at a time. Mark tasks completed ONLY after full verification.",
     ],
@@ -236,19 +237,20 @@ export default function (pi: ExtensionAPI) {
         (t) => t.status !== "completed" && t.status !== "cancelled",
       ).length;
 
+      const todoPayload = {
+        summary: `${activeCount} active (${summary})`,
+        items: todos.map((t) => ({
+          status: t.status,
+          priority: t.priority,
+          task: t.content,
+        })),
+      };
+
       return {
         content: [
           {
             type: "text",
-            text: [
-              `${activeCount} active todos (${summary})`,
-              "",
-              todos.length > 0
-                ? todos
-                    .map((t) => `[${STATUS_ICONS[t.status]}] [${t.priority}] ${t.content}`)
-                    .join("\n")
-                : "(empty)",
-            ].join("\n"),
+            text: toonEncode(todoPayload),
           },
         ],
         details: { todos } as TodoDetails,

@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import type { Message } from "@earendil-works/pi-ai";
 import { type ExtensionAPI, type ToolCallEvent } from "@earendil-works/pi-coding-agent";
+import { encode as toonEncode } from "@toon-format/toon";
 import { Type } from "typebox";
 import {
   extractAllCommandSegments,
@@ -32,6 +33,8 @@ import {
   type SingleResult,
   type SubagentDetails,
   type ToolOverride,
+  toonResult,
+  toonResults,
   writePromptToTempFile,
 } from "./agents";
 import { renderCall, renderResult } from "./render";
@@ -112,9 +115,10 @@ export class SubagentExtension {
       description:
         "Delegate tasks from pi to specialized subagents with isolated context. " +
         "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder). " +
-        "Agent definitions live in custom-settings.yaml under the `agents` key.",
+        "Agent definitions live in custom-settings.yaml under the `agents` key. " +
+        "Tasks and results use TOON format.",
       promptSnippet:
-        "Delegate task from pi to a named subagent. Available subagent names are listed in the system prompt under ## Available subagents.",
+        "Delegate task from pi to a named subagent (uses TOON format). Available subagent names are listed in the system prompt under ## Available subagents.",
       parameters: SubagentParams,
       execute: this.execute as any,
       renderCall,
@@ -192,16 +196,11 @@ export class SubagentExtension {
         const isError =
           result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
         if (isError) {
-          const errorMsg =
-            result.errorMessage ||
-            result.stderr ||
-            getFinalOutput(result.messages) ||
-            "(no output)";
           return {
             content: [
               {
                 type: "text",
-                text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}`,
+                text: toonResult({ ...result, agent: step.agent, task: step.task }),
               },
             ],
             details: { mode: "chain", results },
@@ -214,7 +213,7 @@ export class SubagentExtension {
         content: [
           {
             type: "text",
-            text: getFinalOutput(results[results.length - 1].messages) || "(no output)",
+            text: toonResults(results),
           },
         ],
         details: { mode: "chain", results },
@@ -291,17 +290,11 @@ export class SubagentExtension {
         return result;
       });
 
-      const successCount = results.filter((r) => r.exitCode === 0).length;
-      const summaries = results.map((r) => {
-        const output = getFinalOutput(r.messages);
-        const preview = output.slice(0, 100) + (output.length > 100 ? "..." : "");
-        return `[${r.agent}] ${r.exitCode === 0 ? "completed" : "failed"}: ${preview || "(no output)"}`;
-      });
       return {
         content: [
           {
             type: "text",
-            text: `Parallel: ${successCount}/${results.length} succeeded\n\n${summaries.join("\n\n")}`,
+            text: toonResults(results),
           },
         ],
         details: { mode: "parallel", results },
@@ -328,13 +321,11 @@ export class SubagentExtension {
     const isError =
       result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
     if (isError) {
-      const errorMsg =
-        result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
       return {
         content: [
           {
             type: "text",
-            text: `Agent ${result.stopReason || "failed"}: ${errorMsg}`,
+            text: toonResult(result),
           },
         ],
         details: { mode: "single", results: [result] },
@@ -345,7 +336,7 @@ export class SubagentExtension {
       content: [
         {
           type: "text",
-          text: getFinalOutput(result.messages) || "(no output)",
+          text: toonResult(result),
         },
       ],
       details: { mode: "single", results: [result] },
@@ -433,7 +424,7 @@ export class SubagentExtension {
         args.push("--append-system-prompt", tmpPromptPath);
       }
 
-      args.push(`Task: ${task}`);
+      args.push(toonEncode({ task, agent: agentName }));
       let wasAborted = false;
 
       const exitCode = await new Promise<number>((resolve) => {

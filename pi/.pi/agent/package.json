@@ -23,6 +23,7 @@
     "@secretlint/core": "^13.0.2",
     "@secretlint/secretlint-rule-preset-recommend": "13.0.2",
     "@secretlint/types": "^13.0.2",
+    "@toon-format/toon": "^2.3.0",
     "secretlint": "13.0.2",
     "tree-sitter": "0.25.0",
     "tree-sitter-bash": "0.25.1",

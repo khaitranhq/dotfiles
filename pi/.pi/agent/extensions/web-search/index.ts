@@ -32,6 +32,7 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { formatSize } from "@earendil-works/pi-coding-agent";
+import { encode as toonEncode } from "@toon-format/toon";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import * as crypto from "node:crypto";
@@ -368,9 +369,9 @@ export default function (pi: ExtensionAPI) {
     name: "web_search",
     label: "Web Search",
     description:
-      "Search the web using Tavily. Returns titles, URLs, and content snippets. " +
+      "Search the web using Tavily. Returns results in TOON format with titles, URLs, and snippets. " +
       "Use this to find current information, documentation, or answers to questions.",
-    promptSnippet: "Search the web with Tavily and return results with titles, URLs, and snippets",
+    promptSnippet: "Search the web with Tavily and return results in TOON format",
     promptGuidelines: [
       "Use web_search to find current information, documentation, or answers that are not in your training data.",
       "After getting search results, use web_fetch to retrieve full content from promising URLs.",
@@ -455,22 +456,17 @@ export default function (pi: ExtensionAPI) {
           };
         }
 
-        // Build formatted output
-        const lines: string[] = [
-          `Search results for: "${query}"`,
-          `Found ${results.length} result(s):`,
-          "",
-        ];
+        // Build TOON-formatted output
+        const searchPayload = {
+          query,
+          results: results.map((r) => ({
+            title: r.title,
+            url: r.url,
+            snippet: r.content.slice(0, 300),
+          })),
+        };
 
-        for (let i = 0; i < results.length; i++) {
-          const r = results[i];
-          lines.push(`${i + 1}. ${r.title}`);
-          lines.push(`   URL: ${r.url}`);
-          lines.push(`   ${r.content.slice(0, 300)}`);
-          lines.push("");
-        }
-
-        let output = lines.join("\n");
+        let output = toonEncode(searchPayload);
 
         // Final size check
         const byteLen = Buffer.byteLength(output, "utf-8");

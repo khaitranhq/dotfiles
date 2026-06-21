@@ -8,6 +8,7 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { encode as toonEncode } from "@toon-format/toon";
 import type { AgentToolResult } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
@@ -151,6 +152,35 @@ export function getModelRef(
 }
 
 // ── Message helpers ────────────────────────────────────────────────────
+
+/** Format a single subagent result into TOON. */
+export function toonResult(r: SingleResult): string {
+  const output = getFinalOutput(r.messages);
+  const isError = r.exitCode !== 0 || r.stopReason === "error" || r.stopReason === "aborted";
+  return toonEncode({
+    agent: r.agent,
+    task: r.task,
+    status: isError ? r.stopReason || "failed" : "completed",
+    ...(isError && r.errorMessage ? { error: r.errorMessage } : {}),
+    ...(output ? { output } : {}),
+  });
+}
+
+/** Format multiple subagent results into a TOON array. */
+export function toonResults(rs: SingleResult[]): string {
+  const list = rs.map((r) => {
+    const output = getFinalOutput(r.messages);
+    const isError = r.exitCode !== 0 || r.stopReason === "error" || r.stopReason === "aborted";
+    return {
+      agent: r.agent,
+      step: r.step,
+      status: isError ? r.stopReason || "failed" : "completed",
+      ...(isError && r.errorMessage ? { error: r.errorMessage } : {}),
+      ...(output ? { output: output.slice(0, 500) } : {}),
+    };
+  });
+  return toonEncode({ results: list });
+}
 
 export function getFinalOutput(messages: Message[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
