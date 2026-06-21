@@ -51,6 +51,7 @@ fish_add_path $HOME/.pulumi/bin
 fish_add_path $HOME/go/bin
 fish_add_path $HOME/.dotnet
 fish_add_path $HOME/.dotnet/tools/
+fish_add_path $HOME/.cargo/bin
 
 #=========================SSH Agent=========================
 # Reuse a running ssh-agent when possible. If none is available,

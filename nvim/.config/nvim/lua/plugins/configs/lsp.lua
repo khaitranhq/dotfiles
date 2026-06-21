@@ -79,6 +79,7 @@ local lsp_config = {
   golangci_lint_ls = {},
   just = {},
   roslyn_ls = {},
+  rust_analyzer = {},
   gopls = {
     settings = {
       gopls = {
@@ -179,7 +180,7 @@ local blink_config = {
     default = { "lsp", "path", "buffer", "cmdline", "snippets", "omni" },
     providers = {
       buffer = {
-        max_items = 4,      -- Limit buffer completion items
+        max_items = 4,          -- Limit buffer completion items
         min_keyword_length = 3, -- Require 3 chars before buffer completion
       },
     },

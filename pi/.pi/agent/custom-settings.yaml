@@ -85,6 +85,11 @@ tools:
     od: allow
     pnpm exec tsc: allow
     codegraph: allow
+    cargo check: allow
+    cargo test: allow
+    cargo clippy: allow
+    cargo doc: allow
+    tuicr review: allow
   read: allow
   write: allow
   edit: allow
