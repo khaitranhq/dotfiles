@@ -1,21 +1,11 @@
 ---
 name: golang
-description: Go/Golang workflow including code organization, struct design, error handling, table-driven tests, and post-impl quality steps (test, build, goimports, gofumpt, gofmt, golangci-lint, go vet). Use for any Go project, .go file, Go module/package, or Go tool (go mod/test/build/vet/doc).
+description: Go/Golang workflow including code organization, struct design, error handling, table-driven tests, and post-impl quality steps (test, build, goimports, gofumpt, gofmt, golangci-lint, go vet). Use for any Go project, .go file, Go module/package, Go tool (go mod/test/build/vet/doc), or Go-based IaC (Pulumi, Terraform CDKTF, AWS CDK Go) where struct design, error handling, and go doc discovery apply.
 license: MIT
 metadata:
   author: OpenCode
   version: "1.0.0"
   domain: language
-  triggers:
-    - .go
-    - go.mod
-    - go test
-    - go build
-    - go vet
-    - gofumpt
-    - goimports
-    - golangci-lint
-    - table-driven test
   role: specialist
   scope: implementation
   output-format: code
