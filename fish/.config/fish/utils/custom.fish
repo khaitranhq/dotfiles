@@ -20,6 +20,7 @@ function history_search -d "Interactive history search using fzf"
     set -l selected_command (\
       printf '%s\n' $history_commands | \
       fzf \
+        --cycle \
         --header="🔍 Search Command History" \
         --layout=reverse \
         --border \

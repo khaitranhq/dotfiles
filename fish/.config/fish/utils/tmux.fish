@@ -158,6 +158,7 @@ function pick_files -d "Pick files with fzf and send to tmux pane"
         --ignore-file '.rgignore' \
         --follow \
         | fzf --multi \
+            --cycle \
             --reverse \
             --prompt="Select files: " \
             --preview 'bat --style=numbers --color=always {} 2>/dev/null || cat {}' \

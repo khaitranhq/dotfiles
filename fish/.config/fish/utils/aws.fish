@@ -17,7 +17,7 @@ function aws-ec2-ssm -d "Select AWS profile and EC2 instance via fzf, then conne
     end
 
     # Step 1: fzf select profile (small frame)
-    set -l profile (printf '%s\n' $profiles | fzf --height=~10 --layout=reverse --border --header="Select AWS Profile")
+    set -l profile (printf '%s\n' $profiles | fzf --cycle --height=~10 --layout=reverse --border --header="Select AWS Profile")
     if test -z "$profile"
         echo "No profile selected."
         return 0
@@ -82,7 +82,7 @@ function aws-ec2-ssm -d "Select AWS profile and EC2 instance via fzf, then conne
     end
 
     # Step 5: fzf select instance (small frame, show name only)
-    set -l selected (printf '%s\n' $instances | fzf --height=~10 --layout=reverse --border --header="Select EC2 Instance" --with-nth=1)
+    set -l selected (printf '%s\n' $instances | fzf --cycle --height=~10 --layout=reverse --border --header="Select EC2 Instance" --with-nth=1)
     if test -z "$selected"
         echo "No instance selected."
         return 0
