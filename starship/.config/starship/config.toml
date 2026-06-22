@@ -1,4 +1,6 @@
 format = """
+$fill\
+$line_break\
 $os\
 $username\
 $hostname\
@@ -14,6 +16,9 @@ $character"""
 
 add_newline = false
 palette = "everforest"
+
+[fill]
+symbol = "─"
 
 [os]
 disabled = false
