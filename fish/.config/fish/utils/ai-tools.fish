@@ -49,7 +49,7 @@ function ai_commit -d "Generate AI-powered commit messages from staged changes"
 
     set generated_message "$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --extension ~/.pi/agent/extensions/llm-providers --no-extensions --provider commandcode --model deepseek/deepseek-v4-flash "$2"' \
+        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --extension ~/.pi/agent/extensions/llm-providers --no-extensions --provider github-copilot --model gpt-4.1 "$2"' \
         _ "$diff_content" "$ai_prompt")"
 
     set generate_message_exit_code $status
