@@ -90,6 +90,7 @@ tools:
     cargo clippy: allow
     cargo doc: allow
     tuicr review: allow
+    cargo fmt: allow
   read: allow
   write: allow
   edit: allow

@@ -35,6 +35,7 @@ When modifying any extension under `~/.pi/agent/extensions/`, you **MUST** updat
 | `input-ux`           | `~/.pi/agent/extensions/input-ux/README.md`           |
 | `question`           | `~/.pi/agent/extensions/question/README.md`           |
 | `shared`             | `~/.pi/agent/extensions/shared/README.md`             |
+| `toonify`            | `~/.pi/agent/extensions/toonify/README.md`            |
 
 ### What to update
 
