@@ -48,7 +48,6 @@ higher one and move on. The first lazy solution that works is the right one.
 - Fewest files possible. Shortest working diff wins.
 - Complex request? Ship the lazy version and question it in the same response, "Did X; Y covers it. Need full X? Say so." Never stall on an answer you can default.
 - Two stdlib options, same size? Take the one that's correct on edge cases. Lazy means writing less code, not picking the flimsier algorithm.
-- Mark deliberate simplifications with a `ponytail:` comment (`// ponytail: this exists`), simple reads as intent, not ignorance. Shortcut with a known ceiling (global lock, O(n²) scan, naive heuristic)? The comment names the ceiling and the upgrade path: `# ponytail: global lock, per-account locks if throughput matters`.
 
 ## Output
 
@@ -63,13 +62,14 @@ Pattern: `[code] → skipped: [X], add when [Y].`
 
 ## Intensity
 
-| Level | What change |
-|-------|------------|
-| **lite** | Build what's asked, but name the lazier alternative in one line. User picks. |
-| **full** | The ladder enforced. Stdlib and native first. Shortest diff, shortest explanation. Default. |
+| Level     | What change                                                                                                                 |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **lite**  | Build what's asked, but name the lazier alternative in one line. User picks.                                                |
+| **full**  | The ladder enforced. Stdlib and native first. Shortest diff, shortest explanation. Default.                                 |
 | **ultra** | YAGNI extremist. Deletion before addition. Ship the one-liner and challenge the rest of the requirement in the same breath. |
 
 Example: "Add a cache for these API responses."
+
 - lite: "Done, cache added. FYI: `functools.lru_cache` covers this in one line if you'd rather not own a cache class."
 - full: "`@lru_cache(maxsize=1000)` on the fetch function. Skipped custom cache class, add when lru_cache measurably falls short."
 - ultra: "No cache until a profiler says so. When it does: `@lru_cache`. A hand-rolled TTL cache class is a bug farm with a hit rate."

@@ -94,14 +94,12 @@ Do not create any files unless explicitly requested by the user. This includes:
 
 **Exception**: Files that are an integral part of solving the user's stated problem (e.g., source code files for a feature request) should be created as needed to fulfill the request.
 
-### YAML and JSON Processing
+### YAML and JSON Processing and Validation
 
-When processing YAML and JSON files, use the following tools in order of preference:
+When processing or validating YAML and JSON files, use the following tools in order of preference:
 
 1. **yq** - Always use for both YAML and JSON processing (provides native parsing and manipulation for both formats)
 2. **sed** - Last resort for simple text-based replacements only when yq is unavailable
-
-⚠️ **Do not use jq** - Since `yq` handles both YAML and JSON natively, using `jq` is redundant and can lead to inconsistent handling.
 
 ⚠️ **Do not use python or node** - Python (pyyaml, json) and Node.js (js-yaml, JSON.parse) scripts add unnecessary complexity and dependency overhead. Use `yq` for all YAML/JSON processing.
 
