@@ -2,8 +2,6 @@ format = """
 $fill\
 $line_break\
 $os\
-$username\
-$hostname\
 $directory\
 $cmd_duration\
 $nodejs\
@@ -46,16 +44,12 @@ Debian = "󰣚"
 Redhat = "󱄛"
 RedHatEnterprise = "󱄛"
 
-[username]
-show_always = true
-style_root = 'fg:red'
-style_user = 'fg:blue'
-format = '[$user]($style)'
-
-[hostname]
-ssh_only = false
-style = 'fg:blue'
-format = '[@$hostname]($style) '
+[directory]
+style = "fg:orange"
+read_only_style = "fg:orange"
+truncation_length = 3
+truncation_symbol = "…/"
+format = "[ $path]($style)[$read_only]($read_only_style) "
 
 [cmd_duration]
 min_time = 2000
@@ -63,12 +57,6 @@ show_milliseconds = false
 format = "took [$duration]($style) "
 style = "fg:yellow"
 
-[directory]
-style = "fg:orange"
-read_only_style = "fg:orange"
-truncation_length = 3
-truncation_symbol = "…/"
-format = "[ $path]($style)[$read_only]($read_only_style) "
 
 [nodejs]
 style = "fg:green"
@@ -95,6 +83,7 @@ modified = '✏️${count} '
 staged = '➕${count} '
 renamed = '➡️${count} '
 deleted = '❌${count} '
+
 [character]
 success_symbol = '[→](bold green)'
 error_symbol = '[→](bold red)'
