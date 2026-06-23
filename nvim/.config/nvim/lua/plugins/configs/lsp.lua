@@ -14,6 +14,7 @@ local lsp_config = {
   docker_language_server = {},
   docker_compose_language_service = {},
   bashls = {},
+  marksman = {},
   yamlls = {
     settings = {
       yaml = {

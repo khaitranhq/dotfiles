@@ -3,7 +3,8 @@ local M = {}
 M.setup = function()
   local augroup = vim.api.nvim_create_augroup("CoreAutocommands", { clear = true })
 
-  local priority_map = { p1 = "🔥", p2 = "⭐", p3 = "📋", p4 = "💤" }
+  local prio_map = { p1 = "🔥", p2 = "⭐", p3 = "📋", p4 = "💤" }
+  local priority_order = { ["🔥"] = 1, ["⭐"] = 2, ["📋"] = 3, ["💤"] = 4 }
 
   vim.api.nvim_create_autocmd("BufWritePre", {
     group = augroup,
@@ -21,54 +22,81 @@ M.setup = function()
     callback = function()
       local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
       local changed = false
+      local parsed = {}
 
+      -- Parse all lines: extract task structure
       for i, line in ipairs(lines) do
-        if not line:match("^%s*%- %[[ =]%]") then goto continue end -- luacheck: ignore
+        local indent, status = line:match("^(%s*)%- %[(.)%]%s*")
+        if not indent then
+          parsed[i] = false
+        else
+          local rest = line:match("^%s*%- %[.%]%s*(.*)$")
+          rest = rest or ""
 
-        for p, emoji in pairs(priority_map) do
-          if line:match("%f[%w]" .. p .. "%f[^%w]") then
-            local indent = line:match("^(%s*)")
-            local status = line:match("%[(.)%]")
-            local rest = line:gsub("^%s*%- %[[ =]%]%s*", "")
-            rest = rest:gsub("%s*" .. p .. "%f[^%w]%s*", " ")
-            rest = rest:gsub("%s+", " ")
-            rest = rest:gsub("^%s*(.-)%s*$", "%1")
-            lines[i] = (indent .. "- [" .. status .. "] " .. emoji .. " " .. rest):gsub("%s+$", "")
-            changed = true
-            break
+          -- Strip existing backtick ID (e.g. `03`)
+          rest = rest:gsub("^`%d+`%s*", "")
+
+          -- Check and remove priority marker
+          local emoji
+          for p, e in pairs(prio_map) do
+            if rest:match("%f[%w]" .. p .. "%f[^%w]") then
+              rest = rest:gsub("%s*" .. p .. "%f[^%w]%s*", " ")
+              -- Strip old priority emoji if present
+              for _, old_e in pairs(prio_map) do
+                rest = rest:gsub("^" .. old_e .. "%s*", "")
+              end
+              emoji = e
+              break
+            end
           end
+          -- Fallback: detect priority from existing emoji directly
+          if not emoji then
+            for _, e in pairs(prio_map) do
+              if rest:match("^" .. e) then
+                emoji = e
+                rest = rest:gsub("^" .. e .. "%s*", "")
+                break
+              end
+            end
+          end
+
+          -- Normalize whitespace
+          rest = rest:gsub("%s+", " ")
+          rest = rest:gsub("^%s*(.-)%s*$", "%1")
+
+          parsed[i] = { status = status, emoji = emoji, rest = rest, indent = indent }
         end
-        ::continue:: -- luacheck: ignore
       end
 
       -- Sort contiguous task blocks by priority
-      local priority_order = { ["🔥"] = 1, ["⭐"] = 2, ["📋"] = 3, ["💤"] = 4 }
-
-      local function priority_rank(line)
-        for _, e in ipairs({ "🔥", "⭐", "📋", "💤" }) do
-          if line:find(e, 1, true) then return priority_order[e] end
-        end
-        return 5
+      local function prio_rank(p)
+        return p.emoji and priority_order[p.emoji] or 5
       end
 
       local i = 1
       while i <= #lines do
-        if lines[i]:match("^%s*%- %[[ =x]%]") then
+        if parsed[i] then
           local start = i
-          while i <= #lines and lines[i]:match("^%s*%- %[[ =x]%]") do i = i + 1 end
+          while i <= #lines and parsed[i] do i = i + 1 end
           local block = {}
           for j = start, i - 1 do
-            table.insert(block, { text = lines[j], idx = j })
+            table.insert(block, { idx = j, p = parsed[j] })
           end
           table.sort(block, function(a, b)
-            local ka, kb = priority_rank(a.text), priority_rank(b.text)
+            local ka, kb = prio_rank(a.p), prio_rank(b.p)
             if ka ~= kb then return ka < kb end
             return a.idx < b.idx
           end)
-          for j = start, i - 1 do
-            local prev = lines[j]
-            lines[j] = block[j - start + 1].text
-            if lines[j] ~= prev then changed = true end
+          -- Assign sequential IDs and reconstruct lines
+          for offset, entry in ipairs(block) do
+            local p = entry.p
+            local id_str = "`" .. string.format("%02d", offset) .. "`"
+            local seg = p.emoji and (p.emoji .. " " .. p.rest) or p.rest
+            seg = seg:gsub("%s+$", "")
+            local new_line = p.indent .. "- [" .. p.status .. "] " .. id_str
+            if seg ~= "" then new_line = new_line .. " " .. seg end
+            if new_line ~= lines[entry.idx] then changed = true end
+            lines[entry.idx] = new_line
           end
         else
           i = i + 1
@@ -87,6 +115,12 @@ M.setup = function()
     vim.b.skip_format_on_save = true
     vim.cmd("write")
   end, { desc = "Save the current buffer without running formatters" })
+end
+
+--- Ensure markdown tasks have sequential IDs.
+--- Triggers save which runs BufWritePre for full format fix.
+function M.fix_markdown_task_ids()
+  vim.cmd("write")
 end
 
 return M
