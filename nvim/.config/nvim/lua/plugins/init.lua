@@ -71,7 +71,7 @@ M.setup = function()
       unchecked = { icon = "" },
       checked = { icon = "", scope_highlight = "@markup.strikethrough" },
       custom = {
-        doing = { raw = "[=]", rendered = "▶" },
+        doing = { raw = "[=]", rendered = "🔨" },
       },
     },
   })
