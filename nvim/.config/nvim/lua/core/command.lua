@@ -95,8 +95,8 @@ M.setup = function()
             seg = seg:gsub("%s+$", "")
             local new_line = p.indent .. "- [" .. p.status .. "] " .. id_str
             if seg ~= "" then new_line = new_line .. " " .. seg end
-            if new_line ~= lines[entry.idx] then changed = true end
-            lines[entry.idx] = new_line
+            if new_line ~= lines[start + offset - 1] then changed = true end
+            lines[start + offset - 1] = new_line
           end
         else
           i = i + 1

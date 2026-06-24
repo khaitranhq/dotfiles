@@ -68,10 +68,11 @@ M.setup = function()
   })
   require("render-markdown").setup({
     checkbox = {
-      unchecked = { icon = "" },
-      checked = { icon = "", scope_highlight = "@markup.strikethrough" },
+      unchecked = { icon = "🆕" },
+      checked = { icon = "✅", scope_highlight = "@markup.strikethrough" },
       custom = {
         doing = { raw = "[=]", rendered = "🔨" },
+        blocked = { raw = "[!]", rendered = "🚫" },
       },
     },
   })

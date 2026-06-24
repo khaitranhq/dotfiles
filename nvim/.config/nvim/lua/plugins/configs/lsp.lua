@@ -128,7 +128,7 @@ local lsp_config = {
           { formatCommand = "stylua -", formatStdin = true },
         },
         go = {
-          { formatCommand = "golines --max-len=100", formatStdin = true },
+          { formatCommand = "golines --max-len=130", formatStdin = true },
         },
         -- TOOD: test
         sh = {
