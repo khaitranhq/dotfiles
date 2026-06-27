@@ -4,19 +4,23 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Neovim
 
-- [ ] `01` Simple solution for dropbar.nvim alternative
+- [ ] `01` 🔥 fix indexing for checklist in markdown files
+
+  The second index should be `02` instead of `01`.
+
+- [ ] `02` ⭐ Simple solution for dropbar.nvim alternative
 
 ## Skills
 
-- [ ] `02` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
+- [ ] `03` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
 
 ## Pi Agent
 
-- [ ] `03` new ext - auto harness my system
+- [ ] `04` new ext - auto harness my system
 
 ### Measure AI System Efficiency
 
-- [ ] `04` Implement metrics tool:
+- [ ] `05` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy

@@ -157,9 +157,9 @@ keymaps.markdown = {
   n = {
     ["<leader>mi"] = {
       function()
-        require("core.command").fix_markdown_task_ids()
+        require("core.markdown").fix_markdown_task_ids()
       end,
-      "Toggle Markdown preview",
+      "Fix markdown task IDs",
     },
   },
 }

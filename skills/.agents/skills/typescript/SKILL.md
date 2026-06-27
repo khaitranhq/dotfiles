@@ -21,6 +21,16 @@ When adding or updating dependencies in `package.json`, always pin exact version
 - Never use `"latest"` or `"*"` as a version specifier
 - This ensures reproducible builds and prevents unexpected breaking changes from semver-minor or patch updates
 
+### Looking Up Latest Versions
+
+To find the latest version of a package before adding it:
+
+```bash
+npm view <package-name> version
+```
+
+This prints just the version string (e.g., `4.18.2`). No extra parsing needed. Use the output as the pinned version in `package.json`.
+
 ## Validation
 
 TypeScript validation is critical for catching type errors and ensuring code quality before runtime.
