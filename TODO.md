@@ -16,11 +16,12 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `04` new ext - auto harness my system
+- [ ] `04` 'list available tools' show mcp tools with name without mcp prefix
+- [ ] `05` new ext - auto harness my system
 
 ### Measure AI System Efficiency
 
-- [ ] `05` Implement metrics tool:
+- [ ] `06` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
