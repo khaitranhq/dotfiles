@@ -19,6 +19,15 @@ import { Logger } from "../shared/logger";
 
 const TITLE = "Pi";
 const LOG_PATH = path.join(os.homedir(), ".pi", "agent", "subagent", "notification.log");
+const powershellPath = path.join(
+  "/mnt",
+  "c",
+  "Windows",
+  "System32",
+  "WindowsPowerShell",
+  "v1.0",
+  "powershell.exe",
+);
 
 const logger = new Logger(LOG_PATH);
 
@@ -65,7 +74,7 @@ function createToastScript(title: string, message: string): string {
 function notify(title: string, message: string): void {
   const script = createToastScript(title, message);
   logger.log(`Running notification script:\n${script}`);
-  execFile("powershell.exe", ["-NoProfile", "-Command", script], (err) => {
+  execFile(powershellPath, ["-NoProfile", "-Command", script], (err) => {
     if (err) {
       logger.log(`Failed to send notification: ${err.message}`);
     }
