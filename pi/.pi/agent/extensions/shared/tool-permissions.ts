@@ -30,7 +30,7 @@ export function isToolPermissions(obj: unknown): obj is ToolPermissions {
 /**
  * Look up a tool name in a permission map.
  * Returns the permission value or null if not found.
- * Supports wildcards (e.g. `mcp_atlassian_*`).
+ * Supports wildcards (e.g. `atlassian_*`).
  */
 export function lookupPermission(
   toolName: string,

@@ -6,7 +6,7 @@
  * authorization automatically (DCR, PKCE, token refresh) — no
  * manual OAuth tools required.
  *
- * All MCP tools are registered with "mcp_" prefix.
+ * All MCP tools are registered with "{serverName}_{originalName}" naming.
  */
 
 import { type ExtensionAPI, type Theme, DynamicBorder } from "@earendil-works/pi-coding-agent";

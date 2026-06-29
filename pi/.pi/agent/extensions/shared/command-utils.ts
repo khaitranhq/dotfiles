@@ -183,7 +183,7 @@ export function isCommandApproved(segment: string, approved: Set<string>): boole
  * Only supports trailing `*` (prefix match), internal `*`, and `*` alone.
  *
  * Examples:
- *   "mcp_atlassian_*"  → matches "mcp_atlassian_getpage", "mcp_atlassian_search"
+ *   "atlassian_*"  → matches "atlassian_getpage", "atlassian_search"
  *   "*"                → matches everything
  *   "read"             → exact match only
  */
@@ -198,7 +198,7 @@ export function wildcardToRegex(pattern: string): RegExp {
 
 /**
  * Check whether a tool name matches any pattern in a set.
- * Patterns may contain `*` wildcards (e.g., `mcp_atlassian_*`).
+ * Patterns may contain `*` wildcards (e.g., `atlassian_*`).
  * Exact matches are also checked for entries without wildcards.
  */
 export function matchesToolPattern(toolName: string, patterns: Set<string>): boolean {

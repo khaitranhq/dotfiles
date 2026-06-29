@@ -43,7 +43,7 @@ export type BashPermissions = Record<string, ToolPermission>;
  * tools:
  *   read: allow
  *   write: allow
- *   mcp_atlassian_*: deny
+ *   atlassian_*: deny
  *   bash:
  *     jq: allow
  *     rm: deny

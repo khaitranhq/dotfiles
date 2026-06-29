@@ -101,7 +101,7 @@ export class McpClientManager {
 
           for (const tool of tools) {
             allTools.push({
-              name: `mcp_${server.name}_${tool.name}`,
+              name: `${server.name}_${tool.name}`,
               description: tool.description ?? "",
               inputSchema: (tool.inputSchema as Record<string, unknown>) ?? {
                 type: "object",
@@ -118,7 +118,7 @@ export class McpClientManager {
 
           for (const tool of tools) {
             allTools.push({
-              name: `mcp_${server.name}_${tool.name}`,
+              name: `${server.name}_${tool.name}`,
               description: tool.description ?? "",
               inputSchema: (tool.inputSchema as Record<string, unknown>) ?? {
                 type: "object",

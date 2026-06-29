@@ -86,7 +86,7 @@ tools:
   read: allow
   write: allow
   edit: allow
-  mcp_atlassian_*: deny # wildcard support
+  atlassian_*: deny # wildcard support
   bash:
     ls: allow
     rg: allow

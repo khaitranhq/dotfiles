@@ -4,7 +4,7 @@ Full MCP client that connects to configured MCP servers, discovers their tools,
 and registers them with pi. Includes OAuth 2.1 Dynamic Client Registration
 for servers that require authentication.
 
-All MCP server tools are registered with `mcp_<server>_<tool>` prefix.
+All MCP server tools are registered with `<server>_<tool>` naming (e.g., `codegraph_search`).
 
 ## Commands
 
@@ -86,8 +86,8 @@ calls `tools/list`, and registers every discovered tool with `pi.registerTool()`
 
 ### Tool Naming
 
-MCP tools are registered as `mcp_<server>_<tool>` — e.g., a tool named `search`
-on server `atlassian` becomes `mcp_atlassian_search`.
+MCP tools are registered as `<server>_<tool>` — e.g., a tool named `search`
+on server `atlassian` becomes `atlassian_search`.
 
 ## OAuth 2.1
 

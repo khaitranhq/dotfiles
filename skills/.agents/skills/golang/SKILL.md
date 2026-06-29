@@ -1,45 +1,28 @@
 ---
 name: golang
-description: Go/Golang workflow including code organization, struct design, error handling, table-driven tests, and post-impl quality steps (test, build, goimports, gofumpt, gofmt, golangci-lint, go vet). Use for any Go project, .go file, Go module/package, Go tool (go mod/test/build/vet/doc), or Go-based IaC (Pulumi, Terraform CDKTF, AWS CDK Go) where struct design, error handling, and go doc discovery apply.
-license: MIT
-metadata:
-  author: OpenCode
-  version: "1.0.0"
-  domain: language
-  role: specialist
-  scope: implementation
-  output-format: code
+description: Enforcement rules (mandatory formatting, constraints, post-impl steps) and instructional guidance (pointer/value semantics, struct design, doc discovery) for Go. Use with .go files, Go projects, go test, go vet, golangci-lint, gofumpt, or any Go tooling.
 ---
 
 # Go (Golang) Skill
 
-## Purpose
+## Enforcement
 
-This skill provides specialized instructions and workflows for Go/Golang programming tasks including debugging, testing, building, and code organization.
+Rules that must always be followed. No exceptions.
 
-## Key Workflows
+### 1. File Organization Order
 
-### 1. Code Organization
+**⚠️ CRITICAL: This ordering is mandatory and must be consistently applied to all Go source files.**
 
-#### Package Structure
+Go source files must follow this strict order:
 
-- Organize code into packages following Go conventions
-- Keep `main` package simple, put logic in separate packages
+1. **Package declaration** — at the top
+2. **Imports** — organized in groups (stdlib, third-party, local)
+3. **Constants** — package-level constants
+4. **Type definitions** — interfaces first, then structs
+5. **Variables** — package-level variables
+6. **Functions** — organized by logical grouping
 
-#### File Organization Order
-
-**⚠️ CRITICAL: This ordering is mandatory and must be consistently applied to all Go source files. Maintaining strict file organization is essential for code maintainability, readability, and consistency across the codebase.**
-
-Go source files must follow this strict order for optimal readability and consistency:
-
-1. **Package declaration** - at the top
-2. **Imports** - organized in groups (stdlib, third-party, local)
-3. **Constants** - package-level constants
-4. **Type definitions** - interfaces first, then structs
-5. **Variables** - package-level variables
-6. **Functions** - organized by logical grouping
-
-##### Example
+#### Example
 
 ```go
 package mypackage
@@ -108,27 +91,89 @@ func parseConfig(raw string) (Config, error) {
 }
 ```
 
-##### Key Principles
+#### Key Principles
 
-- **Interfaces before implementations** — Readers can understand contracts before seeing implementations
-- **Constructors early** — `New*` functions should come before methods that use the type
-- **Logical grouping** — Group related functions together (e.g., all `Service` methods, then helper functions)
-- **Alphabetical within groups** — Constants and variables within their sections (struct fields in alphabetical order, see section 2)
-- **Public before private** — Exported items before unexported ones within each section
+- **Interfaces before implementations** — contracts before their concrete types
+- **Constructors early** — `New*` functions before methods that use the type
+- **Logical grouping** — group related functions together
+- **Alphabetical within groups** — constants, variables, struct fields
+- **Public before private** — exported items before unexported ones within each section
+
+### 2. Post-Implementation Steps
+
+Run every available formatter, linter, and static-analysis tool. If a tool is installed, do not skip it.
+
+1. **Run Tests**
+
+   ```bash
+   go test ./...
+   ```
+
+2. **Build and Verify Compilation**
+
+   ```bash
+   go build -o /dev/null ./...
+   ```
+
+3. **Format Code** — run all available, in order:
+   - `goimports -w .`
+   - `gofumpt -w .`
+   - `gofmt -w .` (only if no other formatter installed)
+
+4. **Run linters** — e.g. `golangci-lint run ./...`. Fix issues. Mark false positives with `//nolint` + justification comment.
+
+5. **Run Static Analysis**
+   ```bash
+   go vet ./...
+   ```
+
+### 3. Hard Constraints
+
+#### MUST DO
+
+- **Follow strict File Organization Order** — package, imports, constants, types (interfaces first), variables, functions
+- **Add context.Context to all blocking operations** — enable graceful cancellation and timeout handling
+- **Handle all errors explicitly** — never use naked returns
+- **Write table-driven tests with subtests** — use `t.Run()` for parametrized tests
+- **Propagate errors with fmt.Errorf("%w", err)** — use error wrapping to preserve the error chain
+- **Use errors.New("") for sentinel errors** — package-level error variables for comparison
+- **Define clear interface contracts** — small interfaces, behavior-focused
+- **Run all post-implementation steps** — format, lint, test, vet before committing
+- **Document exported functions and types** — doc comments for all public API
+- **Use `any` instead of `interface{}`** — `any` is the Go 1.18+ alias; shorter, idiomatic, same semantics
+- **Use `go doc` commands** — discover types and signatures before implementing with external packages
+
+#### MUST NOT DO
+
+- **Ignore errors** — no `_ = ` assignments without explicit justification
+- **Inline error wrapping** — never wrap a function's error return directly in `fmt.Errorf`. Assign to `err` first, check `if err != nil`, then wrap.
+  ✅ `err := fn(); if err != nil { return fmt.Errorf("msg: %w", err) }`
+  ❌ `return x, fmt.Errorf("msg: %w", fn())`
+- **Use panic for normal error handling** — use errors for control flow
+- **Hardcode values** — use config, constants, or env vars
+- **Create goroutines without lifecycle management** — ensure goroutines can be cancelled
+
+## Instruction
+
+Guidance and workflows. Use when relevant to the task.
+
+### 1. Package Structure
+
+- Organize code into packages following Go conventions
+- Keep `main` package simple, put logic in separate packages
 
 ### 2. Struct Organization and Design
 
-- **Limit struct fields to 5-7 fields** for optimal readability and maintainability
-- **Split large structs** into multiple smaller, focused structs when exceeding this limit
-- **Group related fields** logically into separate structs
-- **Use composition** to combine smaller structs instead of creating monolithic ones
-- **Consider embedding** related structs for cleaner syntax
-- Keep **number of small structs as few as possible** to avoid overcomplication
-- Struct fields should be ordered in **alphabetical order** for consistency and readability
+- **Limit struct fields to 5–7 fields**
+- **Split large structs** into smaller, focused structs using composition
+- **Group related fields** logically
+- **Use composition** over monolithic structs; consider embedding
+- Keep **number of small structs as few as possible**
+- Struct fields ordered **alphabetically**
 
 #### Example: Refactoring a Large Struct
 
-**Before (Hard to maintain):**
+**Before:**
 
 ```go
 type User struct {
@@ -147,7 +192,7 @@ type User struct {
 }
 ```
 
-**After (Well-organized with composition):**
+**After (with composition):**
 
 ```go
 type Address struct {
@@ -178,141 +223,88 @@ type User struct {
 }
 ```
 
-### 3. Post-Implementation Steps
+### 3. Pointer vs Value Semantics
 
-After implementing Go code, follow these steps to ensure code quality. Run every available formatter, linter, and static-analysis tool for the project and toolchain; if a tool is installed and applicable, do not skip it.
+**⚠️ CRITICAL: Semantic decision, not a micro-optimization. Wrong choice causes bugs or bloat.**
 
-1. **Run Tests**
+#### Use Pointer When
 
-   ```bash
-   go test ./...
-   ```
+| Scenario                                                                             | Reason                                                       |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Mutating the original data**                                                       | Value receiver copies the struct; changes are lost           |
+| **Large struct**                                                                     | Avoid copying entire struct; cutoff: >~64 bytes or >5 fields |
+| **Struct contains a `sync.Mutex`, `sync.RWMutex`, `sync.WaitGroup`, or `sync.Once`** | Must not be copied after first use (go vet warns)            |
+| **Struct contains a `sync/atomic` field**                                            | Atomic operations require a stable address                   |
+| **Method requires pointer receiver**                                                 | Consistency if any method uses a pointer receiver            |
+| **Optional / nullable field semantics**                                              | `nil` = "not set", zero-value struct = "empty but present"   |
+| **Interface satisfaction via pointer**                                               | If methods are on `*T`, only `*T` satisfies the interface    |
+| **Resource handles (files, connections, etc.)**                                      | Copying causes double-close or use-after-close bugs          |
 
-   - Run tests for all packages in the project
-   - Ensure all tests pass before moving to formatting
+#### Use Value When
 
-2. **Build and Verify Compilation**
+| Scenario                                                            | Reason                                                                    |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Small struct (a few scalar fields)**                              | Copy is cheaper than pointer indirection + GC pressure                    |
+| **Immutable / value-type semantics**                                | Time, coordinates, config snapshots — like `time.Time`                    |
+| **No mutation needed**                                              | Simpler code, no nil-check boilerplate                                    |
+| **Concurrency safety via copy**                                     | Each goroutine gets its own copy, no locks needed                         |
+| **Returning from a constructor that configures everything upfront** | `return T{...}` avoids heap allocation; caller can take address if needed |
+| **Map key or comparison needed**                                    | Pointers compared by address, value types give structural equality        |
 
-   ```bash
-   go build -o /dev/null ./...
-   ```
+#### Receiver Rules
 
-   - Verify the code compiles without errors
-   - Use `-o /dev/null` to discard the output binary
+```go
+// ✅ Pointer receiver: mutates state, large struct, or contains sync primitives
+type Cache struct {
+    mu    sync.Mutex
+    items map[string]Item
+}
+func (c *Cache) Set(k string, v Item) { /* mutates */ }
 
-3. **Format Code**
-   **MUST run all available formatters in the following order.** If a formatter is installed and applicable, run it; do not skip one because another formatter already ran.
-   - **goimports**: Organize imports and fix missing/unused imports
-     ```bash
-     goimports -w .
-     ```
-   - **gofumpt**: Stricter formatting than gofmt
-     ```bash
-     gofumpt -w .
-     ```
-   - **gofmt**: Run if it is the only formatter available
-     ```bash
-     gofmt -w .
-     ```
+// ✅ Value receiver: small immutable struct
+type Point struct{ X, Y int }
+func (p Point) Distance() float64 { /* read-only */ }
 
-4. **Run linters**
-   - Run every available linter for the project and toolchain (e.g `golangci-lint run ./...`)
-   - Fix any linting issues reported
-   - Mark any false positives with `//nolint` comments and add justifying comments for why the lint is being ignored
-   - Ensure code follows best practices and conventions
+// ⚠️ Be consistent: if any method needs a pointer receiver, use pointer for all
+// methods on that type (unless deliberately mixed for interface reasons).
+```
 
-5. **Run Static Analysis Tools**
-   - Run every available static-analysis tool for the project and toolchain
-   - **go vet**: Examines Go source code and reports suspicious constructs
-     ```bash
-     go vet ./...
-     ```
+#### Function Parameters
+
+Large struct or need mutation → pointer. Small immutable → value. When in doubt for a read-only function, **prefer value** — communicates immutability and avoids nil-dereference risk.
 
 ### 4. Discovering Go Documentation and Types
 
-When working with Go packages, use `go doc` commands to discover available types, functions, and their correct signatures:
+Use `go doc` to discover types, functions, and signatures before implementing.
 
-#### List available types and functions in a package
+#### List available types and functions
 
 ```bash
 go doc <package>
 ```
 
-Example:
+Shows all exported types and functions. Look for constructors, Args structs, result types.
 
-```bash
-go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2
-```
-
-This shows all exported types and functions in the package. Look for:
-
-- **Constructors** - functions that create resources or values (e.g., `NewInstance`)
-- **Args structs** - e.g., `InstanceArgs` that define properties
-- **Result types** - structs returned by constructors (e.g., `*Instance`)
-
-#### Get detailed information about a specific type or function
+#### Get details on a specific type or function
 
 ```bash
 go doc <package> <type/func name>
 ```
 
-Examples:
+Shows signature, documentation, all struct fields with types and tags.
 
-```bash
-# Get details about a constructor function
-go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 NewInstance
+#### Workflow with external packages
 
-# Get details about an Args struct
-go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 InstanceArgs
-
-# Get details about a resource type
-go doc github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2 Instance
-```
-
-This shows:
-
-- Function/type signature
-- Documentation explaining purpose
-- All fields in structs with their types and field tags
-- Required vs optional parameters
-
-#### Workflow when implementing with external packages
-
-1. **Find the right package** - Determine which package you need (e.g., `pulumi-aws`, `pulumi-gcp`, or standard library packages)
-2. **List available resources** - Run `go doc <package>` to see available constructors and types
-3. **Choose the resource** - Identify the constructor function (e.g., `NewInstance`)
-4. **Get Args struct details** - Run `go doc <package> <ResourceType>Args` to see all available properties
-5. **Understand the return type** - Run `go doc <package> <ResourceType>` to see output fields and methods
-6. **Implement with correct types** - Use the exact field names, types, and struct tag names from documentation
+1. **Find the right package**
+2. **List available resources** — `go doc <package>`
+3. **Choose the resource** — identify the constructor (e.g., `NewInstance`)
+4. **Get Args struct details** — `go doc <package> <ResourceType>Args`
+5. **Understand the return type** — `go doc <package> <ResourceType>`
+6. **Implement with correct types** — use exact field names, types, and struct tag names
 
 #### Common patterns
 
-- Constructors typically follow the pattern `New<ResourceType>(ctx, name, args, opts...)`
+- Constructors: `New<ResourceType>(ctx, name, args, opts...)`
 - Args structs use pointer types for optional fields
-- Output fields use typed outputs (e.g., `StringOutput`, `IntOutput`) for lazy evaluation
-- Resource IDs are automatically managed; avoid hardcoding IDs
-
-## Constraints
-
-### MUST DO
-
-- **Follow strict File Organization Order** — Always organize Go source files with package declaration, imports, constants, types (interfaces first), variables, then functions in logical grouping. This is mandatory for consistency and maintainability
-- **Add context.Context to all blocking operations** — Pass context through the call stack to enable graceful cancellation and timeout handling
-- **Handle all errors explicitly** — Never use naked returns; return errors or use explicit error handling
-- **Write table-driven tests with subtests** — Use `t.Run()` for parametrized tests; enables better test isolation and reporting
-- **Propagate errors with fmt.Errorf("%w", err)** — Use error wrapping to preserve error chain for debugging
-- **Use errors.New("") for sentinel errors** — Create package-level error variables for error comparison
-- **Define clear interface contracts** — Keep interfaces small and focused; design around behavior, not implementation
-- **Run all post-implementation steps** — Format, lint, test, and verify before committing
-- **Document exported functions and types** — Add clear documentation comments for all public API
-- **Use `go doc` commands** — Discover correct types, functions, and signatures before implementing with external packages
-
-### MUST NOT DO
-
-- **Ignore errors** — Avoid `_ = ` assignments without explicit justification; handle or propagate all errors
-- **Inline error wrapping** — Never wrap a function's error return directly inside `fmt.Errorf` (e.g., `return x, fmt.Errorf("msg: %w", fn())`). Assign to `err` first, check `if err != nil`, then wrap.
-  ✅ `err := fn(); if err != nil { return fmt.Errorf("msg: %w", err) }`
-  ❌ `return x, fmt.Errorf("msg: %w", fn())`
-- **Use panic for normal error handling** — Reserve panic for truly exceptional conditions; use errors for control flow
-- **Hardcode values** — Use configuration files, constants, or environment variables instead of hardcoded values
-- **Create goroutines without lifecycle management** — Always ensure goroutines can be cancelled or have bounded lifetime
+- Output fields use typed outputs (e.g., `StringOutput`, `IntOutput`)
+- Resource IDs are auto-managed; avoid hardcoding IDs
