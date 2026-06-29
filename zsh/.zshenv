@@ -1,4 +1,4 @@
-export PATH="$PATH:$HOME/.local/bin:$HOME/.nvm/v22.16.0/bin:$HOME/.pulumi/bin:$HOME/.cargo/bin:$HOME/.local/share/goenv/bin"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/nvm/v22.16.0/bin:$HOME/.pulumi/bin:$HOME/.cargo/bin"
 
 # Editor Configuration
 export KUBE_EDITOR=nvim # Default editor for kubectl edit commands
@@ -41,3 +41,5 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
   --color=separator:#ff9e64 \
   --color=spinner:#ff007c \
 "
+
+export STARSHIP_CONFIG="$HOME/.config/starship/config.toml"
