@@ -43,3 +43,5 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
 "
 
 export STARSHIP_CONFIG="$HOME/.config/starship/config.toml"
+
+export PI_SKIP_VERSION_CHECK=1

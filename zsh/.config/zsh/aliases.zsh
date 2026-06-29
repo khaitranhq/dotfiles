@@ -31,3 +31,6 @@ alias qq="exit" # Quick exit alias
 # CLOUD & DEVOPS TOOLS
 # =============================================================================
 alias p='pulumi'   # Infrastructure as Code tool
+
+alias rpi='pi --provider github-copilot --model gpt-5.4'
+alias cpi='pi --provider commandcode --model deepseek-v4-pro'

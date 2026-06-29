@@ -1,17 +1,4 @@
-# Auto-switch node version when entering a directory with .nvmrc
 autoload -Uz add-zsh-hook
-__check_nvm() {
-    if [[ -f .nvmrc ]]; then
-        local node_version_target
-        node_version_target=$(cat .nvmrc)
-        if nvm list 2>/dev/null | grep -q "$node_version_target"; then
-            nvm use "$node_version_target" --silent
-        else
-            nvm install "$node_version_target" --silent
-        fi
-    fi
-}
-add-zsh-hook chpwd __check_nvm
 
 function add-keys-ssh-agent() {
     if ! ssh-add -l >/dev/null 2>&1; then
