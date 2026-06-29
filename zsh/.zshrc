@@ -8,8 +8,6 @@ fi
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-# Set up fzf key bindings and fuzzy completion
-source <(fzf --zsh)
 
 #=========================SSH Agent=========================
 agent_ok=0
@@ -59,9 +57,13 @@ _zplugin_load() {
 }
 
 _zplugin_load zsh-users zsh-autosuggestions
-_zplugin_load zsh-users zsh-history-substring-search
 _zplugin_load jeffreytse zsh-vi-mode
 _zplugin_load zdharma-continuum fast-syntax-highlighting
+
+# Load fzf after vi-mode using zvm_after_init_commands
+# zsh-vi-mode rebinds ^R at init, so fzf must load afterward
+source <(fzf --zsh)  # initial load
+zvm_after_init_commands+=('source <(fzf --zsh)')
 
 add-keys-ssh-agent
 
