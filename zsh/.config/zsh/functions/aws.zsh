@@ -26,26 +26,9 @@ function aws-ec2-ssm() {
     fi
     echo "🔑 Selected profile: $profile"
 
-    # Step 2: Extract region from config for this profile
-    local region in_section
-    region=""
-    in_section=0
-    while IFS= read -r line; do
-        if [[ "$line" =~ ^\[profile\ $profile\] ]]; then
-            in_section=1
-            continue
-        fi
-        if [[ $in_section -eq 1 ]]; then
-            if [[ "$line" =~ ^\[ ]]; then
-                break
-            fi
-            if [[ "$line" =~ ^region\s*=\s*(.+)$ ]]; then
-                region="${match[1]}"
-                break
-            fi
-        fi
-    done <"$config_file"
-
+    # Step 2: Get region for this profile
+    local region
+    region=$(aws configure get region --profile "$profile" 2>/dev/null)
     if [[ -z "$region" ]]; then
         echo "❌ Error: No region found for profile '$profile'"
         return 1
@@ -228,36 +211,12 @@ function aws_auth() {
 
     # Step 6: Determine AWS region
     if [[ -z "$region" ]]; then
-        echo "🌍 No region specified, reading from ~/.aws/config..."
-        local config_file="$HOME/.aws/config"
-
-        if [[ -f "$config_file" ]]; then
-            local in_profile_section=0
-
-            while IFS= read -r line; do
-                if [[ "$line" =~ ^\[profile\ $profile\]\s*$ ]]; then
-                    in_profile_section=1
-                    continue
-                fi
-
-                if [[ $in_profile_section -eq 1 && "$line" =~ ^\[profile\  ]]; then
-                    break
-                fi
-
-                if [[ $in_profile_section -eq 1 && "$line" =~ ^region\s*=\s*(.+)$ ]]; then
-                    region="${match[1]}"
-                    break
-                fi
-            done <"$config_file"
-
-            if [[ -z "$region" ]]; then
-                echo "⚠️  No region found for profile '$profile' in config file"
-                echo "ℹ️  Proceeding without setting AWS_REGION"
-            else
-                echo "✅ Region found: $region"
-            fi
+        echo "🌍 No region specified, reading from profile..."
+        region=$(aws configure get region --profile "$profile" 2>/dev/null)
+        if [[ -n "$region" ]]; then
+            echo "✅ Region found: $region"
         else
-            echo "⚠️  Config file not found: $config_file"
+            echo "⚠️  No region found for profile '$profile'"
             echo "ℹ️  Proceeding without setting AWS_REGION"
         fi
     else

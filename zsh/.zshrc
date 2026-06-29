@@ -9,6 +9,9 @@ fi
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
+autoload -Uz bashcompinit && bashcompinit
+complete -C '/usr/local/bin/aws_completer' aws
+
 #=========================SSH Agent=========================
 agent_ok=0
 

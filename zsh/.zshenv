@@ -45,3 +45,6 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
 export STARSHIP_CONFIG="$HOME/.config/starship/config.toml"
 
 export PI_SKIP_VERSION_CHECK=1
+export BROWSER='/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
+export RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep/ripgreprc"
+export GOMAXPROCS=6
