@@ -11,6 +11,7 @@ $git_status\
 $line_break\
 $character"""
 
+right_format = """$time"""
 
 add_newline = false
 palette = "everforest"
@@ -87,6 +88,11 @@ deleted = '❌${count} '
 [character]
 success_symbol = '[→](bold green)'
 error_symbol = '[→](bold red)'
+
+[time]
+disabled = false
+time_format = '%T'
+utc_time_offset = '+7'
 
 [palettes.everforest]
 bg_dim = "#232a2e"
