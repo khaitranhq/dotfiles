@@ -95,8 +95,9 @@ Declarations in files and classes must follow this strict top-to-bottom order.
 2. **Interfaces** — `interface` declarations
 3. **Types** — `type` alias declarations
 4. **Constants** — `const` declarations
-5. **Exported functions / classes** — `export function`, `export class`, `export default`
-6. **Internal functions / classes** — non-exported functions and classes
+5. **Main function / class** — the primary exported function or class (if applicable)
+6. **Exported functions / classes** — `export function`, `export class`, `export default`
+7. **Internal functions / classes** — non-exported functions and classes
 
 ```typescript
 // ✅ Correct: imports → interfaces → types → const → export → internal

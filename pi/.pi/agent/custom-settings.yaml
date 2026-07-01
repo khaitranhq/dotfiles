@@ -96,6 +96,7 @@ tools:
     cargo fmt: allow
     npm view: allow
     tr: allow
+    set: allow
   read: allow
   write: allow
   edit: allow

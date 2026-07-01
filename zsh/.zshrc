@@ -42,6 +42,10 @@ if [ -f ~/.config/zsh/aliases.zsh ]; then
   source ~/.config/zsh/aliases.zsh
 fi
 
+if [ -f ~/.config/zsh/hidden.zsh ]; then
+  source ~/.config/zsh/hidden.zsh
+fi
+
 for f in ~/.config/zsh/functions/*.zsh(N); do
   source "$f"
 done
