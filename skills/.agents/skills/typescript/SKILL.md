@@ -176,6 +176,34 @@ class Service {
 }
 ```
 
+## Naming Conventions
+
+### Constants
+
+All `const` declarations must use `SCREAMING_SNAKE_CASE`.
+
+- Use uppercase letters and underscores for top-level and module-level constants
+- Primitive values (`string`, `number`, `boolean`), configuration values, thresholds, enums-as-const
+- Exception: function values, component references, and constructor values stay in `camelCase`
+
+```typescript
+// ✅ Correct
+const DEFAULT_TIMEOUT = 5000;
+const API_BASE_URL = "https://api.example.com";
+const MAX_RETRY_COUNT = 3;
+const VALID_ROLES = ["admin", "user"] as const;
+
+// ❌ Incorrect
+const defaultTimeout = 5000;
+const apiBaseUrl = "https://api.example.com";
+const maxRetryCount = 3;
+
+// ✅ Exceptions: function/component values
+defineConfig({});              // ok — not a primitive constant
+const useCounter = () => { };  // ok — hook/function reference
+const router = new Router();   // ok — instance value
+```
+
 ### For Extension Entry Points
 
 When a file's primary purpose is an `export default function` that serves as an extension entry point, place it after imports and before supporting declarations (interfaces, types, constants, internal helpers):
