@@ -2,6 +2,8 @@
 
 Active tasks and improvements across the dotfiles ecosystem.
 
+## Tools
+
 ## Neovim
 
 - [ ] `01` ⭐ Simple solution for dropbar.nvim alternative
@@ -14,16 +16,20 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `05` 'list available tools' show mcp tools with name without mcp prefix
-- [ ] `06` new ext - auto harness my system
+- [ ] `05` 🔥 subagent able to view its process (like opencode)
+- [ ] `06` ⭐ subagent flow
+- [ ] `07` ⭐ new next - subagent with auto-selected models
+- [ ] `08` new ext - auto harness my system
+  - spawn a subagent to check:
+    - any skill can be used to enhance the result -> why it doesn't loaded
+    - can loaded skill be improved to enhance the result
+    - user taste (from prompt, answer of questions)
 
 ### Measure AI System Efficiency
 
-- [ ] `07` Implement metrics tool:
+- [ ] `09` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
   - Number of skill calls
     → Identify bottlenecks and optimize
-
-### General

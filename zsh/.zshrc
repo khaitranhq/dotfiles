@@ -1,4 +1,6 @@
 # Put this where compinit is called in your .zshrc
+fpath=(~/.config/zsh/completion $fpath)
+
 autoload -Uz compinit
 if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then
   compinit
@@ -11,6 +13,10 @@ eval "$(zoxide init zsh)"
 
 autoload -Uz bashcompinit && bashcompinit
 complete -C '/usr/local/bin/aws_completer' aws
+
+if [ -f /etc/bash_completion.d/azure-cli ]; then
+    source /etc/bash_completion.d/azure-cli
+fi
 
 #=========================SSH Agent=========================
 agent_ok=0
@@ -64,13 +70,16 @@ _zplugin_load() {
 }
 
 _zplugin_load zsh-users zsh-autosuggestions
-_zplugin_load jeffreytse zsh-vi-mode
 _zplugin_load zdharma-continuum fast-syntax-highlighting
 
-# Load fzf after vi-mode using zvm_after_init_commands
-# zsh-vi-mode rebinds ^R at init, so fzf must load afterward
 source <(fzf --zsh)  # initial load
 zvm_after_init_commands+=('source <(fzf --zsh)')
+
+bindkey -e
+
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '\ew' edit-command-line
 
 add-keys-ssh-agent
 
