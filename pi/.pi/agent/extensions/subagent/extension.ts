@@ -109,7 +109,15 @@ export class SubagentExtension {
   // ── Tool registration ──────────────────────────────────────────────
 
   private registerTool(): void {
+    const toolDef = {
+      parameters: SubagentParams,
+      execute: this.execute as any,
+      renderCall,
+      renderResult: renderResult as any,
+    };
+
     this.pi.registerTool({
+      ...toolDef,
       name: "subagent",
       label: "Subagent",
       description:
@@ -119,10 +127,19 @@ export class SubagentExtension {
         "Tasks and results use TOON format.",
       promptSnippet:
         "Delegate task from pi to a named subagent (uses TOON format). Available subagent names are listed in the system prompt under ## Available subagents.",
-      parameters: SubagentParams,
-      execute: this.execute as any,
-      renderCall,
-      renderResult: renderResult as any,
+    });
+
+    this.pi.registerTool({
+      ...toolDef,
+      name: "delegate",
+      label: "Delegate",
+      description:
+        "Create a delegate tool, in this tool it will call subagent to do a specific task. " +
+        "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder). " +
+        "Agent definitions live in custom-settings.yaml under the `agents` key. " +
+        "Tasks and results use TOON format.",
+      promptSnippet:
+        "Create a delegate tool that calls a subagent for a specific task (uses TOON format). Available subagent names are listed in the system prompt under ## Available subagents.",
     });
   }
 
@@ -595,8 +612,8 @@ export class SubagentExtension {
 
     // Prevent subagents from spawning subagents (recursive delegation).
     // Resolve to all tools when no restrictions are configured, then always
-    // strip "subagent" so subagents can never delegate further.
-    effective = (effective ?? resolveAll()).filter((t) => t !== "subagent");
+    // strip "subagent" and "delegate" so subagents can never delegate further.
+    effective = (effective ?? resolveAll()).filter((t) => t !== "subagent" && t !== "delegate");
 
     return effective && effective.length > 0 ? effective : undefined;
   }
@@ -701,7 +718,7 @@ export class SubagentExtension {
     return {
       systemPrompt:
         event.systemPrompt +
-        `\n\n## Available subagents\n${agentList}\n\nUse the subagent tool to delegate tasks to these agents.`,
+        `\n\n## Available subagents\n${agentList}\n\nUse the subagent or delegate tool to delegate tasks to these agents.`,
     };
   };
 
