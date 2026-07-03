@@ -33,6 +33,7 @@ alias qq="exit" # Quick exit alias
 alias p='pulumi'   # Infrastructure as Code tool
 alias pp='pulumi preview' # Pulumi preview command
 alias pup='pulumi up --yes --skip-preview'      # Pulumi update command
+alias pr='pulumi refresh --yes --skip-preview' # Pulumi refresh command
 
 alias rpi='pi --provider github-copilot --model gpt-5.4'
 alias cpi='pi --provider commandcode --model deepseek-v4-pro'

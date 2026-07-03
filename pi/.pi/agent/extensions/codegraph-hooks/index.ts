@@ -19,8 +19,18 @@ const logger = new Logger(
 const CODEGRAPH_BIN = "codegraph";
 const CODEGRAPH_DIR = ".codegraph";
 
-function run(args: readonly string[], cwd: string, label: string): void {
+function run(
+  args: readonly string[],
+  cwd: string,
+  label: string,
+  notify: (msg: string, type: "info" | "error") => void,
+): void {
   execFile(CODEGRAPH_BIN, [...args, cwd], { cwd }, (err) => {
+    if (err) {
+      notify(`Codegraph ${label} failed: ${err.message}`, "error");
+    } else {
+      notify(`Codegraph ${label} complete`, "info");
+    }
     if (err) logger.log(`${label}: ${err.message}`);
   });
 }
@@ -30,12 +40,14 @@ export default function codegraphHooksExtension(pi: ExtensionAPI): void {
     if (event.reason === "startup" || event.reason === "reload") return;
     if (fs.existsSync(path.join(ctx.cwd, CODEGRAPH_DIR))) return;
     logger.log(`init: ${ctx.cwd} (reason=${event.reason})`);
-    run(["init"], ctx.cwd, "init");
+    if (ctx.hasUI) ctx.ui.notify("Codegraph initializing…", "info");
+    run(["init"], ctx.cwd, "init", ctx.ui.notify.bind(ctx.ui));
   });
 
   pi.on("session_shutdown", (event, ctx) => {
     if (!fs.existsSync(path.join(ctx.cwd, CODEGRAPH_DIR))) return;
     logger.log(`sync: ${ctx.cwd} (reason=${event.reason})`);
-    run(["sync", "-q"], ctx.cwd, "sync");
+    if (ctx.hasUI) ctx.ui.notify("Codegraph syncing…", "info");
+    run(["sync", "-q"], ctx.cwd, "sync", ctx.ui.notify.bind(ctx.ui));
   });
 }

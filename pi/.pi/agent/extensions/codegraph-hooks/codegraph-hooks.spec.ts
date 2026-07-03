@@ -37,10 +37,10 @@ function createHarness() {
   return events;
 }
 
-function makeCtx(cwd: string): ExtensionContext {
+function makeCtx(cwd: string, notify = vi.fn()): ExtensionContext {
   return {
     cwd,
-    ui: { notify() {} } as never,
+    ui: { notify } as never,
     hasUI: true,
     sessionManager: {} as never,
     modelRegistry: {} as never,
@@ -85,40 +85,50 @@ afterEach(() => {
 describe("session_start hook", () => {
   it("runs codegraph init when cwd uninitialised and reason=new", () => {
     const events = createHarness();
-    events.get("session_start")!(startEvent("new"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_start")!(startEvent("new"), makeCtx(tempDir, notify));
     expect(execFile).toHaveBeenCalledWith(
       "codegraph",
       ["init", tempDir],
       expect.any(Object),
       expect.any(Function),
     );
+    expect(notify).toHaveBeenCalledWith("Codegraph initializing…", "info");
   });
 
   it("skips init when .codegraph/ already exists", () => {
     fs.mkdirSync(path.join(tempDir, ".codegraph"));
     const events = createHarness();
-    events.get("session_start")!(startEvent("new"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_start")!(startEvent("new"), makeCtx(tempDir, notify));
     expect(execFile).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it("skips init on startup reason (avoid re-init on reload)", () => {
     const events = createHarness();
-    events.get("session_start")!(startEvent("startup"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_start")!(startEvent("startup"), makeCtx(tempDir, notify));
     expect(execFile).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it("skips init on reload reason", () => {
     const events = createHarness();
-    events.get("session_start")!(startEvent("reload"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_start")!(startEvent("reload"), makeCtx(tempDir, notify));
     expect(execFile).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it.each<SessionStartEvent["reason"]>(["new", "resume", "fork"])(
     "runs init on reason=%s",
     (reason) => {
       const events = createHarness();
-      events.get("session_start")!(startEvent(reason), makeCtx(tempDir));
+      const notify = vi.fn();
+      events.get("session_start")!(startEvent(reason), makeCtx(tempDir, notify));
       expect(execFile).toHaveBeenCalledOnce();
+      expect(notify).toHaveBeenCalledWith("Codegraph initializing…", "info");
     },
   );
 });
@@ -129,19 +139,23 @@ describe("session_shutdown hook", () => {
   it("runs codegraph sync -q when .codegraph/ exists", () => {
     fs.mkdirSync(path.join(tempDir, ".codegraph"));
     const events = createHarness();
-    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir, notify));
     expect(execFile).toHaveBeenCalledWith(
       "codegraph",
       ["sync", "-q", tempDir],
       expect.any(Object),
       expect.any(Function),
     );
+    expect(notify).toHaveBeenCalledWith("Codegraph syncing…", "info");
   });
 
   it("skips sync when .codegraph/ is missing", () => {
     const events = createHarness();
-    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir));
+    const notify = vi.fn();
+    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir, notify));
     expect(execFile).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it.each<SessionShutdownEvent["reason"]>(["quit", "reload", "new", "resume", "fork"])(
@@ -149,13 +163,76 @@ describe("session_shutdown hook", () => {
     (reason) => {
       fs.mkdirSync(path.join(tempDir, ".codegraph"));
       const events = createHarness();
-      events.get("session_shutdown")!(shutdownEvent(reason), makeCtx(tempDir));
+      const notify = vi.fn();
+      events.get("session_shutdown")!(shutdownEvent(reason), makeCtx(tempDir, notify));
       expect(execFile).toHaveBeenCalledOnce();
+      expect(notify).toHaveBeenCalledWith("Codegraph syncing…", "info");
     },
   );
 });
 
 // ── Default extension wiring ───────────────────────────────────────────
+
+describe("completion/error notify", () => {
+  it("notifies completion on successful init", () => {
+    const events = createHarness();
+    const notify = vi.fn();
+    execFile.mockImplementation((_bin, _args, _opts, cb: any) => cb(null));
+    events.get("session_start")!(startEvent("new"), makeCtx(tempDir, notify));
+    expect(notify).toHaveBeenCalledWith("Codegraph initializing…", "info");
+    expect(notify).toHaveBeenCalledWith("Codegraph init complete", "info");
+  });
+
+  it("notifies error on failed init", () => {
+    const events = createHarness();
+    const notify = vi.fn();
+    execFile.mockImplementation((_bin, _args, _opts, cb: any) => cb(new Error("not found")));
+    events.get("session_start")!(startEvent("new"), makeCtx(tempDir, notify));
+    expect(notify).toHaveBeenCalledWith("Codegraph initializing…", "info");
+    expect(notify).toHaveBeenCalledWith("Codegraph init failed: not found", "error");
+  });
+
+  it("notifies completion on successful sync", () => {
+    fs.mkdirSync(path.join(tempDir, ".codegraph"));
+    const events = createHarness();
+    const notify = vi.fn();
+    execFile.mockImplementation((_bin, _args, _opts, cb: any) => cb(null));
+    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir, notify));
+    expect(notify).toHaveBeenCalledWith("Codegraph syncing…", "info");
+    expect(notify).toHaveBeenCalledWith("Codegraph sync complete", "info");
+  });
+
+  it("notifies error on failed sync", () => {
+    fs.mkdirSync(path.join(tempDir, ".codegraph"));
+    const events = createHarness();
+    const notify = vi.fn();
+    execFile.mockImplementation((_bin, _args, _opts, cb: any) => cb(new Error("timeout")));
+    events.get("session_shutdown")!(shutdownEvent("quit"), makeCtx(tempDir, notify));
+    expect(notify).toHaveBeenCalledWith("Codegraph syncing…", "info");
+    expect(notify).toHaveBeenCalledWith("Codegraph sync failed: timeout", "error");
+  });
+
+  it("does not choke when notify is a no-op (no-UI mode)", () => {
+    const events = createHarness();
+    const noUiCtx: ExtensionContext = {
+      cwd: tempDir,
+      ui: { notify() {} } as never,
+      hasUI: false,
+      sessionManager: {} as never,
+      modelRegistry: {} as never,
+      model: undefined,
+      isIdle: () => true,
+      signal: undefined,
+      abort: () => {},
+      hasPendingMessages: () => false,
+      shutdown: () => {},
+      getContextUsage: () => undefined,
+      compact: () => {},
+      getSystemPrompt: () => "",
+    } as ExtensionContext;
+    expect(() => events.get("session_start")!(startEvent("new"), noUiCtx)).not.toThrow();
+  });
+});
 
 describe("default extension wiring", () => {
   it("registers handlers for both events", () => {
