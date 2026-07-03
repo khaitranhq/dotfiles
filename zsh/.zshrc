@@ -80,6 +80,10 @@ bindkey -e
 autoload -Uz edit-command-line
 zle -N edit-command-line
 bindkey '\ew' edit-command-line
+# Ctrl + -> Forward word
+bindkey '^[[1;5C' forward-word
+# Ctrl + <- Backward word
+bindkey '^[[1;5D' backward-word
 
 add-keys-ssh-agent
 

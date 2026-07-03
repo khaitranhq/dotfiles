@@ -175,7 +175,7 @@ local blink_config = {
     default = { "lsp", "path", "buffer", "cmdline", "snippets", "omni" },
     providers = {
       buffer = {
-        max_items = 4,          -- Limit buffer completion items
+        max_items = 4,      -- Limit buffer completion items
         min_keyword_length = 3, -- Require 3 chars before buffer completion
       },
     },
@@ -203,50 +203,10 @@ M.setup = function()
 
   require("blink.cmp").setup(blink_config)
 
-  local lsp_augroup = vim.api.nvim_create_augroup("my.lsp", {})
-
-  -- Track buffers whose attached client lacks willSaveWaitUntil (per-buffer BufWritePre
-  -- handlers were merged into the single BufWritePre autocmd below).
-  local format_buffers = {}
-
-  -- BufWritePre: organize imports + format for Go buffers; format for other buffers
-  -- whose attached client lacks willSaveWaitUntil.
-  vim.api.nvim_create_autocmd("BufWritePre", {
-    group = lsp_augroup,
-    callback = function(ev)
-      if vim.b.skip_format_on_save then
-        vim.b.skip_format_on_save = nil
-        return
-      end
-
-      local fname = vim.api.nvim_buf_get_name(ev.buf)
-      if vim.endswith(fname, ".go") then
-        local params = vim.lsp.util.make_range_params(0, "utf-8")
-        params.context = { only = { "source.organizeImports" } }
-        -- buf_request_sync defaults to a 1000ms timeout. Depending on your
-        -- machine and codebase, you may want longer. Add an additional
-        -- argument after params if you find that you have to write the file
-        -- twice for changes to be saved.
-        -- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
-        local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
-        for cid, res in pairs(result or {}) do
-          for _, r in pairs(res.result or {}) do
-            if r.edit then
-              local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
-              vim.lsp.util.apply_workspace_edit(r.edit, enc)
-            end
-          end
-        end
-        vim.lsp.buf.format({ async = false })
-      elseif format_buffers[ev.buf] then
-        vim.lsp.buf.format({ bufnr = ev.buf, id = format_buffers[ev.buf], timeout_ms = 1000 })
-      end
-    end,
-  })
-
-  -- Track buffers that need explicit formatting on save (client lacks willSaveWaitUntil).
   vim.api.nvim_create_autocmd("LspAttach", {
-    group = lsp_augroup,
+
+    group = vim.api.nvim_create_augroup("my.lsp", {}),
+
     callback = function(ev)
       local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
 
@@ -254,22 +214,14 @@ M.setup = function()
           not client:supports_method("textDocument/willSaveWaitUntil")
           and client:supports_method("textDocument/formatting")
       then
-        format_buffers[ev.buf] = client.id
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          group = vim.api.nvim_create_augroup("my.lsp", { clear = false }),
+          buffer = ev.buf,
+          callback = function()
+            vim.lsp.buf.format({ bufnr = ev.buf, id = client.id, timeout_ms = 1000 })
+          end,
+        })
       end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("LspDetach", {
-    group = lsp_augroup,
-    callback = function(ev)
-      format_buffers[ev.buf] = nil
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("BufWipeout", {
-    group = lsp_augroup,
-    callback = function(ev)
-      format_buffers[ev.buf] = nil
     end,
   })
 end

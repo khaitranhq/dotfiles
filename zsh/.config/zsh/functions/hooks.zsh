@@ -37,35 +37,32 @@ __precmd_notify_on_long_running() {
         local elapsed=$((SECONDS - __cmd_start))
         if [[ $elapsed -gt 5 ]]; then
             local sanitized_command="${__cmd_line//\'/}"
-            if command -v powershell.exe &>/dev/null; then
-                powershell.exe -NoProfile -Command "
-                    [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
-                    [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
+            powershell_path='/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
+            "$powershell_path" -NoProfile -Command "
+                  [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
+                  [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
 
-                    \$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-                    \$toastXml = @'
+                  \$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+                  \$toastXml = @'
 <toast>
-  <visual>
-    <binding template=\"ToastText02\">
-      <text id=\"1\">Zsh - Command Complete</text>
-      <text id=\"2\"></text>
-      <text id=\"3\"></text>
-    </binding>
-  </visual>
+<visual>
+  <binding template=\"ToastText02\">
+    <text id=\"1\">Zsh - Command Complete</text>
+    <text id=\"2\"></text>
+    <text id=\"3\"></text>
+  </binding>
+</visual>
 </toast>
 '@
-                    \$xml.LoadXml(\$toastXml)
+                  \$xml.LoadXml(\$toastXml)
 
-                    \$xml.SelectSingleNode('//text[@id=\"2\"]').InnerText = 'Command: $sanitized_command'
-                    \$xml.SelectSingleNode('//text[@id=\"3\"]').InnerText = 'Duration: $elapsed seconds | Exit: $exit_status'
+                  \$xml.SelectSingleNode('//text[@id=\"2\"]').InnerText = 'Command: $sanitized_command'
+                  \$xml.SelectSingleNode('//text[@id=\"3\"]').InnerText = 'Duration: $elapsed seconds | Exit: $exit_status'
 
-                    \$toast = New-Object Windows.UI.Notifications.ToastNotification \$xml
-                    \$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Zsh')
-                    \$notifier.Show(\$toast)
-                "
-            elif command -v notify-send &>/dev/null; then
-                notify-send "Zsh Notification" "Command: $sanitized_command\nDuration: $elapsed seconds\nExit Status: $exit_status"
-            fi
+                  \$toast = New-Object Windows.UI.Notifications.ToastNotification \$xml
+                  \$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Zsh')
+                  \$notifier.Show(\$toast)
+              "
         fi
     fi
     unset __cmd_start __cmd_line
