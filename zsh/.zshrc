@@ -87,3 +87,6 @@ bindkey '^[[1;5D' backward-word
 
 add-keys-ssh-agent
 
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /home/khaitran/.local/bin/terraform terraform
