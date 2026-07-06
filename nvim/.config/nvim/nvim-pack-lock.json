@@ -36,10 +36,6 @@
       "rev": "a905eeebc4e63fdc48b5135d3bf8aea5618fb21c",
       "src": "https://github.com/khaitranhq/lualine.nvim"
     },
-    "markview.nvim": {
-      "rev": "b36a5c28740a3dd6087844e8802475cdbda83e2c",
-      "src": "https://github.com/khaitranhq/markview.nvim.git"
-    },
     "neogit": {
       "rev": "d1cfc4986195239cac55700b675cea7a9578d430",
       "src": "https://github.com/khaitranhq/neogit",

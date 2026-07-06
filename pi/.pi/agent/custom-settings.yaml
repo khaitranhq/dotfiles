@@ -95,6 +95,8 @@ tools:
     tr: allow
     set: allow
     xxd: allow
+    bun test: allow
+    stylua: allow
   read: allow
   write: allow
   edit: allow
@@ -108,11 +110,17 @@ tools:
   ls: allow
   grep: allow
   find: allow
+  delegate: allow
 agents:
   code-reviewer:
     mode: subagent
     description: Senior code reviewer for quality, security, and maintainability
     prompt: ${file:agents/code-reviewer.md}
+  developer:
+    mode: subagent
+    description: Senior developer for implementing code, refactoring, and writing
+      tests. Use when task is implementation-focused.
+    prompt: ${file:agents/developer.md}
   staff-engineer:
     mode: primary
     description: Staff engineer for complex multi-step implementations — explores,

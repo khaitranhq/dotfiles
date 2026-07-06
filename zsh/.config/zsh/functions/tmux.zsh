@@ -29,6 +29,7 @@ function tw() {
         if [[ $? -ne 0 || -z "$session_name" ]]; then
             return 0
         fi
+        session_name="${session_name//./_}"
         target_path=$(pwd)
         yq -i ".[\"$session_name\"] = \"$target_path\"" "$workspace_file"
         echo "✅ Saved workspace '$session_name' → $target_path"
@@ -53,26 +54,28 @@ function tw() {
 
     echo "Selected workspace: $session_name"
 
-    if tmux has-session -t="$session_name" 2>/dev/null; then
+    local tmux_name="${session_name//./_}"
+
+    if tmux has-session -t="$tmux_name" 2>/dev/null; then
         if [[ -n "$TMUX" ]]; then
-            tmux switch-client -t "$session_name"
+            tmux switch-client -t "$tmux_name"
         else
-            tmux attach-session -t "$session_name"
+            tmux attach-session -t "$tmux_name"
         fi
     else
-        tmux new-session -d -s "$session_name" -c "$target_path" -n v
-        tmux send-keys -t "$session_name":v nvim Enter
-        tmux new-window -t "$session_name" -n ai -c "$target_path"
+        tmux new-session -d -s "$tmux_name" -c "$target_path" -n v
+        tmux send-keys -t "$tmux_name":v nvim Enter
+        tmux new-window -t "$tmux_name" -n ai -c "$target_path"
         if [[ "$target_path" == "$HOME/Workspaces/Radicle"* ]]; then
-            tmux send-keys -t "$session_name":ai 'rpi' Enter
+            tmux send-keys -t "$tmux_name":ai 'rpi' Enter
         else
-            tmux send-keys -t "$session_name":ai 'cpi' Enter
+            tmux send-keys -t "$tmux_name":ai 'cpi' Enter
         fi
-        tmux select-window -t "$session_name":v
+        tmux select-window -t "$tmux_name":v
         if [[ -n "$TMUX" ]]; then
-            tmux switch-client -t "$session_name"
+            tmux switch-client -t "$tmux_name"
         else
-            tmux attach-session -t "$session_name"
+            tmux attach-session -t "$tmux_name"
         fi
     fi
 }
@@ -108,8 +111,9 @@ function td() {
         return 0
     fi
 
-    if tmux has-session -t="$selected" 2>/dev/null; then
-        tmux kill-session -t "$selected"
+    local tmux_name="${selected//./_}"
+    if tmux has-session -t="$tmux_name" 2>/dev/null; then
+        tmux kill-session -t "$tmux_name"
         echo "💀 Killed tmux session: $selected"
     else
         echo "⚠️  No tmux session named '$selected' found."

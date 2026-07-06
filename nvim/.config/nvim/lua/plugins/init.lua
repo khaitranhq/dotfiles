@@ -30,7 +30,6 @@ M.setup = function()
     "https://github.com/khaitranhq/codediff.nvim",
     "https://github.com/khaitranhq/copilot.lua",
     "https://github.com/folke/lazydev.nvim.git",
-    "https://github.com/khaitranhq/markview.nvim.git",
   })
 
   -- Load all setup() functions from plugins/configs folder
@@ -50,7 +49,7 @@ M.setup = function()
 
   require("nvim-autopairs").setup({})
   require("early-retirement").setup({
-    retirementAgeMins = 5
+    retirementAgeMins = 5,
   })
   require("codediff").setup({
     explorer = {

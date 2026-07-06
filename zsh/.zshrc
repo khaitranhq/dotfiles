@@ -90,3 +90,10 @@ add-keys-ssh-agent
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /home/khaitran/.local/bin/terraform terraform
+
+# bun completions
+[ -s "/home/khaitran/.bun/_bun" ] && source "/home/khaitran/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

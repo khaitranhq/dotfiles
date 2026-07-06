@@ -176,6 +176,54 @@ class Service {
 }
 ```
 
+## Test Group Ordering
+
+Inside `describe` blocks, hooks, test cases, and sub-groups must follow this
+strict order. Helpers used by tests must be extracted to a separate file —
+`describe` blocks contain only test structure, not helper logic.
+
+1. **`beforeAll`** — scope-wide setup
+2. **`afterAll`** — scope-wide teardown
+3. **`beforeEach`** — per-test setup
+4. **`afterEach`** — per-test teardown
+5. **`it(…)` / `test(…)`** — test cases
+6. **sub-group** — nested `describe` blocks
+
+```typescript
+// ✅ Correct: hooks → test cases → sub-groups
+import { describe, beforeAll, afterAll, beforeEach, afterEach, it } from "vitest";
+
+describe("UserService", () => {
+  beforeAll(async () => { /* setup DB */ });
+  afterAll(async () => { /* tear down DB */ });
+
+  beforeEach(() => { /* reset state */ });
+  afterEach(() => { /* clean up */ });
+
+  it("creates a user", async () => { /* ... */ });
+  it("updates a user", async () => { /* ... */ });
+
+  describe("with inactive user", () => {
+    beforeAll(() => { /* ... */ });
+    it("rejects login", () => { /* ... */ });
+  });
+});
+```
+
+```typescript
+// ❌ Incorrect: hooks interleaved with tests, helpers inline
+import { helper } from "./test-helpers";
+
+describe("UserService", () => {
+  it("creates a user", async () => { /* ... */ }); // ← test before hooks
+
+  beforeAll(() => { /* ... */ });  // ← hook after test
+
+  // ❌ helper declared inside describe
+  function makeUser(name: string) { return { name }; }
+});
+```
+
 ## Naming Conventions
 
 ### Constants
