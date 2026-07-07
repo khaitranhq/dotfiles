@@ -124,9 +124,9 @@ function td() {
 }
 
 function pick_files() {
-    local pane_dir pane_id
-    pane_dir=$(tmux display-message -p '#{pane_current_path}')
-    pane_id=$(tmux display-message -p '#{pane_id}')
+    local pane_id="$1"
+    local pane_dir
+    pane_dir=$(tmux display-message -t "$pane_id" -p '#{pane_current_path}')
 
     cd "$pane_dir" || return 1
 
@@ -139,20 +139,6 @@ function pick_files() {
 
     local fzf_output
     fzf_output=$(rg --files --no-ignore --hidden \
-        --glob '!.git/**' \
-        --glob '!node_modules/**' \
-        --glob '!dist/**' \
-        --glob '!.venv/**' \
-        --glob '!venv/**' \
-        --glob '!.mypy_cache/**' \
-        --glob '!.aider*/**' \
-        --glob '!cdk.out/**' \
-        --glob '!.vagrant/**' \
-        --glob '!build/**' \
-        --glob '!.chat_histories/**' \
-        --glob '!.ruff_cache/**' \
-        --ignore-file '.rgignore' \
-        --follow \
         | fzf --multi \
             --cycle \
             --reverse \

@@ -97,6 +97,8 @@ tools:
     xxd: allow
     bun test: allow
     stylua: allow
+    bun format: allow
+    bun lint: allow
   read: allow
   write: allow
   edit: allow
