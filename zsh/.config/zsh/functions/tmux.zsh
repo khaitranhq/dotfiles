@@ -153,11 +153,7 @@ function pick_files() {
     local relative_paths=()
     while IFS= read -r file; do
         if [[ -n "$file" ]]; then
-            local relative_path
-            relative_path=$(realpath --relative-to="$git_root" "$pane_dir/$file" 2>/dev/null)
-            if [[ -n "$relative_path" ]]; then
-                relative_paths+=("$relative_path")
-            fi
+          relative_paths+=("$file")
         fi
     done <<< "$fzf_output"
 

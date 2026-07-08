@@ -145,10 +145,10 @@ Names must reveal intent:
 
 ## Post-Change Validation (MANDATORY)
 
-After every code change, run:
+After every code change, validate only files touched by the current task:
 
-1. **Formatter** — consistent style (`gofmt`, `prettier`, `rustfmt`, `black`)
-2. **Linter** — code quality, bugs, style (`golangci-lint`, `eslint`, `clippy`, `ruff`)
+1. **Formatter** — fix style in changed files only (`gofmt -w`, `prettier --write`, `rustfmt`, `black`). Do not format unrelated files.
+2. **Linter** — report findings in changed files only. Fix non-critical, auto-fixable issues (style, formatting). Do not fix lint issues in unrelated files or suppress critical warnings (bugs, security) without explicit justification.
 3. **Dry-build / type-check** — compiles without artifacts:
    - Go: `go build -o /dev/null ./...`
    - TypeScript: `tsc --noEmit`
