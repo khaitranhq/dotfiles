@@ -17,6 +17,8 @@ linters:
     - revive
     - nilnil
     - ireturn
+    - gochecknoglobals
+    - err113
 
   settings:
     perfsprint:

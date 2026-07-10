@@ -112,9 +112,28 @@ user <-> browser: interacts
 cache -- db: replication
 ```
 
-### Important Rule
+### Important Rules
 
 Connections must reference object keys, not labels.
+
+Connections must use the **full path** for nested objects. The path starts from the outermost scope, not from the connection’s scope. Example:
+
+```d2
+aws: AWS Cloud {
+  vpc: VPC {
+    subnet: Subnet {
+      instance
+    }
+  }
+  s3: S3
+}
+
+# ✅ full path
+aws.vpc.subnet.instance -> aws.s3: stores
+
+# ❌ unqualified — D2 does not know "subnet" or "s3" outside the container
+subnet.instance -> s3
+```
 
 ```d2
 api: API Server

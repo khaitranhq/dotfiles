@@ -59,6 +59,7 @@ Load the focused reference based on what the user needs:
 ### Avoid
 
 - Referring to nodes by label inside connections.
+- Using unqualified names in connections for objects nested inside containers; always use the full path (e.g., `aws.vpc.subnet.instance`, not just `subnet.instance`).
 - Over-styling before the diagram structure is readable.
 - Using sequence diagrams for static topology views.
 - Long arrowhead labels that are likely to collide visually.

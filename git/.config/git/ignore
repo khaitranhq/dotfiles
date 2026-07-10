@@ -8,3 +8,5 @@
 _tasks
 .ignore
 .codegraph
+
+**/.claude/.cc-writes/
