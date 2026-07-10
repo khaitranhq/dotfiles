@@ -41,7 +41,7 @@ App > DB: SQL
 | Topic                     | Reference                             | Load When                                  |
 | ------------------------- | ------------------------------------- | ------------------------------------------ |
 | Syntax rules              | `references/cloud-architecture-syntax.md` | Nodes, groups, properties, connections, direction, styling |
-| Icon list                 | `references/icon-list.md`             | Finding the right icon for a service       |
+| Icon list                 | `references/icon-list.md`             | Search with `rg`/`grep` for keywords       |
 
 ## Working Rules
 
@@ -62,8 +62,9 @@ App > DB: SQL
 
 ### Icon Selection
 
+- **Never read the full `references/icon-list.md`** — it is 1000+ lines. Always use `rg` or `grep` to search.
 - Assign an icon to every node from `references/icon-list.md`
-- Run `rg "<keyword>" references/icon-list.md` to find matching icons
+- Run `rg -i "<keyword>" references/icon-list.md` to find matching icons
 - Prefer icons that describe the node's exact cloud service (e.g., aws-ec2, gcp-cloud-run, azure-kubernetes-services)
 
 ### Validation Checklist
