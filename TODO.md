@@ -12,16 +12,17 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Skills
 
-- [ ] `04` ⭐ pulumi: proactively use structured configs
-- [ ] `05` IaC: avoid implementing IaC with a root module/component resource
-- [ ] `06` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
+- [ ] `04` 🔥 text-based diagram skills: for sequence diagram and flowchart diagram
+- [ ] `05` ⭐ pulumi: proactively use structured configs
+- [ ] `06` IaC: avoid implementing IaC with a root module/component resource
+- [ ] `07` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
 
 ## Pi Agent
 
-- [ ] `07` 🔥 subagent able to view its process (like opencode)
-- [ ] `08` ⭐ subagent flow
-- [ ] `09` ⭐ new next - subagent with auto-selected models
-- [ ] `10` new ext - auto harness my system
+- [ ] `08` 🔥 subagent able to view its process (like opencode)
+- [ ] `09` ⭐ subagent flow
+- [ ] `10` ⭐ new next - subagent with auto-selected models
+- [ ] `11` new ext - auto harness my system
   - spawn a subagent to check:
     - any skill can be used to enhance the result -> why it doesn't loaded
     - can loaded skill be improved to enhance the result
@@ -29,7 +30,7 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ### Measure AI System Efficiency
 
-- [ ] `11` Implement metrics tool:
+- [ ] `12` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
