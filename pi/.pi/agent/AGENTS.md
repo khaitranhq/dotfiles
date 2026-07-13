@@ -78,6 +78,27 @@ grep -r 'func.*Handler' .           # codegraph_explore instead
 find . -name '*handler*'            # codegraph_search instead
 ```
 
+### NPM Package Management
+
+When adding a new npm package (dependency or devDependency) to any workspace package, check whether the same package is already used by other workspace packages or the root `package.json`. If it is used by **two or more** workspace members, move it to the `catalog` in `pnpm-workspace.yaml` and reference it as `"catalog:"` in all consuming `package.json` files.
+
+```yaml
+# pnpm-workspace.yaml
+catalog:
+  some-package: ^1.2.3
+```
+
+```json
+// package.json
+{
+  "devDependencies": {
+    "some-package": "catalog:"
+  }
+}
+```
+
+When removing a package from all workspace members, also remove it from the catalog.
+
 ### Git Commits
 
 Never run `git commit`. The user will handle all git commits themselves.

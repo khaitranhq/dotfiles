@@ -23,7 +23,7 @@ export function setupCommandCodeProvider(pi: ExtensionAPI) {
         input: ["text"],
         cost: { input: 0.435, output: 0.87, cacheRead: 0.003625, cacheWrite: 0 },
         contextWindow: 1048576,
-        maxTokens: 1048576,
+        maxTokens: 393216,
       },
       {
         id: "deepseek/deepseek-v4-flash",

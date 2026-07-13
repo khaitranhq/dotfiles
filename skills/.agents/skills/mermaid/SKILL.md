@@ -11,6 +11,13 @@ Generate mermaid diagrams and render them as ASCII via `mermaid-ascii`.
 
 - **Update**: when modifying an existing sequence diagram or flowchart, replace the **entire** diagram block. Do NOT surgically edit a single line or participant. Mermaid parse order and implicit participant ordering make partial edits fragile.
 
+## Reference
+
+Detailed syntax references bundled with this skill:
+
+- **[flowchart](reference/flowchart.md)** — nodes, shapes, links, subgraphs, styling, configuration
+- **[sequenceDiagram](reference/sequenceDiagram.md)** — participants, messages, activations, loops, alt/opt/par, notes, configuration
+
 ## Workflow
 
 1. **Write** the mermaid source to `/tmp/<name>.mermaid`

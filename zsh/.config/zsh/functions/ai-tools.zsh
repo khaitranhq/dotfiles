@@ -53,7 +53,7 @@ function ai_commit() {
     local generated_message generate_exit_code
     generated_message=$(gum spin \
         --title "🤖 Generating commit message from staged changes..." -- \
-        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --extension ~/.pi/agent/extensions/llm-providers --no-extensions --provider github-copilot --model gpt-4.1 "$2"' \
+        sh -c 'printf "%s\n" "$1" | pi -p --no-tools --extension ~/.pi/agent/extensions/llm-providers --no-extensions --provider github-copilot --model gpt-5.4-mini "$2"' \
         _ "$diff_content" "$ai_prompt")
     generate_exit_code=$?
 

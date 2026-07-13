@@ -98,29 +98,34 @@ function td() {
     fi
 
     local selected
-    selected=$(print -l $workspace_names | gum filter \
-        --header="🗑️  Select workspace to DELETE" \
-        --prompt="Delete: " \
-        --height=20)
+    selected=$(print -l $workspace_names | gum choose \
+        --header="🗑️  Select workspaces to DELETE" \
+        --height=20 \
+        --no-limit)
 
     if [[ $? -ne 0 || -z "$selected" ]]; then
         return 0
     fi
 
-    if ! gum confirm "Delete workspace '$selected'?" --default=false; then
+    local -a names=("${(@f)selected}")
+
+    if ! gum confirm "Delete ${#names[@]} workspace(s) (${(j:, :)names})?" --default=false; then
         return 0
     fi
 
-    local tmux_name="${selected//./_}"
-    if tmux has-session -t="$tmux_name" 2>/dev/null; then
-        tmux kill-session -t "$tmux_name"
-        echo "💀 Killed tmux session: $selected"
-    else
-        echo "⚠️  No tmux session named '$selected' found."
-    fi
+    local name tmux_name
+    for name in "${names[@]}"; do
+        tmux_name="${name//./_}"
+        if tmux has-session -t="$tmux_name" 2>/dev/null; then
+            tmux kill-session -t "$tmux_name"
+            echo "💀 Killed tmux session: $name"
+        else
+            echo "⚠️  No tmux session named '$name' found."
+        fi
 
-    yq -i "del(.[\"$selected\"])" "$workspace_file"
-    echo "🗑️  Removed workspace '$selected'"
+        yq -i "del(.[\"$name\"])" "$workspace_file"
+        echo "🗑️  Removed workspace '$name'"
+    done
 }
 
 function pick_files() {
