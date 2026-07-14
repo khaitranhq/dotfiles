@@ -1,7 +1,6 @@
 format = """
 $fill\
 $line_break\
-$os\
 $directory\
 $cmd_duration\
 $nodejs\
@@ -18,32 +17,6 @@ palette = "everforest"
 
 [fill]
 symbol = "─"
-
-[os]
-disabled = false
-format = '[$symbol ]($style)'
-style = 'fg:grey2'
-
-[os.symbols]
-Windows = "󰍲"
-Ubuntu = "󰕈"
-SUSE = ""
-Raspbian = "󰐿"
-Mint = "󰣭"
-Macos = "󰀵"
-Manjaro = ""
-Linux = "󰌽"
-Gentoo = "󰣨"
-Fedora = "󰣛"
-Alpine = ""
-Amazon = ""
-Android = ""
-Arch = "󰣇"
-Artix = "󰣇"
-CentOS = ""
-Debian = "󰣚"
-Redhat = "󱄛"
-RedHatEnterprise = "󱄛"
 
 [directory]
 style = "fg:orange"

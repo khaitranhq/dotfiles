@@ -1,12 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Read(*)"
-      "Edit(*)",
-      "Write(*)",
-      "Bash(go build:*)",
-      "Bash(go test:*)"
-    ]
+    "allow": ["Read(*)", "Edit(*)", "Write(*)", "Bash(go build:*)", "Bash(go test:*)"]
   },
   "model": "sonnet",
   "hooks": {
@@ -56,10 +50,7 @@
   },
   "sandbox": {
     "filesystem": {
-      "allowWrite": [
-        "~/.cache/go-build/**",
-        "~/go/pkg/mod/**"
-      ]
+      "allowWrite": ["~/.cache/go-build/**", "~/go/pkg/mod/**"]
     }
   },
   "theme": "dark"
