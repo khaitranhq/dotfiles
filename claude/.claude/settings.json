@@ -1,8 +1,47 @@
 {
-  "model": "haiku",
-  "theme": "dark",
   "permissions": {
-    "allow": ["Edit(*)", "Write(*)", "Bash(go build:*)", "Bash(go test:*)"]
+    "allow": [
+      "Read(*)"
+      "Edit(*)",
+      "Write(*)",
+      "Bash(go build:*)",
+      "Bash(go test:*)"
+    ]
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify.sh"
+          }
+        ]
+      }
+    ]
   },
   "enabledPlugins": {
     "atlassian@radicle-marketplace": true
@@ -15,10 +54,13 @@
       }
     }
   },
-  "theme": "dark",
   "sandbox": {
     "filesystem": {
-      "allowWrite": ["~/.cache/go-build/**", "~/go/pkg/mod/**"]
+      "allowWrite": [
+        "~/.cache/go-build/**",
+        "~/go/pkg/mod/**"
+      ]
     }
-  }
+  },
+  "theme": "dark"
 }
