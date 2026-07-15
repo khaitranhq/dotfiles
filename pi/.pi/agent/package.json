@@ -11,8 +11,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit && oxlint",
-    "format": "oxfmt --write",
-    "postinstall": "mkdir -p node_modules/tree-sitter/prebuilds/linux-x64 && cp node_modules/tree-sitter/build/Release/tree_sitter_runtime_binding.node node_modules/tree-sitter/prebuilds/linux-x64/tree-sitter.node"
+    "format": "oxfmt --write"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.75.3",
@@ -20,22 +19,22 @@
     "@earendil-works/pi-coding-agent": "0.74.1",
     "@earendil-works/pi-tui": "0.75.3",
     "@modelcontextprotocol/sdk": "1.29.0",
-    "@secretlint/core": "^13.0.2",
+    "@secretlint/core": "13.0.2",
     "@secretlint/secretlint-rule-preset-recommend": "13.0.2",
-    "@secretlint/types": "^13.0.2",
-    "@toon-format/toon": "^2.3.0",
+    "@secretlint/types": "13.0.2",
+    "@toon-format/toon": "2.3.0",
     "secretlint": "13.0.2",
-    "tree-sitter": "0.25.0",
+    "tree-sitter": "0.22.4",
     "tree-sitter-bash": "0.25.1",
     "typebox": "1.1.38",
     "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "25.9.1",
-    "oxfmt": "^0.53.0",
+    "oxfmt": "0.53.0",
     "oxlint": "1.66.0",
     "typescript": "5.9.3",
     "vitest": "3.1.1"
   },
-  "packageManager": "pnpm@10.30.3"
+  "packageManager": "pnpm@11.13.0"
 }
