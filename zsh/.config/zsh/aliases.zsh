@@ -11,8 +11,8 @@ alias v="nvim" # Quick nvim alias
 # =============================================================================
 # FILE MANAGEMENT
 # =============================================================================
-alias l='eza -lah --icons'               # Detailed list with icons and human-readable sizes
-alias ls='eza -lah --icons --total-size' # Same as above with total directory size
+alias l='eza -lah --icons auto'               # Detailed list with icons and human-readable sizes
+alias ls='eza -lah --icons auto --total-size' # Same as above with total directory size
 alias cat="bat -p"                       # Use bat (syntax-highlighted cat) in plain mode
 alias y='yazi'                           # Yazi file manager
 
