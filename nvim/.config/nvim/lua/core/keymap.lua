@@ -108,6 +108,36 @@ keymaps.git = {
       end,
       "Next hunk",
     },
+    ["<leader>co"] = {
+      function()
+        require("core.git").resolve_ours()
+      end,
+      "Resolve conflict: ours",
+    },
+    ["<leader>ct"] = {
+      function()
+        require("core.git").resolve_theirs()
+      end,
+      "Resolve conflict: theirs",
+    },
+    ["<leader>cb"] = {
+      function()
+        require("core.git").resolve_both()
+      end,
+      "Resolve conflict: both",
+    },
+    ["]x"] = {
+      function()
+        require("core.git").next_conflict()
+      end,
+      "Next conflict",
+    },
+    ["[x"] = {
+      function()
+        require("core.git").prev_conflict()
+      end,
+      "Previous conflict",
+    },
   },
 }
 
