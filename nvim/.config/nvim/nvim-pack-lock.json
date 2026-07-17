@@ -49,6 +49,10 @@
       "rev": "899e93f9f10251d7220b188eba1b837c0ba27927",
       "src": "https://github.com/khaitranhq/none-ls.nvim"
     },
+    "nui.nvim": {
+      "rev": "de740991c12411b663994b2860f1a4fd0937c130",
+      "src": "https://github.com/MunifTanjim/nui.nvim"
+    },
     "nvim-autopairs": {
       "rev": "59bce2eef357189c3305e25bc6dd2d138c1683f5",
       "src": "https://github.com/khaitranhq/nvim-autopairs"
@@ -76,6 +80,10 @@
     "render-markdown.nvim": {
       "rev": "0fd43fb4b1f073931c4b481f5f3b7cea3749e190",
       "src": "https://github.com/khaitranhq/render-markdown.nvim"
+    },
+    "review.nvim": {
+      "rev": "8e4bc16c8f430208bb0361a3957d487bc458576d",
+      "src": "https://github.com/khaitranhq/review.nvim"
     },
     "snacks.nvim": {
       "rev": "ad9ede6a9cddf16cedbd31b8932d6dcdee9b716e",
