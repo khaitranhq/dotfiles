@@ -1,9 +1,11 @@
 # dotfiles
 
-## Prerequisites
+## Install dependencies
 
-- `eslint`
-
-## Installation
-
-Just open `nvim` and it will automatically install all the plugins
+```bash
+### Node
+### Node tools
+# use npm to install instead
+# binary downloaded from GitHub doesn't have --lsp flag
+npm i -g oxfmt
+```
