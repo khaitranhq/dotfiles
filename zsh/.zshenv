@@ -1,5 +1,5 @@
 export DOTNET_ROOT=$HOME/.dotnet
-export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/nvm/v24.18.0/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.dotnet/tools"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/nvm/versions/node/v24.18.0/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.dotnet/tools"
 export PATH=$DOTNET_ROOT:$PATH
 
 export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"

@@ -34,6 +34,6 @@ promptToReturnFromSubprocess: false
 customCommands:
   - key: "<c-a>" # Keybinding (Ctrl + a)
     description: "AI Commit"
-    command: "source ~/.zshrc && ai_commit"
+    command: "source ~/.config/zsh/functions/ai-tools.zsh && ai_commit"
     context: "global"
     output: terminal

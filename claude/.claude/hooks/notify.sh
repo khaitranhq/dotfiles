@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Notify — desktop toast via PowerShell from WSL.
+# Notify — desktop toast via notify-send.
 # Reads JSON from stdin (Claude Code hook input), extracts event info, and sends a toast.
 #
 # Hook events handled:
@@ -45,34 +45,4 @@ case "$HOOK_EVENT" in
     ;;
 esac
 
-# XML-escape
-escape_xml() {
-  sed -e 's/&/\&amp;/g' \
-      -e 's/</\&lt;/g' \
-      -e 's/>/\&gt;/g' \
-      -e 's/"/\&quot;/g' \
-      -e "s/'/\&apos;/g" \
-      <<< "$1"
-}
-
-ETITLE="$(escape_xml "$TITLE")"
-EMESSAGE="$(escape_xml "$MESSAGE")"
-
-/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -Command "
-[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > \$null
-[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] > \$null
-\$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-\$xml.LoadXml(@'
-<toast>
-  <visual>
-    <binding template=\"ToastText02\">
-      <text id=\"1\">${ETITLE}</text>
-      <text id=\"2\">${EMESSAGE}</text>
-    </binding>
-  </visual>
-</toast>
-'@)
-\$toast = New-Object Windows.UI.Notifications.ToastNotification \$xml
-\$notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('${ETITLE}')
-\$notifier.Show(\$toast)
-"
+notify-send "$TITLE" "$MESSAGE"
