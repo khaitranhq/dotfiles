@@ -1,1 +1,0 @@
-Refactor Go code to properly propagate context.Context through all blocking operations. Add context parameters to functions that perform I/O, check ctx.Err() at appropriate points, and ensure cancellation flows from HTTP handlers down to database calls. Follow Go best practices for context usage.

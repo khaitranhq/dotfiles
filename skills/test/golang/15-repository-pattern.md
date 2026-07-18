@@ -1,1 +1,0 @@
-Implement the repository pattern in Go for database access. Define a narrow interface with CRUD methods, create a concrete PostgreSQL implementation, and use dependency injection to provide it to a service layer. Include proper error wrapping, context propagation, and table-driven tests with a mock repository.

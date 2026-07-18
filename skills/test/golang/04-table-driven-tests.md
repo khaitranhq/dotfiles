@@ -1,1 +1,0 @@
-Write table-driven tests for a Go function that validates email addresses. The function should check for valid format, handle edge cases like empty strings and missing @ symbols, and return descriptive errors. Use t.Run() for subtests.
