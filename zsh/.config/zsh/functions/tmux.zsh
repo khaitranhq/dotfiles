@@ -98,10 +98,9 @@ function td() {
     fi
 
     local selected
-    selected=$(print -l $workspace_names | gum choose \
+    selected=$(print -l $workspace_names | fzf --multi \
         --header="🗑️  Select workspaces to DELETE" \
-        --height=20 \
-        --no-limit)
+        --height=20)
 
     if [[ $? -ne 0 || -z "$selected" ]]; then
         return 0

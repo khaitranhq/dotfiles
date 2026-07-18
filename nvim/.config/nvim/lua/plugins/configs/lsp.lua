@@ -13,7 +13,13 @@ local lsp_config = {
   },
   docker_language_server = {},
   docker_compose_language_service = {},
-  bashls = {},
+  bashls = {
+    filetypes = {
+      "sh",
+      "bash",
+      "zsh",
+    },
+  },
   marksman = {},
   yamlls = {
     settings = {
@@ -175,7 +181,7 @@ local blink_config = {
     default = { "lsp", "path", "buffer", "cmdline", "snippets", "omni" },
     providers = {
       buffer = {
-        max_items = 4,      -- Limit buffer completion items
+        max_items = 4,          -- Limit buffer completion items
         min_keyword_length = 3, -- Require 3 chars before buffer completion
       },
     },

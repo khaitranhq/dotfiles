@@ -16,6 +16,7 @@ eval "$(fzf --zsh)"
 [[ -f ~/.config/zsh/aliases.zsh ]] && source ~/.config/zsh/aliases.zsh
 [[ -f ~/.config/zsh/hidden.zsh ]] && source ~/.config/zsh/hidden.zsh
 for f in ~/.config/zsh/functions/*.zsh(N); do source "$f"; done
+[[ -f ~/.config/zsh/ai.zsh ]] && source ~/.config/zsh/ai.zsh
 
 # ── Plugins ─────────────────────────────────────────────────────────────────
 ZPLUGINDIR="${ZDOTDIR:-$HOME/.config/zsh}/plugins"
