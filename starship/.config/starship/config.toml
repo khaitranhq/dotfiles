@@ -17,6 +17,7 @@ palette = "everforest"
 
 [fill]
 symbol = "─"
+style = "fg:grey0"
 
 [directory]
 style = "fg:orange"
