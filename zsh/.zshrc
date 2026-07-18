@@ -10,6 +10,7 @@ fi
 # ── Prompt & jump ──────────────────────────────────────────────────────────
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
+eval "$(fzf --zsh)"
 
 # ── Load aliases & functions ────────────────────────────────────────────────
 [[ -f ~/.config/zsh/aliases.zsh ]] && source ~/.config/zsh/aliases.zsh
@@ -30,9 +31,6 @@ _zplugin_load() {
 }
 _zplugin_load zsh-users zsh-autosuggestions
 _zplugin_load zdharma-continuum fast-syntax-highlighting
-
-# ── FZF (defer to zvm_after_init) ──────────────────────────────────────────
-zvm_after_init_commands+=('source <(fzf --zsh)')
 
 # ── Keybindings ─────────────────────────────────────────────────────────────
 bindkey -e
@@ -67,8 +65,3 @@ _zshrc_expand_or_complete() {
 }
 zle -N _zshrc_expand_or_complete
 bindkey '^I' _zshrc_expand_or_complete
-
-# ── Bun ─────────────────────────────────────────────────────────────────────
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-[ -s "/home/khaitran/.bun/_bun" ] && source "/home/khaitran/.bun/_bun"
