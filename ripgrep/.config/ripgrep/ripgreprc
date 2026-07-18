@@ -22,6 +22,7 @@
 --glob=!target
 --glob=!go-build
 --glob=!**/.ignore/*
+--glob=!.codegraph
 
 # Do not respect .gitignore files by default
 --no-ignore

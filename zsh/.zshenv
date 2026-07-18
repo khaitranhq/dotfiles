@@ -22,6 +22,7 @@ export SAVEHIST=10000                # Number of commands to save to file
 setopt appendhistory                 # Append to history file instead of overwriting
 
 # FZF Configuration - Everforest Dark Medium theme
+export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
   --highlight-line \
   --info=inline-right \
