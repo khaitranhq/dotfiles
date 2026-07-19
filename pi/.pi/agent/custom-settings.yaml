@@ -100,6 +100,7 @@ tools:
     bun format: allow
     bun lint: allow
     mermaid-ascii: allow
+    hadolint: allow
   read: allow
   write: allow
   edit: allow

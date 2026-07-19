@@ -1,6 +1,6 @@
 ---
 name: docker
-description: Docker image design rules with enforcement for Dockerfile best practices. Use when writing, reviewing, or modifying Dockerfiles, image builds, or container configurations.
+description: Docker image design rules with enforcement for Dockerfile best practices. Use when writing, reviewing, or modifying Dockerfiles, image builds, container configurations, Docker security, secrets management, container privileges, or Dockerfile linting.
 triggers:
   - docker
   - Dockerfile
@@ -13,6 +13,15 @@ triggers:
   - container image
   - image build
   - containerize
+  - docker security
+  - container security
+  - secrets
+  - credentials
+  - token
+  - .dockerignore
+  - hadolint
+  - dockle
+  - trivy
 role: specialist
 scope: implementation
 output-format: code
@@ -26,63 +35,63 @@ required-references:
 
 ### 1. Pin Base Images by SHA Digest
 
-Every `FROM` referencing a remote registry **must** use a SHA256 digest.
-
-```dockerfile
-# ✅ Correct
-FROM node:22.14.0-alpine@sha256:62d1ed22bb0d965a07c0bf4fe26ff4d1bd0b0e7a9d2f70d5de7a57dcec6f5cc1
-
-# ❌ Wrong — mutable tag
-FROM node:22.14.0-alpine
-FROM node:latest
-```
-
-Local-only base images (built in same project) are exempt.
+Every `FROM` referencing a remote registry **must** use a SHA256 digest. Local-only base images (built in same project) are exempt.
 
 ### 2. No Root in Final Stage
 
-The final stage **must not** run as root. Create an unprivileged user.
+Final stage **must not** run as root. Create an unprivileged user per distro (see REFERENCE). Bind to high ports (≥1024); map to 80/443 externally.
+
+Executables owned by root, not world-writable — even when run by non-root user.
+
+### 3. No Secrets in Image
+
+Never put secrets in `ENV`, `ARG`, or `COPY` instructions. Use `RUN --mount=type=secret` (BuildKit) for build-time secrets. `.dockerignore` must exclude `.env`, `.git`, credentials, and backups. Secrets in intermediate layers persist even after `rm`.
+
+### 4. COPY over ADD; Exec Form CMD
+
+Use `COPY`, not `ADD` (except remote URL with checksum or tar auto-extract). Use `CMD ["exec", "form"]`, not shell form.
+
+### 5. Clean Up in Same Layer
+
+Package install + cleanup in one `RUN`. Never split across layers.
 
 ```dockerfile
-# ✅ Correct
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
-# ❌ Wrong
-CMD ["node", "server.js"]
+# ✅ Single layer
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends pkg-a pkg-b \
+    && rm -rf /var/lib/apt/lists/*
 ```
-
-Build stages may run as root. Only the final stage must switch.
 
 ## Structural Rules
 
-### 3. Mandatory Multi-Stage Builds
+### 6. Mandatory Multi-Stage Builds
 
-Separate build and runtime. Final image must not contain build toolchain, dev deps, or unused source artifacts.
+Separate build and runtime. Final image must not contain build toolchain, dev deps, or source artifacts. Secret-consuming steps stay in intermediate stages.
 
-### 4. Order Layers by Change Frequency
+### 7. Copy Only Essential Files
 
-Least-frequently-changing first: dependencies before application code.
+Dependencies before application code. Copy strategy: specific paths when few files, `COPY . .` with `.dockerignore` only when copying many files in a directory. Never `COPY . .` without `.dockerignore`. In final stages, copy only built artifacts and runtime deps — not raw source.
 
-```dockerfile
-# ✅ Correct
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-```
+### 8. No Unnecessary Privileges
 
-### 5. Mandatory .dockerignore
+Drop all capabilities at runtime: `--cap-drop=ALL --cap-add=NET_BIND_SERVICE`. Never mount `docker.sock` or use `--privileged`. Only `EXPOSE` required ports.
 
-Every Dockerfile project must have `.dockerignore` excluding `.git`, `node_modules`, `target/`, `dist/`, and env files.
+### 9. Mandatory .dockerignore
+
+Every Dockerfile project must have `.dockerignore` excluding `.git`, `node_modules`, `target/`, `dist/`, `.env`, `.env.*`, and IDE/OS junk.
 
 ## Validation
 
-Before committing, run:
-
 ```bash
-hadolint Dockerfile              # Lint Dockerfile rules
-docker buildx build .             # Dry-run build
-dockle --image <image>            # Image security audit
+hadolint Dockerfile              # Lint
+docker buildx build .            # Dry-run build
+dockle --image <image>           # Security audit
+trivy image <image>              # Vuln scan (CI)
 ```
 
-See [REFERENCE.md](REFERENCE.md) for full syntax patterns, examples, and edge-case guidance.
+## Tag Strategy
+
+- Pin to digest: `image:tag@sha256:...`
+- Use specific semver tags (`:1.2.3-alpine`), never `:latest` in prod
+
+See [REFERENCE.md](REFERENCE.md) for per-distro commands, patterns, secret mounts, capability dropping, supply chain, and cache mounts.
