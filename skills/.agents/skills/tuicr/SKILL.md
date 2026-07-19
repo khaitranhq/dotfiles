@@ -177,23 +177,35 @@ For structured input, use `--input` with literal JSON, `@path/to/file.json`, or
 
 ## Resolve Comments
 
-In the TUI, press `x` on a comment to toggle its resolved status.
+Resolve a comment by adding a **Praise** type comment on the same line(s), with
+a tick/success icon (e.g. ✅, ✔) as a prefix. This acknowledges the fix while
+keeping the review thread intact.
 
-Via the CLI, mark comments as resolved after addressing them. Supports both
-individual and batch resolve:
+In the TUI, select the target comment's file and line(s), then add a Praise
+comment with the icon prefix.
 
-Mark comments as resolved after addressing them. Supports both individual and
-batch resolve:
+Via the CLI:
 
 ```bash
-# Resolve specific comments by ID
-$ tuicr review resolve --repo /path/to/repo --session <slug> --id <comment-id-1> --id <comment-id-2>
+# Resolve a line comment with a praise + tick icon
+tuicr review add --repo /path/to/repo --session <slug> \
+  --target-file src/main.rs \
+  --line 42 \
+  --side new \
+  --type praise \
+  --username "Codex" \
+  "✅ Done."
 
-# Resolve all unresolved comments
-$ tuicr review resolve --repo /path/to/repo --session <slug> --all
+# Resolve a range comment
+tuicr review add --repo /path/to/repo --session <slug> \
+  --target-file src/main.rs \
+  --line 42 \
+  --end-line 45 \
+  --side new \
+  --type praise \
+  --username "Codex" \
+  "✅ Addressed."
 ```
-
-Output is JSON: `{"resolved": N}`.
 
 ## Legacy Export Output
 
