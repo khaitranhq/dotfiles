@@ -39,3 +39,5 @@ alias rpi='pi --provider github-copilot --model gpt-5.4'
 alias cpi='pi --provider commandcode --model deepseek-v4-pro'
 
 alias tf='terraform' # Terraform command
+
+alias c='claude'

@@ -67,7 +67,7 @@ function tw() {
         tmux send-keys -t "$tmux_name":v nvim Enter
         tmux new-window -t "$tmux_name" -n ai -c "$target_path"
         if [[ "$target_path" == "$HOME/Workspaces/Radicle"* ]]; then
-            tmux send-keys -t "$tmux_name":ai 'rpi' Enter
+            tmux send-keys -t "$tmux_name":ai 'c' Enter
         else
             tmux send-keys -t "$tmux_name":ai 'cpi' Enter
         fi

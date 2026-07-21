@@ -45,4 +45,4 @@ case "$HOOK_EVENT" in
     ;;
 esac
 
-notify-send "$TITLE" "$MESSAGE"
+notify-send "$TITLE" "$MESSAGE" --hint=string:sound-name:complete

@@ -37,7 +37,7 @@ __precmd_notify_on_long_running() {
         local elapsed=$((SECONDS - __cmd_start))
         if [[ $elapsed -gt 5 ]]; then
             local sanitized_command="${__cmd_line//\'/}"
-            notify-send "Zsh - Command Complete" "Command: $sanitized_command\nDuration: $elapsed seconds | Exit: $exit_status"
+            notify-send "Zsh - Command Complete" "Command: $sanitized_command\nDuration: $elapsed seconds | Exit: $exit_status" --hint=string:sound-name:complete
         fi
     fi
     unset __cmd_start __cmd_line

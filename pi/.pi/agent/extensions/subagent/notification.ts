@@ -24,7 +24,7 @@ const logger = new Logger(LOG_PATH);
 
 function notify(title: string, message: string): void {
   logger.log(`Sending notification: ${title} — ${message}`);
-  execFile("notify-send", [title, message], (err) => {
+  execFile("notify-send --hint=string:sound-name:complete", [title, message], (err) => {
     if (err) {
       logger.log(`Failed to send notification: ${err.message}`);
     }

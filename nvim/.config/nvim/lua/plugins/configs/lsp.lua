@@ -28,6 +28,8 @@ local lsp_config = {
           ["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*.{yml,yaml}",
           ["/home/khaitran/.config/nvim/lua/plugins/configs/bitbucket-pipelines-schema.json"] =
           "**/bitbucket-pipelines.yml",
+          ["/home/khaitran/.config/nvim/lua/plugins/configs/pulumi-config-schema.json"] = "**/Pulumi.*.yaml",
+          ["https://json.schemastore.org/github-action.json"] = "**/.github/**/*.{yml,yaml}",
         },
       },
     },
