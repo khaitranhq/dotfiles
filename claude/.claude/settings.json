@@ -136,14 +136,7 @@
   "enabledPlugins": {
     "atlassian@radicle-marketplace": true
   },
-  "extraKnownMarketplaces": {
-    "radicle-marketplace": {
-      "source": {
-        "source": "git",
-        "url": "git@github.com:footholdtech/claude-plugins.git"
-      }
-    }
-  },
+  "extraKnownMarketplaces": {},
   "sandbox": {
     "filesystem": {
       "allowWrite": ["~/.cache/go-build/**", "~/go/pkg/mod/**"],

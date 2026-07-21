@@ -31,11 +31,6 @@ linters:
       max-complexity: 15
     lll:
       line-length: 150
-    # gomoddirectives:
-    #   replace-local: true
-    #   replace-allow-list:
-    #     - github.com/footholdtech/axiom-infrastructure/sdk
-    #     - github.com/footholdtech/pulumi-azure/sdk
 
   exclusions:
     rules:
