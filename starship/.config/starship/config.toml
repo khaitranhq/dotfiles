@@ -7,6 +7,7 @@ $nodejs\
 $git_branch\
 $git_state\
 $git_status\
+$pulumi\
 $line_break\
 $character"""
 
@@ -67,6 +68,9 @@ error_symbol = '[→](bold red)'
 disabled = false
 time_format = '%T'
 utc_time_offset = '+7'
+
+[pulumi]
+format = '[🛥 $stack]($style) '
 
 [palettes.everforest]
 bg_dim = "#232a2e"
