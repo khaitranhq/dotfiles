@@ -151,6 +151,7 @@ local lsp_config = {
       },
     },
   },
+  ty = {},
   terraformls = {
     settings = {
       terraform = {

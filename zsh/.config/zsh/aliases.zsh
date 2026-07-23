@@ -40,4 +40,8 @@ alias cpi='pi --provider commandcode --model deepseek-v4-pro'
 
 alias tf='terraform' # Terraform command
 
+alias smd='specmd'   # Create spec.md from template
+alias rmd='reviewmd'  # Create review.md from template
+
 alias c='claude'
+

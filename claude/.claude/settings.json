@@ -139,8 +139,14 @@
   "extraKnownMarketplaces": {},
   "sandbox": {
     "filesystem": {
-      "allowWrite": ["~/.cache/go-build/**", "~/go/pkg/mod/**"],
-      "allowRead": ["~/.cache/go-build/**", "~/go/pkg/mod/**"]
+      "allowWrite": [
+        "~/.cache/go-build/**",
+        "~/go/pkg/mod/**"
+      ],
+      "allowRead": [
+        "~/.cache/go-build/**",
+        "~/go/pkg/mod/**"
+      ]
     }
   },
   "theme": "custom:everforest"
