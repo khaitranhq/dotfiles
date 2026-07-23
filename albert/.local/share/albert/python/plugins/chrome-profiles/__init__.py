@@ -42,8 +42,10 @@ class Plugin(PluginInstance, GeneratorQueryHandler):
         data = json.loads(CHROME_STATE.read_text())
         return data.get("profile", {}).get("info_cache", {})
 
-    def items(self, ctx):
-        raw = ctx.query.strip()
+    def items(self, context):
+        exe = self.executable
+        assert exe is not None
+        raw = context.query.strip()
         trigger = self.defaultTrigger().strip()
         if raw.startswith(trigger):
             raw = raw[len(trigger):].strip()
@@ -63,7 +65,7 @@ class Plugin(PluginInstance, GeneratorQueryHandler):
                     Action(
                         "open", "Open profile",
                         lambda d=dir_name: runDetachedProcess(
-                            [self.executable, f"--profile-directory={d}"]
+                            [exe, f"--profile-directory={d}"]
                         ),
                     ),
                 ],

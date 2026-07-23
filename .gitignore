@@ -9,3 +9,4 @@ yazi/.config/yazi/plugins/
 **/fish/.config/fish/themes
 **/fish/.config/fish/fish_*
 node_modules
+__pycache__

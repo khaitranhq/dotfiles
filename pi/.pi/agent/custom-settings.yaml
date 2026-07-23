@@ -102,6 +102,7 @@ tools:
     mermaid-ascii: allow
     hadolint: allow
     git ls-files: allow
+    ty check: allow
   read: allow
   write: allow
   edit: allow
