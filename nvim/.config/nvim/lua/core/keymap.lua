@@ -215,6 +215,26 @@ keymaps.ai = {
   },
 }
 
+keymaps.location = {
+  n = {
+    ["<leader>cl"] = {
+      function()
+        require("core.utils").copy_location("n")
+      end,
+      "Copy location (path:line)",
+    },
+  },
+  v = {
+    ["<leader>cl"] = {
+      function()
+        require("core.utils").copy_location("v")
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+      end,
+      "Copy location (path:start...end)",
+    },
+  },
+}
+
 local M = {}
 
 M.setup = function()

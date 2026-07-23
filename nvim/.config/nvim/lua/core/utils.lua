@@ -140,6 +140,29 @@ function M.copy_buffer_path()
 	end)
 end
 
+--- Copy cursor location to clipboard as relative/path:line (normal) or relative/path:start...end (visual).
+--- @param mode string "n" for cursor line, "v" for visual selection range
+function M.copy_location(mode)
+	local buf_path = vim.api.nvim_buf_get_name(0)
+	if buf_path == "" then
+		vim.notify("No file in current buffer.", vim.log.levels.WARN)
+		return
+	end
+	local rel = vim.fn.fnamemodify(buf_path, ":.")
+	local text
+	if mode == "v" then
+		local v_start = vim.fn.getpos("v")
+		local v_end = vim.fn.getpos(".")
+		local sl = v_start[2]
+		local el = v_end[2]
+		if sl > el then sl, el = el, sl end
+		text = string.format("%s:%d...%d", rel, sl, el)
+	else
+		text = string.format("%s:%d", rel, vim.fn.line("."))
+	end
+	vim.fn.setreg("+", text)
+	vim.notify("Copied: " .. text, vim.log.levels.INFO)
+end
 
 --- Opens a centered floating window to select a buffer using keyboard shortcuts (a-z, 0-9).
 --- Shows all loaded buffers with a modified indicator (yellow icon) for unsaved buffers.
