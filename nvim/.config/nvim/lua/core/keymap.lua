@@ -164,6 +164,12 @@ keymaps.lsp = {
     },
     ["gd"] = {
       function()
+        vim.lsp.buf.definition()
+      end,
+      "Go to definition",
+    },
+    ["gD"] = {
+      function()
         vim.cmd('rightbelow vsplit')
         vim.lsp.buf.definition()
       end,

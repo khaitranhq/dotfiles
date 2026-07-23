@@ -115,34 +115,24 @@ Do not create any files unless explicitly requested by the user. This includes:
 
 **Exception**: Files that are an integral part of solving the user's stated problem (e.g., source code files for a feature request) should be created as needed to fulfill the request.
 
-### YAML and JSON Processing and Validation
-
-When processing or validating YAML and JSON files, use the following tools in order of preference:
-
-1. **yq** - Always use for both YAML and JSON processing (provides native parsing and manipulation for both formats)
-2. **sed** - Last resort for simple text-based replacements only when yq is unavailable
-
-⚠️ **Do not use python or node** - Python (pyyaml, json) and Node.js (js-yaml, JSON.parse) scripts add unnecessary complexity and dependency overhead. Use `yq` for all YAML/JSON processing.
-
 ### YAML Validation
 
-All YAML files in this project must be validated using `yamllint` before being committed or merged.
-
-#### Configuration
-
-The default yamllint configuration should be used. If a custom configuration is needed, it can be specified via a `.yamllint` or `.yamllint.yaml` file in the project root.
-
-#### When to Apply
-
-- All YAML files (`*.yaml`, `*.yml`) must be validated
-- This applies to configuration files, YAML workflows, and any other YAML content in the project
-
-#### Example Usage
+All YAML files (`*.yaml`, `*.yml`) must be validated using `yamllint` before being committed or merged. The default yamllint configuration should be used; a custom configuration can be specified via a `.yamllint` or `.yamllint.yaml` file in the project root.
 
 ```bash
 yamllint filename.yaml
 yamllint -d "{extends: default}" directory/
 ```
+
+### YAML and JSON Data Extraction
+
+When extracting data from YAML or JSON files, use the following tools in order of preference:
+
+1. **yq** - Primary tool for both YAML and JSON processing (native parsing and manipulation)
+2. **jq** - Fallback for JSON-specific extraction when yq is unavailable
+3. **sed** - Last resort for simple text-based replacements only when both yq and jq are unavailable
+
+⚠️ **Do not use python or node** - Python (pyyaml, json) and Node.js (js-yaml, JSON.parse) scripts add unnecessary complexity and dependency overhead.
 
 ## Working Style
 
