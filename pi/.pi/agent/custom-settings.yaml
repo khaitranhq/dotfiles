@@ -103,6 +103,8 @@ tools:
     hadolint: allow
     git ls-files: allow
     ty check: allow
+    terraform validate: allow
+    terraform fmt: allow
   read: allow
   write: allow
   edit: allow
