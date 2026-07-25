@@ -1,121 +1,56 @@
 # AI Agentic Workflow design
 
-## My usage
+This file is for brainstorming and designing the AI agentic workflow. The target is to create a workflow and harness system (skills, rules)
 
-- Work
-  - Analyze requirements: clarity objectives/AC, define existing and missing resources
-  - Design, planning
-  - Implementation
-    - IaC Pulumi + Go + Azure implementation
-    - CDK + Typescript + AWS implementation
-    - Estimate DevOps effort & infrastructure cost, draw diagram
-    - DevOps tasks planning reviewed with Well Architected Framework
-    - Documentation
-  - Review
-- Personal projects
-  - IaC Pulumi + Go/Typescript for AWS
-  - Rust, Go development (pure code, no vibe coding)
-- Learning English
-  - Following my learning system
+## Constraints
 
-## Additional requirements
-
-- Front-loading accuracy: Analyze and clarify requirements before starting
-- Clear separation of concerns: analyze requirements, design, implementation, review
-- Predicting Impact & Guardrails to prevent negative outcomes, fail fast
-
-## Success criteria
-
-- Automation: avoid manual work, automate as much as possible
-- Error: avoid issues and rework
+- Maximum automation but keep the quality
+- Definition of quality: meet all DoD (Definition of Done)
+- Must keep the human in the loop for quality assurance and decision making
 
 ## Workflows
 
-### Coding/devops tasks:
-
-#### Master agents
-
-- architect-master-agent
-  - Clarifies requirements, then delegates to architect-agent and planning-agent
-- implementation-master-agent
-  - Delegates to solid-coder and code-reviewer
-
 ```mermaid
-sequenceDiagram
-  participant User
-  participant ArchMaster as architect-master-agent
-  participant ImplMaster as implementation-master-agent
-  participant Architect as architect-agent
-  participant Planner as planning-agent
-  participant SolidCoder as solid-coder
-  participant CodeReviewer as code-reviewer
-  participant AI_Folder as Folder
+graph TD
+    %% Main Flow Sequence
+    REQS[me: write high-level requirements in spec.md] --> SOLUTIONING
 
-  Note over User,AI_Folder: Requirements gathering and clarification
-  User->>ArchMaster: Provide high-level requirements and hard constraints
-  ArchMaster-->>User: Ask only blocking clarification questions
-  User->>ArchMaster: Provide answers / sign off requirements
-  ArchMaster->>AI_Folder: Write `requirements.md`
+    %% Solutioning Loop Block
+    subgraph SOLUTIONING [loop: solutioning]
+        D1[ai: clarify requirements with users and write to spec.md] --> D2[ai: generate 3 solutions, pros & cons for each, and a recommendation]
+        D2 --> D3[me: choose a solution]
+        D3 --> D4[ai: generate design, DoD]
+        D4 --> D5[me: review & approve design + DoD]
+    end
 
-  Note over User,AI_Folder: Design
-  ArchMaster-->>Architect: Deliver clarified requirements (from `requirements.md`)
-  Architect-->>User: Present design aligned with principles and Well-Architected Framework
-  User->>Architect: Review and sign off design
-  Architect->>AI_Folder: Write `design.md` with final design
-  Architect-->>ArchMaster: Report design written
+    %% Flow to Implementation
+    SOLUTIONING --> IMPL
 
-  Note over User,AI_Folder: Planning
-  ArchMaster-->>Planner: Produce task plan and milestones (based on `design.md`)
-  Planner-->>User: Present plan for review
-  User->>Planner: Review and sign off plan
-  Planner->>AI_Folder: Write `plan.md` with tasks and milestones
-  Planner-->>ArchMaster: Report plan written
+    %% AI Implementation Loop Block
+    subgraph IMPL [loop: ai implementation]
+        I1[ai: implement, must pass DoD] --> I2[ai: review code]
+        I2 -.->|Fixes| I1
+    end
 
-  Note over User,AI_Folder: Implementation
-  loop For each implementation task
-    ArchMaster->>ImplMaster: Handoff implementation plan
-    ImplMaster->>SolidCoder: Coordinate start of implementation tasks
-    SolidCoder-->>SolidCoder: Execute implementation tasks
-    SolidCoder-->>ImplMaster: Report implementation task completed
-    ImplMaster-->>CodeReviewer: Submit changes for review
-    CodeReviewer-->>ImplMaster: Present review results and compliance checks
-    ImplMaster->>SolidCoder: Request rework if needed
-  end
-  ImplMaster-->>ImplMaster: Review changes again to ensure requirements met
-  ImplMaster->>AI_Folder: Write implementation summary and documentation
-  ImplMaster-->>User: Present final aggregated status and process log
+    %% My Review Loop Block
+    subgraph REVIEW [loop: my review]
+        R1[me: review manually] --> R2[ai: address comments]
+        R2 -.->|Re-review| R1
+    end
+
+    %% Flow to Harness
+    REVIEW --> HARNESS
+
+    %% Harness Section Block
+    subgraph HARNESS [harness]
+        H1[me: export AI questions/permission request, human prompts/comments]
+        H2[me: log issues to dotfiles/TODO.md]
+    end
 ```
 
-#### Requirements for each agent
-
-- architect-agent:
-  - Break down the system into components/modules with clear responsibilities.
-  - Output design includes diagrams, data flow, and technology choices aligned with best practices.
-- planning-agent:
-  - Create a detailed task list with
-    - Task description
-    - Resources needed (tools, information, files,...)
-    - Subtasks as detailed steps
-    - AC
-  - Split to phases if the task scope is large.
-- solid-coder:
-  - Follow best coding practices, ensure code quality, maintainability, and security.
-  - Write comment only where necessary to explain complex logic.
-  - Should run tools to check code quality, security, and compliance before reporting task completion.
-- code-reviewer:
-  - Perform thorough code reviews, checking for adherence to requirements, design, and coding standards.
-  - Provide constructive feedback and suggest improvements.
-  - Ensure all acceptance criteria are met before approving changes.
-- architect-master-agent:
-  - Clarify requirements, then coordinate design and planning phases.
-  - Aggregate reports from architect-agent and planning-agent.
-  - Stop immediately if negative impact/guardrail issues are detected
-- implementation-master-agent:
-  - Coordinate implementation and review phases.
-  - Aggregate reports from solid-coder and code-reviewer.
-  - Present final aggregated status and process log to the user.
-  - Stop immediately if negative impact/guardrail issues are detected
-
-### English learning system
-
-Just use default opencode agent with defined `AGENTS.md` file about the system.
+- Solutioning block: from requirements to design (include test cases, may be test scripts or test scenario performed by me) and DoD
+- Implementation block: from design to implementation, must pass DoD
+- Harness block: from agent questions/permission request, my answers/prompts to enhance AI harness system
+  - skills
+  - Global AGENTS.md
+  - Project AGENTS.md
