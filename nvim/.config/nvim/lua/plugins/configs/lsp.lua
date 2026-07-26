@@ -20,7 +20,7 @@ local lsp_config = {
       "zsh",
     },
   },
-  marksman = {},
+  markdown_oxide = {},
   yamlls = {
     settings = {
       yaml = {
