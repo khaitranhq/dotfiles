@@ -1,6 +1,6 @@
 ---
 name: solutioning
-description: Structured solutioning workflow: clarify requirements, generate 3 options with pros/cons, produce design + DoD, and gate on human approval before implementation. Use when planning a new feature, designing a solution, writing a spec, defining acceptance criteria, or when user says "solutioning", "spec", "design", "DoD", "Definition of Done", "plan before building".
+description: Structured solutioning workflow - clarify requirements, generate 3 options with pros/cons, produce design + DoD, and gate on human approval before implementation. Use when planning a new feature, designing a solution, writing a spec, defining acceptance criteria, or when user says "solutioning", "spec", "design", "DoD", "Definition of Done", "plan before building".
 ---
 
 # Solutioning

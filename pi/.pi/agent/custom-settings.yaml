@@ -126,6 +126,7 @@ agents:
     prompt: ${file:agents/code-reviewer.md}
   developer:
     mode: subagent
-    description: Senior developer for implementing code, refactoring, and writing
+    description:
+      Senior developer for implementing code, refactoring, and writing
       tests. Use when task is implementation-focused.
     prompt: ${file:agents/developer.md}
