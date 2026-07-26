@@ -81,10 +81,6 @@
       "rev": "0fd43fb4b1f073931c4b481f5f3b7cea3749e190",
       "src": "https://github.com/khaitranhq/render-markdown.nvim"
     },
-    "review.nvim": {
-      "rev": "8e4bc16c8f430208bb0361a3957d487bc458576d",
-      "src": "https://github.com/khaitranhq/review.nvim"
-    },
     "snacks.nvim": {
       "rev": "ad9ede6a9cddf16cedbd31b8932d6dcdee9b716e",
       "src": "https://github.com/khaitranhq/snacks.nvim"
@@ -96,10 +92,6 @@
     "todo-comments.nvim": {
       "rev": "31e3c38ce9b29781e4422fc0322eb0a21f4e8668",
       "src": "https://github.com/khaitranhq/todo-comments.nvim"
-    },
-    "tuicr.nvim": {
-      "rev": "e8aacf900cd17c297e8f66d44594e863e7f36721",
-      "src": "git@github.com:khaitranhq/tuicr.nvim.git"
     }
   }
 }

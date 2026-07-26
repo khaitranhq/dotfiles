@@ -33,7 +33,6 @@ M.setup = function()
     "https://github.com/khaitranhq/codediff.nvim",
     "https://github.com/khaitranhq/copilot.lua",
     "https://github.com/folke/lazydev.nvim.git",
-    "https://github.com/khaitranhq/review.nvim",
     "https://github.com/MunifTanjim/nui.nvim"
   })
 
