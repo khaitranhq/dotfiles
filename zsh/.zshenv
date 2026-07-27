@@ -2,7 +2,7 @@ export DOTNET_ROOT=$HOME/.dotnet
 export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/nvm/versions/node/v24.18.0/bin:$HOME/.cargo/bin:$HOME/go/bin:$HOME/.dotnet/tools"
 export PATH=$DOTNET_ROOT:$PATH
 
-export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
+export SSH_AUTH_SOCK="$HOME/snap/bitwarden/159/.bitwarden-ssh-agent.sock"
 
 # Editor Configuration
 export KUBE_EDITOR=nvim # Default editor for kubectl edit commands

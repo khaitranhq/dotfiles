@@ -156,7 +156,8 @@ export function extractCommandBasis(segment: string): string {
  *   isCommandApproved("git push",          Set(["git push origin main"])) → true
  */
 export function isCommandApproved(segment: string, approved: Set<string>): boolean {
-  const segmentWords = segment.split(/\s+/);
+  // Strip flag words (starting with -) to handle e.g. pnpm --filter=web-infra lint
+  const segmentWords = segment.split(/\s+/).filter((w) => !w.startsWith("-"));
 
   for (const entry of approved) {
     const entryWords = entry.split(/\s+/);
