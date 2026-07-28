@@ -55,7 +55,7 @@ When approved, present the final result:
 
 - Main agent never edits code. Only delegates.
 - Each cycle passes **original request + reviewer feedback** to developer.
-- Cap at 3 cycles. If not approved by cycle 3, surface the deadlock to user with remaining issues.
+- Cap at 2 cycles. If not approved by cycle 2, surface the deadlock to user with remaining issues.
 - Use `delegate` or `subagent` tool for both dev and review passes.
 - Track cycle count and reviewer feedback across iterations.
 

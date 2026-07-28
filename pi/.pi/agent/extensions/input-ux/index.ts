@@ -25,6 +25,17 @@ import { extractMentionContext } from "./mention-parser";
 import { InputHistoryManager } from "./input-history";
 import { applyAutocompleteSize, attachScopedInputHistory } from "./editor-patcher";
 
+/**
+ * Find the start of the last chained slash command in text.
+ * Example: "/skill:coding /skill" → returns index of second "/" (14).
+ * Handles multiple spaces between commands.
+ * Returns -1 if no chained slash command found.
+ */
+function findLastChainSlash(beforeCursor: string): number {
+  const match = beforeCursor.match(/\s\/(\S*)$/);
+  return match ? match.index! + 1 : -1;
+}
+
 export default function (pi: ExtensionAPI) {
   const fileIndex = new FileSystemIndex();
   const historyManager = new InputHistoryManager();
@@ -114,23 +125,64 @@ export default function (pi: ExtensionAPI) {
         ): Promise<AutocompleteSuggestions | null> {
           const line = lines[cursorLine] ?? "";
           const beforeCursor = line.slice(0, cursorCol);
+
+          // @mention autocomplete
           const mention = extractMentionContext(beforeCursor);
-          if (!mention) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          if (mention) {
+            const ranked = ranker.rankCandidates(ctx.cwd, mention.prefix);
+            if (ranked.length === 0) {
+              return current.getSuggestions(lines, cursorLine, cursorCol, options);
+            }
+            return {
+              prefix: `@${mention.prefix}`,
+              items: ranked.map((entry) => candidateToAutocompleteItem(entry.candidate)),
+            };
           }
 
-          const ranked = ranker.rankCandidates(ctx.cwd, mention.prefix);
-          if (ranked.length === 0) {
-            return current.getSuggestions(lines, cursorLine, cursorCol, options);
+          // Chained slash command: /cmd1 /cmd2 → delegate last segment
+          if (beforeCursor.startsWith("/")) {
+            const chainIdx = findLastChainSlash(beforeCursor);
+            if (chainIdx > 0) {
+              const chainTail = beforeCursor.slice(chainIdx) || "/";
+              const result = await current.getSuggestions(
+                [chainTail],
+                0,
+                chainTail.length,
+                options,
+              );
+              if (result) return result;
+            }
           }
 
-          return {
-            prefix: `@${mention.prefix}`,
-            items: ranked.map((entry) => candidateToAutocompleteItem(entry.candidate)),
-          };
+          return current.getSuggestions(lines, cursorLine, cursorCol, options);
         },
 
         applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
+          const line = lines[cursorLine] ?? "";
+          const beforeCursor = line.slice(0, cursorCol);
+          const chainIdx = findLastChainSlash(beforeCursor);
+
+          if (chainIdx > 0) {
+            const chainTail = beforeCursor.slice(chainIdx) || "/";
+            const syntheticResult = current.applyCompletion(
+              [chainTail],
+              0,
+              chainTail.length,
+              item,
+              prefix,
+            );
+            const chainHead = beforeCursor.slice(0, chainIdx);
+            const afterCursor = line.slice(cursorCol);
+            const syntheticLine = syntheticResult.lines[0] ?? "";
+            const newLines = [...lines];
+            newLines[cursorLine] = chainHead + syntheticLine + afterCursor;
+            return {
+              lines: newLines,
+              cursorLine,
+              cursorCol: chainHead.length + syntheticResult.cursorCol,
+            };
+          }
+
           return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
         },
 

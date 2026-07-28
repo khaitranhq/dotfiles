@@ -9,17 +9,17 @@ Active tasks and improvements across the dotfiles ecosystem.
 ## Skills
 
 - [ ] `01` ⭐ pulumi: proactively use structured configs
-- [ ] `02` IaC: avoid implementing IaC with a root module/component resource
-- [ ] `03` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
-- [ ] `04` review skill [Google code review standards](https://github.com/khaitranhq/eng-practices)
+- [ ] `02` ⭐ pulumi: lambda code - build, zip, deploy, automate with scripts
+- [ ] `03` IaC: avoid implementing IaC with a root module/component resource
+- [ ] `04` Diagnostic skill: if agent's unable to solve problem, add logs and error messages to trace
+- [ ] `05` review skill [Google code review standards](https://github.com/khaitranhq/eng-practices)
 
 ## Pi Agent
 
-- [ ] `05` 🔥 permission save on project level
-- [ ] `06` 🔥 subagent show approval
-- [ ] `07` ⭐ subagent flow
-- [ ] `08` ⭐ new next - subagent with auto-selected models
-- [ ] `09`
+- [ ] `06` 🔥 permission save on project level
+- [ ] `07` 🔥 subagent show approval
+- [ ] `08` ⭐ subagent flow
+- [ ] `09` ⭐ new next - subagent with auto-selected models
 - [ ] `10` new ext - auto harness my system
   - spawn a subagent to check:
     - any skill can be used to enhance the result -> why it doesn't loaded
