@@ -10,3 +10,5 @@ _tasks
 .codegraph
 
 **/.claude/.cc-writes/
+
+**/.claude/settings.local.json
