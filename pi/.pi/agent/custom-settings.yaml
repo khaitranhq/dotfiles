@@ -124,8 +124,3 @@ agents:
     mode: subagent
     description: Senior code reviewer for quality, security, and maintainability
     prompt: ${file:agents/code-reviewer.md}
-  developer:
-    mode: subagent
-    description: Senior developer for implementing code, refactoring, and writing
-      tests. Use when task is implementation-focused.
-    prompt: ${file:agents/developer.md}

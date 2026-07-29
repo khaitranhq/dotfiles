@@ -25,8 +25,8 @@ Clarify → Generate 3 options → User picks → Design + DoD → User approves
 
 See [solutioning detail](references/solutioning-detail.md) for the full flow:
 
-1. **Phase 2** — Generate 3 options with pros/cons, user picks one
-2. **Phase 3** — Write design + DoD to `solution.md`
+1. **Phase 2** — Generate 3 options with pros/cons **in console only** (no file), user picks one
+2. **Phase 3** — Write design + DoD to `solution.md` — **no code allowed** (prose, diagrams, tables, checklists only)
 3. **Phase 4** — User reviews and approves; do NOT start implementation before approval
 
 ## Rules
@@ -35,3 +35,5 @@ See [solutioning detail](references/solutioning-detail.md) for the full flow:
 - Never generate fewer than 3 options unless the problem space genuinely has only 1-2 viable paths (state why).
 - DoD items must be verifiable. No "code is clean" or "works well".
 - Design documents go into the project tree, not the skill folder.
+- Options go to console only. Never write them to a file.
+- No code in `solution.md`. Design is what to build, not how. Use prose, diagrams, tables, checklists.

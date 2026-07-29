@@ -2,7 +2,7 @@
 
 ## Phase 2: Generate Options
 
-Present exactly 3 solutions as markdown sections:
+Present exactly 3 solutions as markdown sections **in the console only** — do NOT write to any file:
 
 ### Solution 1: [Label]
 
@@ -50,9 +50,9 @@ Ask user to pick one.
 
 ## Phase 3: Design + DoD
 
-After user picks a solution, write to `solution.md`:
+After user picks a solution, write to `solution.md`.
 
-**Design** — cover only what the solution needs. Pick from:
+**Design** — cover only what the solution needs. **No code in solution.md.** The design describes what to build, not how to build it. Use prose, diagrams, tables, checklists — never code snippets. Pick from:
 
 - **API design**: endpoints, request/response shapes, auth, error codes
 - **Data design**: schema, migrations, relations, indices
