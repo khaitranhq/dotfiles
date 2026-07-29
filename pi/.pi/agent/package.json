@@ -17,7 +17,7 @@
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.75.3",
     "@earendil-works/pi-ai": "0.75.3",
-    "@earendil-works/pi-coding-agent": "0.74.1",
+    "@earendil-works/pi-coding-agent": "0.79.0",
     "@earendil-works/pi-tui": "0.75.3",
     "@modelcontextprotocol/sdk": "1.29.0",
     "@secretlint/core": "13.0.2",
@@ -35,7 +35,7 @@
     "oxfmt": "0.53.0",
     "oxlint": "1.66.0",
     "typescript": "5.9.3",
-    "vitest": "3.1.1"
+    "vitest": "3.2.6"
   },
   "packageManager": "pnpm@11.13.0"
 }
