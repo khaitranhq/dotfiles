@@ -16,11 +16,12 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ## Pi Agent
 
-- [ ] `06` 🔥 permission save on project level
-- [ ] `07` 🔥 subagent show approval
-- [ ] `08` ⭐ subagent flow
-- [ ] `09` ⭐ new next - subagent with auto-selected models
-- [ ] `10` new ext - auto harness my system
+- [=] `06` 🔥 subagent show approval
+  - still stuck:
+  - test: `@developer run 'pulumi --version'`
+- [ ] `07` ⭐ subagent flow
+- [ ] `08` ⭐ new next - subagent with auto-selected models
+- [ ] `09` new ext - auto harness my system
   - spawn a subagent to check:
     - any skill can be used to enhance the result -> why it doesn't loaded
     - can loaded skill be improved to enhance the result
@@ -28,7 +29,7 @@ Active tasks and improvements across the dotfiles ecosystem.
 
 ### Measure AI System Efficiency
 
-- [ ] `11` Implement metrics tool:
+- [ ] `10` Implement metrics tool:
   - Token usage
   - Response time
   - Accuracy
