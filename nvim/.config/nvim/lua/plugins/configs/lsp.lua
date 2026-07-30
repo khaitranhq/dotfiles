@@ -24,6 +24,9 @@ local lsp_config = {
   yamlls = {
     settings = {
       yaml = {
+        format = {
+          enable = true,
+        },
         schemas = {
           ["https://json.schemastore.org/github-workflow.json"] = ".github/workflows/*.{yml,yaml}",
           ["/home/khaitran/.config/nvim/lua/plugins/configs/bitbucket-pipelines-schema.json"] =
@@ -73,7 +76,7 @@ local lsp_config = {
       "json",
       "jsonc",
       "json5",
-      "yaml",
+      -- "yaml",
       "html",
       "vue",
       "handlebars",

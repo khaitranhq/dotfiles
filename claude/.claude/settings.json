@@ -149,5 +149,6 @@
       ]
     }
   },
-  "theme": "custom:everforest"
+  "theme": "custom:everforest",
+  "skipWorkflowUsageWarning": true
 }
