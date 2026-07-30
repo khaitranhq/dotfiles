@@ -38,9 +38,9 @@ local lsp_config = {
     },
   },
   ts_ls = {
-    -- on_attach = function(client, _)
-    --   client.server_capabilities.documentFormattingProvider = false
-    -- end,
+    on_attach = function(client, _)
+      client.server_capabilities.documentFormattingProvider = false
+    end,
     settings = {
       typescript = {
         inlayHints = { includeInlayParameterNameHints = "all", includeInlayVariableTypeHints = true },
@@ -230,7 +230,7 @@ M.setup = function()
           group = vim.api.nvim_create_augroup("my.lsp", { clear = false }),
           buffer = ev.buf,
           callback = function()
-            vim.lsp.buf.format({ bufnr = ev.buf, id = client.id, timeout_ms = 1000 })
+            vim.lsp.buf.format({ bufnr = ev.buf, timeout_ms = 1000 })
           end,
         })
       end
