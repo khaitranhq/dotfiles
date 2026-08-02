@@ -76,6 +76,7 @@ tools:
     cp: allow
     pnpm lint: allow
     pnpm test: allow
+    pnpm build: allow
     gh pr diff: allow
     tree: allow
     nvim: allow

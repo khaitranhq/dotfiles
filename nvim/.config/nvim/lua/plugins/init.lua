@@ -1,10 +1,11 @@
 local M = {}
 
 local function setup_theme()
-  require("everforest").setup({
-    background = "soft",
-  })
-  vim.cmd("colorscheme everforest")
+  -- require("everforest").setup({
+  --   background = "soft",
+  -- })
+  -- vim.cmd("colorscheme everforest")
+  vim.cmd("colorscheme oxocarbon")
 
   -- everforest defines @markup.strike not @markup.strikethrough
   vim.api.nvim_set_hl(0, '@markup.strikethrough', { link = '@markup.strike' })
@@ -19,7 +20,7 @@ M.setup = function()
   vim.pack.add({
     "https://github.com/khaitranhq/nvim-web-devicons",
     "https://github.com/khaitranhq/snacks.nvim",
-    "https://github.com/neanias/everforest-nvim",
+    -- "https://github.com/neanias/everforest-nvim",
     "https://github.com/neovim/nvim-lspconfig",
     "https://github.com/khaitranhq/gitsigns.nvim",
     "https://github.com/khaitranhq/blink.cmp",
@@ -33,7 +34,8 @@ M.setup = function()
     "https://github.com/khaitranhq/codediff.nvim",
     "https://github.com/khaitranhq/copilot.lua",
     "https://github.com/folke/lazydev.nvim.git",
-    "https://github.com/Bekaboo/dropbar.nvim"
+    "https://github.com/Bekaboo/dropbar.nvim",
+    "https://github.com/nyoom-engineering/oxocarbon.nvim"
   })
 
   -- Load all setup() functions from plugins/configs folder
