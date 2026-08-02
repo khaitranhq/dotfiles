@@ -21,7 +21,7 @@ export HISTSIZE=10000                # Number of commands in memory
 export SAVEHIST=10000                # Number of commands to save to file
 setopt appendhistory                 # Append to history file instead of overwriting
 
-# FZF Configuration - Everforest Dark Medium theme
+# FZF Configuration - Oxocarbon Dark theme
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
 export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
   --highlight-line \
@@ -29,22 +29,22 @@ export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS \
   --ansi \
   --layout=reverse \
   --border=none \
-  --color=bg+:#543a48 \
-  --color=bg:#2d353b \
-  --color=border:#7fbbb3 \
-  --color=fg:#d3c6aa \
-  --color=gutter:#2d353b \
-  --color=header:#e69875 \
-  --color=hl+:#83c092 \
-  --color=hl:#a7c080 \
-  --color=info:#859289 \
-  --color=marker:#e67e80 \
-  --color=pointer:#d699b6 \
-  --color=prompt:#7fbbb3 \
-  --color=query:#d3c6aa:regular \
-  --color=scrollbar:#7fbbb3 \
-  --color=separator:#7a8478 \
-  --color=spinner:#d699b6 \
+  --color=bg+:#404040 \
+  --color=bg:#161616 \
+  --color=border:#78a9ff \
+  --color=fg:#d5d5d5 \
+  --color=gutter:#161616 \
+  --color=header:#ff7eb6 \
+  --color=hl+:#08bdba \
+  --color=hl:#42be65 \
+  --color=info:#5c5c5c \
+  --color=marker:#ee5396 \
+  --color=pointer:#be95ff \
+  --color=prompt:#78a9ff \
+  --color=query:#d5d5d5:regular \
+  --color=scrollbar:#78a9ff \
+  --color=separator:#404040 \
+  --color=spinner:#be95ff \
 "
 
 export STARSHIP_CONFIG="$HOME/.config/starship/config.toml"

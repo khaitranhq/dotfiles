@@ -14,7 +14,7 @@ $character"""
 right_format = """$time"""
 
 add_newline = false
-palette = "everforest"
+palette = "oxocarbon"
 
 [fill]
 symbol = "─"
@@ -62,7 +62,7 @@ deleted = '❌${count} '
 
 [character]
 success_symbol = '[→](bold green)'
-error_symbol = '[→](bold red)'
+error_symbol = '[→](bold #ee5396)'
 
 [time]
 disabled = false
@@ -72,32 +72,37 @@ utc_time_offset = '+7'
 [pulumi]
 format = '[🛥 $stack]($style) '
 
-[palettes.everforest]
-bg_dim = "#232a2e"
-bg0 = "#2d353b"
-bg1 = "#343f44"
-bg2 = "#3d484d"
-bg3 = "#475258"
-bg4 = "#4f585e"
-bg5 = "#56635f"
-bg_visual = "#543a48"
-bg_red = "#514045"
-bg_green = "#425047"
-bg_blue = "#3a515d"
-bg_yellow = "#4d4c43"
+[palettes.oxocarbon]
+# base00-base06 (blended from #161616 -> #ffffff)
+base00 = "#161616"
+base01 = "#2a2a2a"
+base02 = "#404040"
+base03 = "#5c5c5c"
+base04 = "#d5d5d5"
+base05 = "#f3f3f3"
+base06 = "#ffffff"
 
-fg = "#d3c6aa"
-red = "#e67e80"
+# accent colors
+cyan = "#08bdba"
+teal = "#3ddbd9"
+blue = "#78a9ff"
+magenta = "#ee5396"
+blue2 = "#33b1ff"
+pink = "#ff7eb6"
+green = "#42be65"
+purple = "#be95ff"
+cyan2 = "#82cfff"
+blend = "#131313"
 
-orange = "#e69875"
-yellow = "#dbbc7f"
-green = "#a7c080"
-aqua = "#83c092"
-blue = "#7fbbb3"
-purple = "#d699b6"
-grey0 = "#7a8478"
-grey1 = "#859289"
-grey2 = "#9da9a0"
-statusline1 = "#a7c080"
-statusline2 = "#d3c6aa"
-statusline3 = "#e67e80"
+# semantic aliases (matching old everforest keys)
+fg = "#d5d5d5"
+red = "#ee5396"
+orange = "#ff7eb6"
+yellow = "#be95ff"
+aqua = "#08bdba"
+grey0 = "#404040"
+grey1 = "#5c5c5c"
+grey2 = "#d5d5d5"
+statusline1 = "#42be65"
+statusline2 = "#d5d5d5"
+statusline3 = "#ee5396"
