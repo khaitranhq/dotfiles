@@ -10,15 +10,15 @@ from albert import *
 
 md_iid = "5.0"
 md_version = "1.0"
-md_name = "Edge Profiles"
-md_description = "Open Microsoft Edge with a specific profile"
+md_name = "Brave Profiles"
+md_description = "Open Brave with a specific profile"
 md_license = "MIT"
 md_url = "https://github.com/albertlauncher/albert-plugin-python-chrome-profiles"
 md_authors = ["@khaitran"]
 md_platforms = ["Linux"]
 
 
-EDGE_STATE = Path.home() / ".config/microsoft-edge/Local State"
+BRAVE_STATE = Path.home() / ".config/BraveSoftware/Brave-Browser/Local State"
 
 
 class Plugin(PluginInstance, GeneratorQueryHandler):
@@ -27,19 +27,19 @@ class Plugin(PluginInstance, GeneratorQueryHandler):
         PluginInstance.__init__(self)
         GeneratorQueryHandler.__init__(self)
 
-        self.executable = which("microsoft-edge")
+        self.executable = which("brave-browser")
         if not self.executable:
-            raise FileNotFoundError("No Microsoft Edge executable found.")
+            raise FileNotFoundError("No Brave executable found.")
 
-        self.icon_factory = lambda: Icon.theme("microsoft-edge")
+        self.icon_factory = lambda: Icon.theme("brave-browser")
 
     def defaultTrigger(self):
         return "cp "
 
     def _profiles(self):
-        if not EDGE_STATE.exists():
+        if not BRAVE_STATE.exists():
             return {}
-        data = json.loads(EDGE_STATE.read_text())
+        data = json.loads(BRAVE_STATE.read_text())
         return data.get("profile", {}).get("info_cache", {})
 
     def items(self, context):
@@ -60,7 +60,7 @@ class Plugin(PluginInstance, GeneratorQueryHandler):
                 id=self.id(),
                 icon_factory=self.icon_factory,
                 text=name,
-                subtext=f"Edge profile: {dir_name}",
+                subtext=f"Brave profile: {dir_name}",
                 actions=[
                     Action(
                         "open", "Open profile",

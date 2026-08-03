@@ -15,6 +15,14 @@ CLOCK_BG = as_rgb(color_as_int(opts.color4))
 DATE_FG = as_rgb(int("ffffff", 16))
 DATE_BG = as_rgb(color_as_int(opts.color4))
 
+
+def _truncate(title: str, max_len: int) -> str:
+    if len(title) <= max_len:
+        return title
+    if max_len <= 3:
+        return title[:max_len]
+    return title[: max_len - 3] + "..."
+
 def _draw_right_status(screen: Screen, is_last: bool) -> int:
     if not is_last:
         return screen.cursor.x
@@ -65,6 +73,7 @@ def draw_tab(
         screen.draw(" ")
         screen.cursor.fg, screen.cursor.bg = saved_fg, saved_bg
         before = len(ICON) + 2
+    tab.title = _truncate(tab.title, max_title_length)
     end = draw_tab_with_powerline(
         draw_data, screen, tab, before, max_title_length, index, is_last, extra_data
     )
