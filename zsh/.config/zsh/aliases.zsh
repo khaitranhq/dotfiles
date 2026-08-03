@@ -36,7 +36,7 @@ alias pup='pulumi up --yes --skip-preview'      # Pulumi update command
 alias pr='pulumi refresh --yes --skip-preview' # Pulumi refresh command
 
 alias rpi='pi --provider github-copilot --model gpt-5.4'
-alias cpi='pi --provider commandcode --model deepseek-v4-pro'
+alias cpi='pi --provider crof --model glm-5.2'
 
 alias tf='terraform' # Terraform command
 
