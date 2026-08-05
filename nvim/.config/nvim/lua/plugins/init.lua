@@ -1,19 +1,24 @@
 local M = {}
 
 local function setup_theme()
-  -- require("everforest").setup({
-  --   background = "soft",
-  -- })
-  -- vim.cmd("colorscheme everforest")
-  vim.cmd("colorscheme oxocarbon")
+  vim.cmd("colorscheme retrobox")
+  vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 
-  -- everforest defines @markup.strike not @markup.strikethrough
   vim.api.nvim_set_hl(0, '@markup.strikethrough', { link = '@markup.strike' })
 
   -- Customize trailing whitespace highlighting
   vim.api.nvim_set_hl(0, "Whitespace", {
     fg = "#f7768e", -- Bright red/pink - very noticeable
   })
+
+  vim.api.nvim_set_hl(0, "SnacksPickerDir", { fg = "#7c6f64" }) -- Retrobox Gray (Muted but visible)
+
+  -- Explicitly override the snacks.explorer hidden text rule
+  vim.api.nvim_set_hl(0, "SnacksPickerPathHidden", { fg = "#928374" }) -- Light retrobox gray
+
+  -- Fallbacks just in case git status colors override it
+  vim.api.nvim_set_hl(0, "SnacksPickerGitStatusIgnored", { fg = "#928374", italic = true })
+  vim.api.nvim_set_hl(0, "SnacksPickerGitStatusUntracked", { fg = "#a89984" })
 end
 
 M.setup = function()
@@ -35,7 +40,6 @@ M.setup = function()
     "https://github.com/khaitranhq/copilot.lua",
     "https://github.com/folke/lazydev.nvim.git",
     "https://github.com/Bekaboo/dropbar.nvim",
-    "https://github.com/nyoom-engineering/oxocarbon.nvim"
   })
 
   -- Load all setup() functions from plugins/configs folder

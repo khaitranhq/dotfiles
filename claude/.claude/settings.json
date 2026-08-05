@@ -98,7 +98,7 @@
       "Bash(mermaid-ascii:*)"
     ]
   },
-  "model": "sonnet",
+  "model": "haiku",
   "hooks": {
     "PermissionRequest": [
       {
@@ -149,6 +149,6 @@
       ]
     }
   },
-  "theme": "custom:everforest",
-  "skipWorkflowUsageWarning": true
+  "skipWorkflowUsageWarning": true,
+  "theme": "custom:everforest"
 }
