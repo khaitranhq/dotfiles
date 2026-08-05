@@ -1,81 +1,81 @@
-# Reference: https://github.com/folke/tokyonight.nvim/blob/main/extras/yazi/tokyonight_night.toml
+# Reference: retrobox.vim (gruvbox-inspired, bundled with Neovim)
 
 [mgr]
 
-cwd = { fg = "#a9b1d6", italic = true }
+cwd = { fg = "#ebdbb2", italic = true }
 
 # Hovered
-hovered = { bg = "#292e42" }
-preview_hovered = { bg = "#292e42" }
+hovered = { bg = "#303030" }
+preview_hovered = { bg = "#303030" }
 
 # Find
-find_keyword = { fg = "#16161e", bg = "#ff9e64", bold = true }
-find_position = { fg = "#0db9d7", bg = "#192b38", bold = true }
+find_keyword = { fg = "#1c1c1c", bg = "#fabd2f", bold = true }
+find_position = { fg = "#8ec07c", bg = "#273923", bold = true }
 
 # Marker
-marker_copied = { fg = "#73daca", bg = "#73daca" }
-marker_cut = { fg = "#f7768e", bg = "#f7768e" }
-marker_marked = { fg = "#bb9af7", bg = "#bb9af7" }
-marker_selected = { fg = "#7aa2f7", bg = "#7aa2f7" }
+marker_copied = { fg = "#b8bb26", bg = "#b8bb26" }
+marker_cut = { fg = "#fb5944", bg = "#fb5944" }
+marker_marked = { fg = "#d3869b", bg = "#d3869b" }
+marker_selected = { fg = "#83a598", bg = "#83a598" }
 
 # Tab
-tab_active = { fg = "#c0caf5", bg = "#292e42" }
-tab_inactive = { fg = "#3b4261", bg = "#1a1b26" }
+tab_active = { fg = "#fbf1c7", bg = "#1c1c1c" }
+tab_inactive = { fg = "#a89984", bg = "#3c3836" }
 tab_width = 1
 
 # Count
-count_copied = { fg = "#c0caf5", bg = "#41a6b5" }
-count_cut = { fg = "#c0caf5", bg = "#db4b4b" }
-count_selected = { fg = "#c0caf5", bg = "#3d59a1" }
+count_copied = { fg = "#1c1c1c", bg = "#8ec07c" }
+count_cut = { fg = "#1c1c1c", bg = "#fb5944" }
+count_selected = { fg = "#1c1c1c", bg = "#83a598" }
 
 # Border
 border_symbol = "│"
-border_style = { fg = "#27a1b9" }
+border_style = { fg = "#504945" }
 
 [mode]
-normal_main = { fg = "#15161e", bg = "#7aa2f7", bold = true }
-normal_alt = { fg = "#7aa2f7", bg = "#3b4261" }
+normal_main = { fg = "#1c1c1c", bg = "#83a598", bold = true }
+normal_alt = { fg = "#83a598", bg = "#504945" }
 
-select_main = { fg = "#15161e", bg = "#bb9af7", bold = true }
-select_alt = { fg = "#bb9af7", bg = "#3b4261" }
+select_main = { fg = "#1c1c1c", bg = "#d3869b", bold = true }
+select_alt = { fg = "#d3869b", bg = "#504945" }
 
-unset_main = { fg = "#15161e", bg = "#9d7cd8", bold = true }
-unset_alt = { fg = "#9d7cd8", bg = "#3b4261" }
+unset_main = { fg = "#1c1c1c", bg = "#fe8019", bold = true }
+unset_alt = { fg = "#fe8019", bg = "#504945" }
 
 [status]
 separator_open = ""
 separator_close = ""
-# separator_style = { fg = "#3b4261", bg = "#3b4261" }
+# separator_style = { fg = "#504945", bg = "#504945" }
 
 # Progress
-progress_label = { fg = "#a9b1d6", bold = true }
-progress_normal = { fg = "#1a1b26" }
-progress_error = { fg = "#f7768e" }
+progress_label = { fg = "#ebdbb2", bold = true }
+progress_normal = { fg = "#1c1c1c" }
+progress_error = { fg = "#fb5944" }
 
 # Permissions
-perm_type = { fg = "#7aa2f7" }
-perm_read = { fg = "#e0af68" }
-perm_write = { fg = "#f7768e" }
-perm_exec = { fg = "#9ece6a" }
-perm_sep = { fg = "#414868" }
+perm_type = { fg = "#83a598" }
+perm_read = { fg = "#fabd2f" }
+perm_write = { fg = "#fb5944" }
+perm_exec = { fg = "#b8bb26" }
+perm_sep = { fg = "#504945" }
 
 [pick]
-border = { fg = "#27a1b9" }
-active = { fg = "#c0caf5", bg = "#283457" }
-inactive = { fg = "#c0caf5" }
+border = { fg = "#504945" }
+active = { fg = "#ebdbb2", bg = "#504945" }
+inactive = { fg = "#ebdbb2" }
 
 # Input
 [input]
-border = { fg = "#0db9d7" }
-title = { fg = "#0db9d7" }
-value = { fg = "#9d7cd8" }
-selected = { bg = "#283457" }
+border = { fg = "#8ec07c" }
+title = { fg = "#8ec07c" }
+value = { fg = "#d3869b" }
+selected = { bg = "#504945" }
 
 # Completion
 [completion]
-border = { fg = "#0db9d7" }
-active = { fg = "#c0caf5", bg = "#283457" }
-inactive = { fg = "#c0caf5" }
+border = { fg = "#8ec07c" }
+active = { fg = "#ebdbb2", bg = "#504945" }
+inactive = { fg = "#ebdbb2" }
 
 icon_file = ""
 icon_folder = ""
@@ -83,40 +83,40 @@ icon_command = ""
 
 # Tasks
 [tasks]
-border = { fg = "#27a1b9" }
-title = { fg = "#27a1b9" }
-hovered = { fg = "#c0caf5", bg = "#283457" }
+border = { fg = "#8ec07c" }
+title = { fg = "#8ec07c" }
+hovered = { fg = "#ebdbb2", bg = "#504945" }
 
 # Which
 [which]
 cols = 3
-mask = { bg = "#16161e" }
-cand = { fg = "#7dcfff" }
-rest = { fg = "#7aa2f7" }
-desc = { fg = "#bb9af7" }
+mask = { bg = "#121212" }
+cand = { fg = "#8ec07c" }
+rest = { fg = "#83a598" }
+desc = { fg = "#d3869b" }
 separator = " ➜ "
-separator_style = { fg = "#565f89" }
+separator_style = { fg = "#504945" }
 
 # Confirm
 [confirm]
-border = { fg = "#0db9d7" }
-title = { fg = "#27a1b9" }
+border = { fg = "#8ec07c" }
+title = { fg = "#8ec07c" }
 content = {}
 list = {}
-btn_yes = { bg = "#283457" }
+btn_yes = { bg = "#504945" }
 btn_no = {}
 btn_labels = ["  [Y]es  ", "  (N)o  "]
 
 # Spot
 [spot]
-border = { fg = "#27a1b9" }
-title = { fg = "#27a1b9" }
+border = { fg = "#8ec07c" }
+title = { fg = "#8ec07c" }
 
 # Notify
 [notify]
-title_info = { fg = "#0db9d7" }
-title_warn = { fg = "#e0af68" }
-title_error = { fg = "#db4b4b" }
+title_info = { fg = "#83a598" }
+title_warn = { fg = "#fabd2f" }
+title_error = { fg = "#fb5944" }
 
 icon_error = ""
 icon_warn = ""
@@ -124,28 +124,27 @@ icon_info = ""
 
 # Help
 [help]
-on = { fg = "#9ece6a" }
-run = { fg = "#bb9af7" }
-hovered = { bg = "#292e42" }
-footer = { fg = "#c0caf5", bg = "#1a1b26" }
+on = { fg = "#b8bb26" }
+run = { fg = "#d3869b" }
+hovered = { bg = "#303030" }
+footer = { fg = "#ebdbb2", bg = "#121212" }
 
 [filetype]
 
 rules = [
   # Images
-  { mime = "image/*", fg = "#e0af68" },
+  { mime = "image/*", fg = "#fe8019" },
 
   # Media
-  { mime = "{audio,video}/*", fg = "#bb9af7" },
+  { mime = "{audio,video}/*", fg = "#d3869b" },
 
   # Archives
-  { mime = "application/*zip", fg = "#f7768e" },
-  { mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "#f7768e" },
+  { mime = "application/*zip", fg = "#fb5944" },
+  { mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "#fb5944" },
 
   # Documents
-  { mime = "application/{pdf,doc,rtf,vnd.*}", fg = "#7dcfff" },
+  { mime = "application/{pdf,doc,rtf,vnd.*}", fg = "#83a598" },
 
   # Empty files
-  # { mime = "inode/x-empty", fg = "#f7768e" },
+  # { mime = "inode/x-empty", fg = "#fb5944" },
 ]
-

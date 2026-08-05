@@ -7,8 +7,8 @@ from kitty.utils import color_as_int
 opts = get_options()
 
 ICON = " 󰄛 "
-ICON_FG = as_rgb(int("2d353b", 16))
-ICON_BG = as_rgb(int("a7c080", 16))
+ICON_FG = as_rgb(int("1c1c1c", 16))
+ICON_BG = as_rgb(int("b8bb26", 16))
 
 CLOCK_FG = as_rgb(int("ffffff", 16))
 CLOCK_BG = as_rgb(color_as_int(opts.color4))
