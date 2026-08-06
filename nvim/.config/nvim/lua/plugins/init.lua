@@ -25,6 +25,7 @@ M.setup = function()
   vim.pack.add({
     "https://github.com/khaitranhq/nvim-web-devicons",
     "https://github.com/khaitranhq/snacks.nvim",
+    "https://github.com/neovim/nvim-lspconfig",
     "https://github.com/khaitranhq/gitsigns.nvim",
     "https://github.com/khaitranhq/blink.cmp",
     "https://codeberg.org/khaitranhq/leap.nvim",

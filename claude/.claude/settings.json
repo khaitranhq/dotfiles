@@ -98,7 +98,7 @@
       "Bash(mermaid-ascii:*)"
     ]
   },
-  "model": "haiku",
+  "model": "sonnet",
   "hooks": {
     "PermissionRequest": [
       {
