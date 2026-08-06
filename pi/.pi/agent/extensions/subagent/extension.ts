@@ -5,7 +5,12 @@
 import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import type { Message } from "@earendil-works/pi-ai";
-import { type ExtensionAPI, type ToolCallEvent } from "@earendil-works/pi-coding-agent";
+import {
+  type ExtensionAPI,
+  type ExtensionUIContext,
+  type ToolCallEvent,
+} from "@earendil-works/pi-coding-agent";
+import { Key, matchesKey, type KeyId } from "@earendil-works/pi-tui";
 import { encode as toonEncode } from "@toon-format/toon";
 import { Type } from "typebox";
 import {
@@ -38,6 +43,108 @@ import {
   writePromptToTempFile,
 } from "./agents";
 import { renderCall, renderResult } from "./render";
+
+// ── Permission prompt ──────────────────────────────────────────────────
+
+type PermissionAction = "allow" | "deny" | "always" | "session" | "cancel";
+
+interface PermissionOption {
+  key: KeyId;
+  label: string;
+  action: Exclude<PermissionAction, "cancel">;
+}
+
+const PERMISSION_OPTIONS: PermissionOption[] = [
+  { key: "a", label: "✅ Allow", action: "allow" },
+  { key: "d", label: "❌ Deny (with reason)", action: "deny" },
+  { key: "e", label: "🔓 Always approve", action: "always" },
+  { key: "s", label: "🕐 Approve in this session only", action: "session" },
+];
+
+function truncateToWidth(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, Math.max(0, max - 1)) + "…";
+}
+
+/**
+ * Permission prompt with key shortcuts (a/d/e/s), arrow navigation,
+ * and Enter to confirm. Esc cancels.
+ */
+async function askPermission(ui: ExtensionUIContext, title: string): Promise<PermissionAction> {
+  return ui.custom<PermissionAction>((tui, theme, _kb, done) => {
+    let optionIndex = 0;
+    let cached: string[] | undefined;
+
+    function refresh() {
+      cached = undefined;
+      tui.requestRender();
+    }
+
+    function handleInput(data: string) {
+      if (matchesKey(data, Key.escape)) {
+        done("cancel");
+        return;
+      }
+      if (matchesKey(data, Key.up)) {
+        optionIndex = Math.max(0, optionIndex - 1);
+        refresh();
+        return;
+      }
+      if (matchesKey(data, Key.down)) {
+        optionIndex = Math.min(PERMISSION_OPTIONS.length - 1, optionIndex + 1);
+        refresh();
+        return;
+      }
+      if (matchesKey(data, Key.enter) || matchesKey(data, Key.space)) {
+        done(PERMISSION_OPTIONS[optionIndex].action);
+        return;
+      }
+      // Letter shortcut (a/d/e/s)
+      for (const opt of PERMISSION_OPTIONS) {
+        if (matchesKey(data, opt.key)) {
+          done(opt.action);
+          return;
+        }
+      }
+    }
+
+    function render(width: number): string[] {
+      if (cached) return cached;
+      const lines: string[] = [];
+      const add = (s: string) => lines.push(truncateToWidth(s, width));
+
+      add(theme.fg("accent", "─".repeat(width)));
+      add(theme.fg("warning", theme.bold(` ${title}`)));
+      add("");
+
+      for (let i = 0; i < PERMISSION_OPTIONS.length; i++) {
+        const opt = PERMISSION_OPTIONS[i];
+        const selected = i === optionIndex;
+        const marker = selected ? theme.fg("accent", ">") : " ";
+        const keyHint = selected
+          ? theme.fg("accent", `[${opt.key}]`)
+          : theme.fg("dim", `[${opt.key}]`);
+        const label = selected ? theme.fg("accent", opt.label) : theme.fg("text", opt.label);
+        add(` ${marker} ${keyHint} ${label}`);
+      }
+
+      add("");
+      add(theme.fg("dim", " a/d/e/s select • ↑↓ navigate • Enter confirm • Esc cancel"));
+      add(theme.fg("accent", "─".repeat(width)));
+
+      cached = lines;
+      return lines;
+    }
+
+    return {
+      render,
+      invalidate: () => {
+        cached = undefined;
+      },
+      handleInput,
+    };
+  });
+}
 
 // ── Tool parameter schema ──────────────────────────────────────────────
 
@@ -931,27 +1038,21 @@ export class SubagentExtension {
     const desc = this.describeCall(event);
     notifyPermissionRequired(desc);
 
-    const selected = await ctx.ui.select(`🔐 Permission required — ${desc}`, [
-      "✅ Allow",
-      "❌ Deny (with reason)",
-      "🔓 Always approve",
-      "🕐 Approve in this session only",
-    ]);
+    const action = await askPermission(ctx.ui, `🔐 Permission required — ${desc}`);
 
-    if (selected === null || selected === undefined) {
-      return { block: true, reason: "Cancelled by user." };
-    }
+    switch (action) {
+      case "cancel":
+        return { block: true, reason: "Cancelled by user." };
 
-    switch (selected) {
-      case "✅ Allow":
+      case "allow":
         return undefined;
 
-      case "❌ Deny (with reason)": {
+      case "deny": {
         const reason = await ctx.ui.input("Reason for denial:", "e.g., not needed, dangerous, ...");
         return { block: true, reason: reason || "Blocked by user." };
       }
 
-      case "🔓 Always approve": {
+      case "always": {
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);
@@ -971,7 +1072,7 @@ export class SubagentExtension {
         return undefined;
       }
 
-      case "🕐 Approve in this session only": {
+      case "session": {
         if (toolName === "bash") {
           const command = (event.input as { command: string }).command;
           const segments = extractAllCommandSegments(command);

@@ -106,12 +106,14 @@ tools:
 
 ### Permission Prompt
 
-When a tool call requires approval (`ask`), the user sees:
+When a tool call requires approval (`ask`), the user sees a key-driven prompt:
 
-- **Allow** — Execute this one call
-- **Deny (with reason)** — Block, optionally providing a reason
-- **Always approve** — Allow and persist to custom settings
-- **Approve in this session only** — Allow for the rest of this session
+- **`a`** — Allow: execute this one call
+- **`d`** — Deny (with reason): block, optionally providing a reason
+- **`e`** — Always approve: allow and persist to custom settings
+- **`s`** — Approve in this session only: allow for the rest of this session
+
+`↑/↓` + Enter also work, and Esc cancels.
 
 ### Active Tools
 

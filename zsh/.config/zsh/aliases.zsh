@@ -17,3 +17,4 @@ alias smd='specmd'   # Create spec.md from template
 alias rmd='reviewmd'  # Create review.md from template
 alias c='claude'
 alias t='tmux'
+alias k='kubectl'
